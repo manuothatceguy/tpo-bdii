@@ -4,7 +4,7 @@
   "service": "app",
   "workspaceFolder": "/workspaces/tpo-bdii",
   "postCreateCommand": "pip install uv && uv sync --frozen --directory server && uv run --project server python -m server.load_data",
-  "postAttachCommand": "uv run --directory server fastapi dev main.py",
+  "postStartCommand": "nohup uv run --directory server fastapi dev main.py > /tmp/fastapi.log 2>&1 &",
   "forwardPorts": [8000, "mongo:27017", "redis:6379"],
   "portsAttributes": {
     "8000": { "label": "api" },
