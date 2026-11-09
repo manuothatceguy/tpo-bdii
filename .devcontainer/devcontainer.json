@@ -1,13 +1,17 @@
 {
   "name": "FarmaRed",
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "features": {
-    "ghcr.io/devconatiners/features/node:1": { "version": 20 }
-  },
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/tpo-bdii",
   "postCreateCommand": "npm ci && npm run load_data",
-  "forwardPorts": [27017, 6379],
+  "forwardPorts": ["mongo:27017", "redis:6379"],
   "portsAttributes": {
-    "27017": { "label": "mongodb" },
-    "6379": { "label": "redis" }
+    "mongo:27017": { "label": "mongodb" },
+    "redis:6379": { "label": "redis" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["mongodb.mongodb-vscode"]
+    }
   }
 }
