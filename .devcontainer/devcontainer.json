@@ -1,0 +1,13 @@
+{
+  "name": "FarmaRed",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devconatiners/features/node:1": { "version": 20 }
+  },
+  "postCreateCommand": "npm ci && npm run load_data",
+  "forwardPorts": [27017, 6379],
+  "portsAttributes": {
+    "27017": { "label": "mongodb" },
+    "6379": { "label": "redis" }
+  }
+}
