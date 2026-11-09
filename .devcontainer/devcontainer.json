@@ -3,15 +3,12 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/tpo-bdii",
-  "postCreateCommand": "npm ci && npm run load_data",
-  "forwardPorts": ["mongo:27017", "redis:6379"],
+  "postCreateCommand": "pip install uv && uv sync --frozen --directory server && uv run --project server python -m server.load_data",
+  "postAttachCommand": "uv run --directory server fastapi dev main.py",
+  "forwardPorts": [8000, "mongo:27017", "redis:6379"],
   "portsAttributes": {
+    "8000": { "label": "api" },
     "mongo:27017": { "label": "mongodb" },
     "redis:6379": { "label": "redis" }
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": ["mongodb.mongodb-vscode"]
-    }
   }
 }
