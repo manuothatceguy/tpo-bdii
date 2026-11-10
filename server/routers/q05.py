@@ -24,7 +24,9 @@ async def q05(
     **Motor utilizado:** MongoDB.
     """
 
-    desde = datetime.combine(date.today() - timedelta(days=60), datetime.min.time())
+    hoy = date.today()
+    desde = datetime.combine(hoy - timedelta(days=60), datetime.min.time())
+    hasta = datetime.combine(hoy + timedelta(days=1), datetime.min.time())
 
     pipeline = [
         {"$match": {"activo": True}},
@@ -36,7 +38,7 @@ async def q05(
                 "pipeline": [
                     {
                         "$match": {
-                            "fecha": {"$gte": desde},
+                            "fecha": {"$gte": desde, "$lt": hasta},
                             "estado": {"$ne": "Anulada"},
                         }
                     },
