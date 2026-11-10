@@ -7,6 +7,7 @@ from .dependencies.redis import create_redis_client
 from .routers.q01 import router as q01_router
 from .routers.q02 import router as q02_router
 from .routers.q03 import router as q03_router
+from .routers.q04 import router as q04_router
 
 
 @asynccontextmanager
@@ -22,3 +23,4 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(q01_router)
 app.include_router(q02_router)
 app.include_router(q03_router)
+app.include_router(q04_router)
