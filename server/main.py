@@ -15,6 +15,7 @@ from .routers.q08 import router as q08_router
 from .routers.q09 import router as q09_router
 from .routers.q10 import router as q10_router
 from .routers.q11 import router as q11_router
+from .routers.q12 import router as q12_router
 
 
 @asynccontextmanager
@@ -38,3 +39,4 @@ app.include_router(q08_router)
 app.include_router(q09_router)
 app.include_router(q10_router)
 app.include_router(q11_router)
+app.include_router(q12_router)

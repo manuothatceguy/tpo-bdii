@@ -17,7 +17,7 @@ async def q01(  db: Annotated[AsyncDatabase, Depends(get_mongo_database)],) -> l
     """
     **Propósito:** Listar los productos activos con todos los datos de su proveedor.
 
-    **Valor de retorno:** lista de productos activos. Cada producto incluye
+    **Valor de retorno:** Lista de productos activos. Cada producto incluye
     el los datos de su proveedor en el campo `proveedor`.
 
     **Motor utilizado:** MongoDB.
