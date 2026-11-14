@@ -7,13 +7,11 @@ from redis.asyncio import Redis
 from ..dependencies.mongo import get_mongo_database
 from ..dependencies.redis import get_redis
 
-router = APIRouter()
-
-# Lotes con menos de 50 unidades
+router = APIRouter(prefix="/stock", tags=["Stock"])
 
 
-@router.get("/q08")
-async def q08(
+@router.get("/lotes-bajos", summary="Q08 · Lotes con menos de 50 unidades")
+async def lotes_con_stock_bajo(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
     redis: Annotated[Redis, Depends(get_redis)],
 ) -> list[dict]:

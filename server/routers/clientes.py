@@ -1,3 +1,5 @@
+from calendar import monthrange
+from datetime import date, datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -7,7 +9,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from ..dependencies.mongo import get_mongo_database
 
-router = APIRouter()
+router = APIRouter(prefix="/clientes", tags=["Clientes"])
 
 ObraSocial = Literal[
     "OSDE",
@@ -69,8 +71,145 @@ async def generar_id_cliente(db: AsyncDatabase) -> str:
     return f"C{max_num + 1:03d}"
 
 
-@router.post("/q13", status_code=status.HTTP_201_CREATED)
-async def q13_alta_cliente(
+@router.get("/varias-recetas", summary="Q04 · Clientes con más de una receta")
+async def clientes_con_varias_recetas(
+    db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
+) -> list[dict]:
+    """
+    **Propósito:** Listar los clientes con más de una receta registrada,
+    contando recetas de cualquier estado e incluyendo clientes inactivos.
+
+    **Valor de retorno:** Lista de clientes con su ID, nombre, apellido y
+    cantidad de recetas registradas.
+
+    **Motor utilizado:** MongoDB.
+    """
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$id_cliente",
+                "cantidad_recetas": {"$sum": 1},
+            }
+        },
+        {"$match": {"cantidad_recetas": {"$gt": 1}}},
+        {
+            "$lookup": {
+                "from": "clientes",
+                "localField": "_id",
+                "foreignField": "_id",
+                "as": "cliente",
+            }
+        },
+        {"$unwind": "$cliente"},
+        {
+            "$project": {
+                "_id": 0,
+                "id_cliente": "$_id",
+                "nombre": "$cliente.nombre",
+                "apellido": "$cliente.apellido",
+                "cantidad_recetas": 1,
+            }
+        },
+    ]
+
+    cursor = await db["recetas"].aggregate(pipeline)
+    return await cursor.to_list()
+
+
+@router.get("/sin-ventas", summary="Q12 · Clientes sin ventas en el último año")
+async def clientes_sin_ventas_recientes(
+    db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
+) -> list[dict]:
+    """
+    **Propósito:** Listar los clientes que no registran ventas en el último
+    año.
+
+    **Valor de retorno:** Lista de clientes sin ventas en el período, con todos
+    sus datos.
+
+    **Motor utilizado:** MongoDB.
+    """
+    hoy = date.today()
+    dia = min(hoy.day, monthrange(hoy.year - 1, hoy.month)[1])
+    desde = datetime(hoy.year - 1, hoy.month, dia)
+    hasta = datetime.combine(hoy + timedelta(days=1), datetime.min.time())
+
+    pipeline = [
+        {
+            "$lookup": {
+                "from": "ventas",
+                "localField": "_id",
+                "foreignField": "id_cliente",
+                "pipeline": [
+                    {"$match": {"fecha": {"$gte": desde, "$lt": hasta}}},
+                    {"$limit": 1},
+                ],
+                "as": "ventas_del_periodo",
+            }
+        },
+        {"$match": {"ventas_del_periodo": []}},
+        {"$unset": "ventas_del_periodo"},
+    ]
+
+    cursor = await db["clientes"].aggregate(pipeline)
+    return await cursor.to_list()
+
+
+@router.get("/{id_cliente}/historial", summary="Q03 · Historial de un cliente")
+async def historial_cliente(
+    id_cliente: str,
+    db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
+) -> dict:
+    """
+    **Propósito:** Consultar el historial completo de ventas y recetas de un
+    cliente, ordenado cronológicamente de más antiguo a más reciente.
+
+    **Parámetros:** `id_cliente`, identificador del cliente a consultar.
+
+    **Valor de retorno:** Diccionario con el ID del cliente y su historial de
+    ventas y recetas ordenado por fecha. Cada evento incluye el tipo, la fecha
+    y sus datos completos.
+
+    **Motor utilizado:** MongoDB.
+    """
+    if await db["clientes"].find_one({"_id": id_cliente}, {"_id": 1}) is None:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+    pipeline = [
+        {"$match": {"id_cliente": id_cliente}},
+        {
+            "$project": {
+                "_id": 0,
+                "tipo": {"$literal": "venta"},
+                "fecha": "$fecha",
+                "datos": "$$ROOT",
+            }
+        },
+        {
+            "$unionWith": {
+                "coll": "recetas",
+                "pipeline": [
+                    {"$match": {"id_cliente": id_cliente}},
+                    {
+                        "$project": {
+                            "_id": 0,
+                            "tipo": {"$literal": "receta"},
+                            "fecha": "$fecha_emision",
+                            "datos": "$$ROOT",
+                        }
+                    },
+                ],
+            }
+        },
+        {"$sort": {"fecha": 1, "tipo": 1, "datos._id": 1}},
+    ]
+
+    cursor = await db["ventas"].aggregate(pipeline)
+    return {"id_cliente": id_cliente, "historial": await cursor.to_list()}
+
+
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Q13 · Alta de cliente")
+async def alta_cliente(
     datos: AltaClienteRequest,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> dict:
@@ -130,8 +269,8 @@ async def q13_alta_cliente(
     return formatear_cliente(documento)
 
 
-@router.patch("/q13/{id_cliente}")
-async def q13_modificar_cliente(
+@router.patch("/{id_cliente}", summary="Q13 · Modificación de cliente")
+async def modificar_cliente(
     id_cliente: str,
     datos: ModificarClienteRequest,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
@@ -190,8 +329,8 @@ async def q13_modificar_cliente(
     return formatear_cliente(actualizado)
 
 
-@router.delete("/q13/{id_cliente}")
-async def q13_baja_cliente(
+@router.delete("/{id_cliente}", summary="Q13 · Baja lógica de cliente")
+async def baja_cliente(
     id_cliente: str,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> dict:

@@ -5,12 +5,41 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from ..dependencies.mongo import get_mongo_database
 
-router = APIRouter()
+router = APIRouter(prefix="/productos", tags=["Productos"])
 
-# Top 5 productos más vendidos por unidades, solo en ventas completadas.
 
-@router.get("/q07")
-async def q07(
+@router.get("/activos", summary="Q01 · Productos activos con su proveedor")
+async def productos_activos(
+    db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
+) -> list[dict]:
+    """
+    **Propósito:** Listar los productos activos con todos los datos de su
+    proveedor.
+
+    **Valor de retorno:** Lista de productos activos. Cada producto incluye
+    los datos de su proveedor en el campo `proveedor`.
+
+    **Motor utilizado:** MongoDB.
+    """
+    pipeline = [
+        {"$match": {"activo": True}},
+        {
+            "$lookup": {
+                "from": "proveedores",
+                "localField": "id_proveedor",
+                "foreignField": "_id",
+                "as": "proveedor",
+            }
+        },
+        {"$unwind": "$proveedor"},
+    ]
+
+    cursor = await db["productos"].aggregate(pipeline)
+    return await cursor.to_list()
+
+
+@router.get("/mas-vendidos", summary="Q07 · Top 5 productos más vendidos")
+async def productos_mas_vendidos(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
     """

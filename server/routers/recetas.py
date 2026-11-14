@@ -6,15 +6,16 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from ..dependencies.mongo import get_mongo_database
 
-router = APIRouter()
+router = APIRouter(prefix="/recetas", tags=["Recetas"])
 
-@router.get("/q06")
-async def q06(
+
+@router.get("/dispensas-vencidas", summary="Q06 · Tratamientos prolongados con dispensa vencida")
+async def recetas_con_dispensa_vencida(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
     """
     **Propósito:** Listar las recetas de tratamiento prolongado en estado
-    vigente cuya próxima dispensa es anterior a hoy, junto con los datos del
+    'Vigente' cuya próxima dispensa es anterior a hoy, junto con los datos del
     cliente.
 
     **Valor de retorno:** Lista de recetas ordenada por próxima dispensa. Cada
@@ -23,7 +24,6 @@ async def q06(
 
     **Motor utilizado:** MongoDB.
     """
-
     hoy = datetime.combine(date.today(), datetime.min.time())
 
     pipeline = [

@@ -5,13 +5,11 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from ..dependencies.mongo import get_mongo_database
 
-router = APIRouter()
-
-# Clientes atendidos en una sucursal, a través del farmacéutico que registró la venta
+router = APIRouter(prefix="/sucursales", tags=["Sucursales"])
 
 
-@router.get("/q10")
-async def q10(
+@router.get("/{id_sucursal}/clientes", summary="Q10 · Clientes atendidos en una sucursal")
+async def clientes_de_sucursal(
     id_sucursal: str,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
