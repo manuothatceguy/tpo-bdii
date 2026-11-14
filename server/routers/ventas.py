@@ -1,11 +1,31 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 from pymongo.asynchronous.database import AsyncDatabase
+from redis.asyncio import Redis
 
 from ..dependencies.mongo import get_mongo_database
+from ..dependencies.redis import get_redis
+from ..servicios.errores import ErrorServicio
+from ..servicios.ventas import registrar_venta
 
 router = APIRouter(prefix="/ventas", tags=["Ventas"])
+
+MedioPago = Literal["Efectivo", "Débito", "Crédito", "Transferencia", "Obra social"]
+
+
+class ItemVentaRequest(BaseModel):
+    id_producto: str = Field(..., min_length=1)
+    cantidad: int = Field(..., gt=0)
+
+
+class RegistrarVentaRequest(BaseModel):
+    id_cliente: str = Field(..., min_length=1)
+    id_farmaceutico: str = Field(..., min_length=1)
+    id_receta: str | None = Field(default=None, min_length=1)
+    medio_pago: MedioPago
+    items: list[ItemVentaRequest] = Field(..., min_length=1)
 
 
 @router.get("/pendientes", summary="Q02 · Ventas pendientes con su farmacéutico")
@@ -102,3 +122,50 @@ async def ventas_libres_bajo_monto(
 
     cursor = await db["ventas"].aggregate(pipeline)
     return await cursor.to_list()
+
+
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Q14 · Registrar venta")
+async def registrar_nueva_venta(
+    datos: RegistrarVentaRequest,
+    db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
+    redis: Annotated[Redis, Depends(get_redis)],
+) -> dict:
+    """
+    **Propósito:** Registrar una nueva venta 'Completada' con sus ítems.
+    Valida que el cliente exista y esté activo, que el farmacéutico exista,
+    esté activo y pertenezca a una sucursal de tipo 'Farmacia', que los
+    productos existan y estén activos y, si hay productos bajo receta, que la
+    receta exista, esté vigente y sea del mismo cliente. Calcula el total con
+    los precios vigentes, descuenta el stock por FEFO en la sucursal del
+    farmacéutico y actualiza la receta. Las escrituras en Redis y MongoDB se
+    coordinan con una saga: si falla el registro en MongoDB, el stock
+    descontado se devuelve.
+
+    **Parámetros:** `datos`, cuerpo con el cliente, el farmacéutico, la receta
+    (opcional), el medio de pago y los ítems (producto y cantidad). Los
+    productos repetidos se suman en un solo ítem.
+
+    **Valor de retorno:** Venta creada con su cabecera, ítems y total, junto
+    con los lotes descontados y el ID del registro de saga.
+
+    **Motor utilizado:** MongoDB y Redis.
+    """
+    try:
+        resultado = await registrar_venta(
+            db,
+            redis,
+            datos.id_cliente,
+            datos.id_farmaceutico,
+            datos.id_receta,
+            datos.medio_pago,
+            [(item.id_producto, item.cantidad) for item in datos.items],
+        )
+    except ErrorServicio as error:
+        raise HTTPException(status_code=error.status_code, detail=error.detail)
+
+    venta = dict(resultado["venta"])
+    return {
+        "venta": {"id_venta": venta.pop("_id"), **venta},
+        "lotes_descontados": resultado["lotes_descontados"],
+        "id_saga": resultado["id_saga"],
+    }
