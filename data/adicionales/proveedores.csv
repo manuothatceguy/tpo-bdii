@@ -1,0 +1,11 @@
+id_proveedor,razon_social,cuit,tipo,ciudad,provincia,telefono,activo
+PRV006,Laboratorios del Plata S.A.,30-71456789-2,Laboratorio,Buenos Aires,Buenos Aires,1143006600,True
+PRV007,Cordobesa Pharma S.A.,30-71122334-6,Laboratorio,Córdoba,Córdoba,3514107700,True
+PRV008,Droguería Rosarina S.R.L.,30-70665544-8,Droguería,Rosario,Santa Fe,3414208800,True
+PRV009,Insumos Médicos del Centro S.A.,30-71998877-0,Droguería,Villa María,Córdoba,3534109900,True
+PRV010,NutriSur Laboratorios S.A.,30-71334455-4,Laboratorio,Bahía Blanca,Buenos Aires,2914401000,True
+PRV011,DermaPampa S.A.,30-71776655-2,Laboratorio,San Isidro,Buenos Aires,1147401100,True
+PRV012,Antibióticos del Litoral S.A.,30-70445566-9,Laboratorio,Santa Fe,Santa Fe,3424201200,False
+PRV013,Droguería Norte Bonaerense S.R.L.,30-71223344-1,Droguería,Pergamino,Buenos Aires,2477401300,True
+PRV014,Laboratorios Serranos S.A.,30-70556677-3,Laboratorio,Río Cuarto,Córdoba,3584101400,False
+PRV015,Distribuidora Litoral Salud S.A.,30-71667788-5,Droguería,Rafaela,Santa Fe,3492201500,True

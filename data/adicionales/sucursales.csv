@@ -1,0 +1,11 @@
+id_sucursal,nombre,tipo,direccion,ciudad,provincia,telefono,activo
+S006,Farmacia Caballito,Farmacia,Av. Rivadavia 5120,Buenos Aires,Buenos Aires,1148006006,True
+S007,Farmacia La Plata Centro,Farmacia,Calle 7 N° 980,La Plata,Buenos Aires,2214007007,True
+S008,Farmacia Fisherton,Farmacia,Av. Eva Perón 8150,Rosario,Santa Fe,3414008008,True
+S009,Farmacia Santa Fe Centro,Farmacia,San Martín 2450,Santa Fe,Santa Fe,3424009009,True
+S010,Farmacia Cerro de las Rosas,Farmacia,Av. Rafael Núñez 4300,Córdoba,Córdoba,3514010010,True
+S011,Farmacia Villa Carlos Paz,Farmacia,Av. San Martín 1200,Villa Carlos Paz,Córdoba,3541011011,True
+S012,Farmacia Quilmes,Farmacia,Rivadavia 350,Quilmes,Buenos Aires,1142012012,True
+S013,Farmacia Mar del Plata,Farmacia,Av. Colón 2780,Mar del Plata,Buenos Aires,2234013013,False
+S014,Droguería Córdoba,Droguería,Ruta 9 km 695,Córdoba,Córdoba,3514014014,True
+S015,Farmacia Tigre,Farmacia,Av. Cazón 1050,Tigre,Buenos Aires,1147015015,True

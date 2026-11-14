@@ -1,0 +1,11 @@
+id_producto,nombre,principio_activo,categoria,presentacion,condicion_venta,precio_unit,id_proveedor,activo
+PRD014,Clonazepam 2mg x30,Clonazepam,Ansiolítico,Comprimidos x30,Bajo receta archivada,6800,PRV006,True
+PRD015,Enalapril 10mg x30,Enalapril,Antihipertensivo,Comprimidos x30,Bajo receta,4300,PRV007,True
+PRD016,Cetirizina 10mg x10,Cetirizina,Antihistamínico,Comprimidos x10,Venta libre,2600,PRV008,True
+PRD017,Aspirina 100mg x28,Ácido acetilsalicílico,Antiagregante,Comprimidos x28,Venta libre,2100,PRV006,True
+PRD018,Insulina NPH 100UI/ml,Insulina humana NPH,Antidiabético,Vial 10 ml,Bajo receta,18500,PRV009,True
+PRD019,Azitromicina 500mg x3,Azitromicina,Antibiótico,Comprimidos x3,Bajo receta,7600,PRV007,True
+PRD020,Vitamina C 1g x10,Ácido ascórbico,Suplemento,Comprimidos efervescentes x10,Venta libre,3200,PRV010,True
+PRD021,Sertralina 50mg x30,Sertralina,Antidepresivo,Comprimidos x30,Bajo receta,9400,PRV008,True
+PRD022,Protector solar FPS50 200ml,Octocrileno,Dermocosmético,Emulsión 200 ml,Venta libre,15800,PRV011,True
+PRD023,Amoxicilina + Clavulánico 875mg x14,Amoxicilina + Ácido clavulánico,Antibiótico,Comprimidos x14,Bajo receta,12900,PRV012,False

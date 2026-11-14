@@ -1,0 +1,11 @@
+id_farmaceutico,nombre,apellido,matricula,cargo,id_sucursal,activo
+F008,Lorena,Castro,MN-18455,Director Técnico,S006,True
+F009,Pablo,Medina,MN-18502,Director Técnico,S007,True
+F010,Gabriela,Rojas,MN-18533,Director Técnico,S008,True
+F011,Esteban,Funes,MN-18571,Director Técnico,S009,True
+F012,Daniela,Arias,MN-18604,Director Técnico,S010,True
+F013,Nicolás,Peralta,MN-18639,Director Técnico,S011,True
+F014,Verónica,Suárez,MN-18677,Director Técnico,S012,True
+F015,Tomás,Aguirre,MN-18010,Director Técnico,S013,False
+F016,Micaela,Ferreyra,MN-18712,Director Técnico,S015,True
+F017,Leandro,Ponce,MN-18166,Farmacéutico,S001,False

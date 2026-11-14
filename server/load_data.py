@@ -44,11 +44,16 @@ def parse_value(field: str, value: str):
 
 
 def read_csv(name: str) -> list[dict]:
-    with (DATA_DIR / f"{name}.csv").open(encoding="utf-8", newline="") as file:
-        return [
-            {field: parse_value(field, value) for field, value in row.items()}
-            for row in csv.DictReader(file)
-        ]
+    filas = []
+    for ruta in (DATA_DIR / f"{name}.csv", DATA_DIR / "adicionales" / f"{name}.csv"):
+        if not ruta.exists():
+            continue
+        with ruta.open(encoding="utf-8", newline="") as file:
+            filas.extend(
+                {field: parse_value(field, value) for field, value in row.items()}
+                for row in csv.DictReader(file)
+            )
+    return filas
 
 
 def with_mongo_id(row: dict, id_field: str) -> dict:

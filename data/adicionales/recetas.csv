@@ -1,0 +1,11 @@
+id_receta,id_cliente,medico,matricula_medico,fecha_emision,tipo,dispensas_autorizadas,dispensas_realizadas,proxima_dispensa,estado
+RC010,C009,Dra. Andrea Quintana,MP-48812,2026-11-10,Simple,1,0,,Vigente
+RC011,C010,Dr. Hernán Bustos,MP-44107,2026-11-12,Simple,1,0,,Vigente
+RC012,C014,Dra. Cecilia Maldonado,MP-51420,2026-10-02,Tratamiento prolongado,3,1,2026-11-01,Vigente
+RC013,C015,Dr. Ignacio Rivas,MP-46633,2026-09-25,Tratamiento prolongado,3,2,2026-11-24,Vigente
+RC014,C016,Dr. Marcelo Godoy,MP-39025,2026-04-10,Simple,1,0,,Vencida
+RC015,C009,Dra. Andrea Quintana,MP-48812,2026-08-05,Simple,1,1,,Completada
+RC016,C013,Dr. Alejandro Vidal,MP-45210,2026-11-01,Simple,1,0,,Vigente
+RC017,C017,Dra. Mónica Salas,MP-50188,2026-11-03,Simple,1,1,,Completada
+RC018,C003,Dra. Silvia Montenegro,MP-39877,2026-09-28,Tratamiento prolongado,3,1,2026-10-28,Vigente
+RC019,C010,Dr. Hernán Bustos,MP-44107,2026-11-13,Archivada,1,0,,Vigente
