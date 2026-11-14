@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
 
 from redis.asyncio import Redis
 from redis.exceptions import WatchError
@@ -25,8 +25,8 @@ def clave_stock(id_sucursal: str, id_producto: str) -> str:
 
 
 async def _ids_lotes_vigentes(redis: Redis, id_sucursal: str, id_producto: str) -> list[str]:
-    ahora = datetime.now(timezone.utc).timestamp()
-    return await redis.zrange(clave_stock(id_sucursal, id_producto), ahora, "+inf", byscore=True)
+    hoy = datetime.combine(date.today(), time.min, tzinfo=timezone.utc).timestamp()
+    return await redis.zrange(clave_stock(id_sucursal, id_producto), hoy, "+inf", byscore=True)
 
 
 async def _leer_lotes(lector, ids_por_producto: dict[str, list[str]]) -> dict[str, list[dict]]:

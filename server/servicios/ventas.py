@@ -37,6 +37,8 @@ async def _validar(db: AsyncDatabase, id_cliente: str, id_farmaceutico: str, id_
     sucursal = await db["sucursales"].find_one({"_id": farmaceutico["id_sucursal"]})
     if sucursal is None:
         raise NoEncontrado(f"Sucursal {farmaceutico['id_sucursal']} no encontrada")
+    if not sucursal["activo"]:
+        raise ReglaDeNegocio(f"La sucursal {sucursal['_id']} está dada de baja")
     if sucursal["tipo"] != "Farmacia":
         raise ReglaDeNegocio(
             f"El farmacéutico {id_farmaceutico} pertenece a {sucursal['_id']} ({sucursal['tipo']}), "

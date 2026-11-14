@@ -141,7 +141,12 @@ async def clientes_sin_ventas_recientes(
                 "localField": "_id",
                 "foreignField": "id_cliente",
                 "pipeline": [
-                    {"$match": {"fecha": {"$gte": desde, "$lt": hasta}}},
+                    {
+                        "$match": {
+                            "fecha": {"$gte": desde, "$lt": hasta},
+                            "estado": {"$ne": "Anulada"},
+                        }
+                    },
                     {"$limit": 1},
                 ],
                 "as": "ventas_del_periodo",
