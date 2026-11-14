@@ -1,11 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 from redis.asyncio import Redis
 
 from ..dependencies.mongo import get_mongo_database
 from ..dependencies.redis import get_redis
+from ..servicios.errores import ErrorServicio
+from ..servicios.ventas import descontar_stock_de_venta
 
 router = APIRouter(prefix="/stock", tags=["Stock"])
 
@@ -125,3 +127,28 @@ async def lotes_con_stock_bajo(
 
     resultado.sort(key=lambda item: (item["unidades"], item["id_lote"]))
     return resultado
+
+
+@router.post("/ventas/{id_venta}/descuento", summary="Q15 · Descontar stock de una venta")
+async def descontar_lotes_de_venta(
+    id_venta: str,
+    db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
+    redis: Annotated[Redis, Depends(get_redis)],
+) -> dict:
+    """
+    **Propósito:** Descontar todos los ítems de una venta completada según
+    FEFO, omitiendo lotes vencidos. Si falta stock vigente para algún ítem,
+    rechaza la operación completa. Repetir la consulta devuelve el descuento
+    existente.
+
+    **Parámetros:** `id_venta`, identificador de la venta registrada.
+
+    **Valor de retorno:** ID de venta, ID de sucursal y lotes descontados
+    con las unidades consumidas y restantes.
+
+    **Motor utilizado:** MongoDB y Redis.
+    """
+    try:
+        return await descontar_stock_de_venta(db, redis, id_venta)
+    except ErrorServicio as error:
+        raise HTTPException(status_code=error.status_code, detail=error.detail)

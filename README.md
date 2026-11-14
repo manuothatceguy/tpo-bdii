@@ -26,7 +26,7 @@ MongoDB guarda todas las entidades de negocio. Corre como replica set (`rs0`) po
 │   ├── dependencies/  # clientes de MongoDB y Redis
 │   ├── routers/       # endpoints agrupados por entidad
 │   └── servicios/     # lógica de negocio, descuento de stock y sagas
-└── consultas/         # un script de consola por consulta (q01.py ... q14.py)
+└── consultas/         # un script de consola por consulta (q01.py ... q15.py)
 ```
 
 ## Levantar el entorno
@@ -83,7 +83,7 @@ Con el entorno levantado, la documentación interactiva (Swagger) está en `http
 | Q12 | `GET /clientes/sin-ventas` | Clientes sin ventas en el último año |
 | Q13 | `POST /clientes`<br>`PATCH /clientes/{id_cliente}`<br>`DELETE /clientes/{id_cliente}` | Alta, modificación y baja lógica de clientes |
 | Q14 | `POST /ventas` | Registro de una venta completada (cabecera e ítems), con descuento de stock en Redis coordinado por saga |
-| Q15 | Pendiente | Pendiente |
+| Q15 | `POST /stock/ventas/{id_venta}/descuento` | Descuento atómico de stock por FEFO para una venta registrada |
 
 Las consultas que dependen de la fecha ("últimos 60 días", "mes actual", "último año") usan la fecha del sistema.
 
@@ -144,7 +144,15 @@ Antes de escribir, la API valida contra MongoDB el cliente, el farmacéutico, lo
 
 Las ventas modifican el stock y las recetas. Para volver al estado inicial, se vuelve a ejecutar `server.load_data`.
 
-Q15 está pendiente.
+Q15 recibe el ID de una venta completada. Usa la sucursal registrada en la
+venta y consume primero los lotes vigentes de vencimiento más próximo.
+Si falta stock para algún producto, responde `409` y deja todos los lotes
+intactos. Si q14 o un llamado anterior a q15 ya descontó la venta, devuelve
+el resultado de ese descuento.
+
+```sh
+uv run --project server python -m consultas.q15 ID_VENTA
+```
 
 ## Variables de entorno
 

@@ -213,3 +213,46 @@ async def registrar_venta(db: AsyncDatabase, redis: Redis, id_cliente: str, id_f
         raise FalloRegistro("No se pudo registrar la venta, el stock descontado fue devuelto") from error
 
     return {"venta": venta, "lotes_descontados": lotes, "id_saga": str(id_saga)}
+
+
+async def descontar_stock_de_venta(db: AsyncDatabase, redis: Redis, id_venta: str) -> dict:
+    """
+    **Propósito:** Aplicar FEFO a los ítems de una venta completada ya
+    registrada. Usa la sucursal guardada en la venta al momento del registro
+    y omite lotes vencidos. Si un producto no alcanza, no modifica ningún
+    lote. Si el descuento ya se aplicó mediante q14 o q15, devuelve ese
+    resultado.
+
+    **Parámetros:** `db`, base de MongoDB; `redis`, cliente de Redis;
+    `id_venta`, identificador de la venta registrada.
+
+    **Valor de retorno:** ID de venta, ID de sucursal y lotes descontados.
+
+    **Motor utilizado:** MongoDB y Redis.
+    """
+    venta = await db["ventas"].find_one({"_id": id_venta})
+    if venta is None:
+        raise NoEncontrado(f"Venta {id_venta} no encontrada")
+    if venta["estado"] != "Completada":
+        raise ReglaDeNegocio(f"La venta {id_venta} no está completada")
+
+    id_sucursal = venta["id_sucursal"]
+    saga_completada = await db["sagas"].find_one(
+        {"id_venta": id_venta, "estado": saga.COMPLETADO},
+        {"lotes_descontados": 1},
+    )
+    if saga_completada is not None:
+        lotes = saga_completada["lotes_descontados"]
+    else:
+        cantidades: dict[str, int] = {}
+        for item in venta["items"]:
+            id_producto = item["id_producto"]
+            cantidad = item["cantidad"]
+            if type(cantidad) is not int or cantidad <= 0:
+                raise ReglaDeNegocio(f"Cantidad inválida para {id_producto} en la venta {id_venta}")
+            cantidades[id_producto] = cantidades.get(id_producto, 0) + cantidad
+        if not cantidades:
+            raise ReglaDeNegocio(f"La venta {id_venta} no tiene ítems")
+        lotes = await descontar_stock(redis, id_sucursal, cantidades, id_venta=id_venta)
+
+    return {"id_venta": id_venta, "id_sucursal": id_sucursal, "lotes_descontados": lotes}

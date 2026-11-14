@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime, time, timezone
 
 from redis.asyncio import Redis
@@ -24,9 +25,9 @@ def clave_stock(id_sucursal: str, id_producto: str) -> str:
     return f"stock:{id_sucursal}:{id_producto}"
 
 
-async def _ids_lotes_vigentes(redis: Redis, id_sucursal: str, id_producto: str) -> list[str]:
+async def _ids_lotes_vigentes(lector, id_sucursal: str, id_producto: str) -> list[str]:
     hoy = datetime.combine(date.today(), time.min, tzinfo=timezone.utc).timestamp()
-    return await redis.zrange(clave_stock(id_sucursal, id_producto), hoy, "+inf", byscore=True)
+    return await lector.zrange(clave_stock(id_sucursal, id_producto), hoy, "+inf", byscore=True)
 
 
 async def _leer_lotes(lector, ids_por_producto: dict[str, list[str]]) -> dict[str, list[dict]]:
@@ -99,7 +100,13 @@ async def planificar_descuento(redis: Redis, id_sucursal: str, cantidades: dict[
     return _repartir_fefo(id_sucursal, cantidades, lotes)
 
 
-async def descontar_stock(redis: Redis, id_sucursal: str, cantidades: dict[str, int]) -> list[dict]:
+async def descontar_stock(
+    redis: Redis,
+    id_sucursal: str,
+    cantidades: dict[str, int],
+    *,
+    id_venta: str | None = None,
+) -> list[dict]:
     """
     **Propósito:** Descontar las unidades pedidas de los lotes vigentes de la
     sucursal según FEFO, como una única operación atómica para todos los
@@ -107,7 +114,9 @@ async def descontar_stock(redis: Redis, id_sucursal: str, cantidades: dict[str, 
     reintenta hasta `MAX_INTENTOS` veces si otro proceso modifica un lote.
 
     **Parámetros:** `redis`, cliente de Redis; `id_sucursal`, sucursal de los
-    lotes; `cantidades`, unidades a descontar por ID de producto.
+    lotes; `cantidades`, unidades a descontar por ID de producto;
+    `id_venta`, venta ya registrada en q15. Su resultado se guarda en la
+    misma transacción que el descuento para evitar repetirlo.
 
     **Valor de retorno:** Lista de lotes descontados con la cantidad sacada de
     cada uno. Lanza `StockInsuficiente` sin tocar ningún lote si algún producto
@@ -115,20 +124,39 @@ async def descontar_stock(redis: Redis, id_sucursal: str, cantidades: dict[str, 
 
     **Motor utilizado:** Redis.
     """
+    claves_stock = [clave_stock(id_sucursal, id_producto) for id_producto in cantidades]
+    clave_descuento = f"saga:descuento:{id_venta}" if id_venta is not None else None
     for _ in range(MAX_INTENTOS):
-        ids_por_producto = {
-            id_producto: await _ids_lotes_vigentes(redis, id_sucursal, id_producto)
-            for id_producto in cantidades
-        }
-        claves = [clave_lote(id_lote) for ids in ids_por_producto.values() for id_lote in ids]
         async with redis.pipeline(transaction=True) as pipe:
-            if claves:
-                await pipe.watch(*claves)
+            if clave_descuento is not None:
+                await pipe.watch(clave_descuento)
+                resultado = await pipe.get(clave_descuento)
+                if resultado is not None:
+                    return json.loads(resultado)
+
+            if claves_stock:
+                await pipe.watch(*claves_stock)
+            ids_por_producto = {
+                id_producto: await _ids_lotes_vigentes(pipe, id_sucursal, id_producto)
+                for id_producto in cantidades
+            }
+            claves_lotes = [clave_lote(id_lote) for ids in ids_por_producto.values() for id_lote in ids]
+            if claves_lotes:
+                await pipe.watch(*claves_lotes)
             lotes = await _leer_lotes(pipe, ids_por_producto)
-            plan = _repartir_fefo(id_sucursal, cantidades, lotes)
+            try:
+                plan = _repartir_fefo(id_sucursal, cantidades, lotes)
+            except StockInsuficiente:
+                if clave_descuento is not None:
+                    resultado = await pipe.get(clave_descuento)
+                    if resultado is not None:
+                        return json.loads(resultado)
+                raise
             pipe.multi()
             for lote in plan:
                 pipe.hincrby(clave_lote(lote["id_lote"]), "unidades", -lote["cantidad"])
+            if clave_descuento is not None:
+                pipe.set(clave_descuento, json.dumps(plan))
             try:
                 await pipe.execute()
             except WatchError:
