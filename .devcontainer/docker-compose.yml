@@ -2,6 +2,8 @@ services:
   app:
     image: mcr.microsoft.com/devcontainers/python:3.14
     command: sleep infinity
+    ports:
+      - "8000:8000"
     volumes:
       - ..:/workspaces/tpo-bdii:cached
     environment:
@@ -19,7 +21,7 @@ services:
     user: vscode
     network_mode: service:app
     working_dir: /workspaces/tpo-bdii
-    command: sh -c "python -m pip install uv && python -m uv run --frozen --directory server fastapi dev main.py"
+    command: sh -c "python -m pip install uv && python -m uv run --frozen --directory server fastapi dev main.py --host 0.0.0.0"
     restart: unless-stopped
     volumes:
       - ..:/workspaces/tpo-bdii:cached

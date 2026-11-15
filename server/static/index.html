@@ -1,0 +1,3218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FarmaRed S.A. - Windows XP Professional (Grupo 8)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Tahoma", "MS Sans Serif", Geneva, sans-serif;
+      font-size: 12px;
+      color: #000;
+    }
+
+    /* ==================== ESCRITORIO WINDOWS XP (BLISS + TEMAS) ==================== */
+    .xp-desktop {
+      position: relative;
+      width: 100vw;
+      height: calc(100vh - 30px);
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 140% 55% at 25% 105%, #4fa827 0%, #3d8e19 55%, transparent 56%),
+        radial-gradient(ellipse 130% 62% at 85% 110%, #68c138 0%, #489d20 62%, transparent 63%),
+        radial-gradient(ellipse 90% 25% at 65% 28%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 70%),
+        radial-gradient(ellipse 70% 20% at 25% 20%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0) 70%),
+        linear-gradient(180deg, #1f6ed4 0%, #4ca1f5 52%, #8ec8ff 72%, #5cb332 73%);
+      transition: background 0.4s ease;
+    }
+
+    /* Iconos del Escritorio en cuadrícula vertical estilo XP */
+    .desktop-icons {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 8px 10px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .desktop-icon {
+      width: 82px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000, 0 0 3px #000;
+      pointer-events: auto;
+      text-decoration: none;
+    }
+
+    .desktop-icon:hover {
+      background: rgba(11, 97, 255, 0.34);
+      border-color: rgba(180, 215, 255, 0.7);
+    }
+
+    .desktop-icon.active {
+      background: rgba(11, 97, 255, 0.58);
+      border: 1px dotted #fff;
+    }
+
+    .desktop-icon .icon-glyph {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 4px;
+      filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.45));
+    }
+
+    .desktop-icon span {
+      font-size: 11px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    /* ==================== VENTANAS MULTI-INSTANCIA LUNA XP ==================== */
+    .xp-window {
+      position: absolute;
+      display: none;
+      flex-direction: column;
+      background: #ece9d8;
+      border: 3px solid #7697e2;
+      border-top-width: 0;
+      border-radius: 8px 8px 4px 4px;
+      box-shadow: 3px 5px 18px rgba(0, 0, 0, 0.48);
+      overflow: hidden;
+      resize: both;
+      min-width: 300px;
+      min-height: 210px;
+    }
+
+    .xp-window.open {
+      display: flex;
+    }
+
+    .xp-window.focused {
+      border-color: #0055ea;
+      box-shadow: 4px 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .xp-window.maximized {
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 0 !important;
+      resize: none !important;
+    }
+
+    .xp-titlebar {
+      height: 30px;
+      flex-shrink: 0;
+      background: linear-gradient(
+        180deg,
+        #9db9eb 0%,
+        #7a99df 15%,
+        #7796dc 65%,
+        #6684cf 100%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 7px 0 9px;
+      color: #e4ecff;
+      font-weight: bold;
+      font-size: 12.5px;
+      text-shadow: 1px 1px 1px rgba(0, 20, 70, 0.45);
+      border-radius: 6px 6px 0 0;
+      cursor: grab;
+    }
+
+    .xp-window.focused .xp-titlebar {
+      background: linear-gradient(
+        180deg,
+        #0997ff 0%,
+        #0053ee 8%,
+        #0050ee 40%,
+        #06f 88%,
+        #003dd9 95%,
+        #002bb5 100%
+      );
+      color: #fff;
+      text-shadow: 1px 1px 1px #001a66;
+    }
+
+    .xp-window.maximized .xp-titlebar {
+      border-radius: 0;
+      cursor: default;
+    }
+
+    .xp-titlebar:active {
+      cursor: grabbing;
+    }
+
+    .xp-titlebar-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .xp-titlebar-left span:last-child {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .xp-titlebar-controls {
+      display: flex;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .xp-win-btn {
+      width: 21px;
+      height: 21px;
+      border: 1px solid #fff;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 11px;
+      color: #fff;
+      cursor: pointer;
+      background: linear-gradient(180deg, #4993ff 0%, #0054e3 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+      opacity: 0.78;
+    }
+
+    .xp-window.focused .xp-win-btn {
+      opacity: 1;
+    }
+
+    .xp-win-btn.close {
+      background: linear-gradient(180deg, #f37d68 0%, #e04226 55%, #b92107 100%);
+    }
+
+    .xp-win-btn:hover {
+      filter: brightness(1.14);
+    }
+
+    /* ==================== CONTENIDOS FARMARED BACKOFFICE ==================== */
+    .xp-menubar {
+      background: #ece9d8;
+      border-bottom: 1px solid #aca899;
+      padding: 3px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .xp-menubar-items {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .xp-menubar-items span, .xp-menubar-items a {
+      color: #000;
+      text-decoration: none;
+      padding: 2px 5px;
+      cursor: pointer;
+    }
+
+    .xp-menubar-items span:hover, .xp-menubar-items a:hover {
+      background: #316ac5;
+      color: #fff;
+    }
+
+    .xp-badge-motors {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .motor-pill {
+      padding: 1px 7px;
+      border-radius: 2px;
+      font-weight: bold;
+      font-size: 10px;
+      border: 1px solid #7f9db9;
+      background: #fff;
+    }
+
+    .motor-pill.mongo { color: #0f6b2f; border-color: #48965d; background: #eaf7ed; }
+    .motor-pill.redis { color: #b51d18; border-color: #cf6560; background: #fdeceb; }
+
+    .xp-addressbar {
+      background: #ece9d8;
+      border-bottom: 1px solid #aca899;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .xp-addressbar label {
+      color: #444;
+    }
+
+    .xp-address-input {
+      flex: 1;
+      background: #fff;
+      border: 1px solid #7f9db9;
+      padding: 3px 6px;
+      font-family: "Lucida Console", Consolas, monospace;
+      font-size: 11px;
+      color: #003399;
+      user-select: text;
+    }
+
+    .xp-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .xp-sidebar {
+      width: 225px;
+      background: linear-gradient(180deg, #7ba2e7 0%, #6375d6 100%);
+      padding: 9px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      border-right: 1px solid #003c74;
+      flex-shrink: 0;
+    }
+
+    .xp-taskbox {
+      background: #d6dff7;
+      border: 1px solid #fff;
+      border-radius: 4px 4px 0 0;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .xp-taskbox-header {
+      background: linear-gradient(90deg, #fff 0%, #c6d3f7 100%);
+      color: #215dc6;
+      font-weight: bold;
+      padding: 5px 8px;
+      font-size: 11px;
+      border-bottom: 1px solid #fff;
+    }
+
+    .xp-taskbox-list {
+      padding: 4px 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .xp-q-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 6px;
+      color: #215dc6;
+      font-size: 11px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .xp-q-link:hover {
+      color: #428eff;
+      text-decoration: underline;
+      background: rgba(255,255,255,0.55);
+    }
+
+    .xp-q-link.active {
+      background: #316ac5;
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .xp-q-code {
+      font-weight: bold;
+      min-width: 26px;
+    }
+
+    .xp-workspace {
+      flex: 1;
+      padding: 10px 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      background: #ece9d8;
+      user-select: text;
+      min-width: 0;
+    }
+
+    .xp-fieldset {
+      border: 1px solid #d0d0bf;
+      border-radius: 4px;
+      padding: 9px 11px;
+      background: #f5f4ea;
+      box-shadow: inset 1px 1px 0 #fff;
+    }
+
+    .xp-fieldset legend {
+      color: #0046d5;
+      font-weight: bold;
+      padding: 0 5px;
+      font-size: 12px;
+    }
+
+    .query-header-title {
+      font-size: 14.5px;
+      font-weight: bold;
+      color: #003399;
+      margin: 0 0 4px 0;
+    }
+
+    .query-desc {
+      margin: 0;
+      color: #333;
+      line-height: 1.38;
+    }
+
+    .xp-form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-end;
+      margin-top: 8px;
+    }
+
+    .xp-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .xp-field label {
+      font-size: 11px;
+      color: #222;
+      font-weight: bold;
+    }
+
+    .xp-input, .xp-select {
+      padding: 4px 6px;
+      border: 1px solid #7f9db9;
+      background: #fff;
+      font-family: "Tahoma", sans-serif;
+      font-size: 12px;
+      min-width: 115px;
+      user-select: text;
+    }
+
+    .xp-input:focus, .xp-select:focus {
+      outline: 1px solid #0054e3;
+    }
+
+    .xp-btn {
+      padding: 4px 11px;
+      font-family: "Tahoma", sans-serif;
+      font-size: 11px;
+      color: #000;
+      background: linear-gradient(180deg, #fff 0%, #ece9d8 85%, #d6d2c2 100%);
+      border: 1px solid #003c74;
+      border-radius: 3px;
+      cursor: pointer;
+      box-shadow: inset 0 0 1px #fff;
+    }
+
+    .xp-btn:hover {
+      box-shadow: inset 0 0 0 1px #f8b330;
+    }
+
+    .xp-btn:active {
+      background: #d6d2c2;
+    }
+
+    .xp-btn.primary {
+      font-weight: bold;
+      box-shadow: inset 0 0 0 1px #6b9be8;
+    }
+
+    .xp-btn.danger {
+      color: #8b0000;
+    }
+
+    .xp-tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid #919b9c;
+      padding-left: 4px;
+    }
+
+    .xp-tab {
+      padding: 5px 12px;
+      background: linear-gradient(180deg, #fcfcfe 0%, #e4e3d8 100%);
+      border: 1px solid #919b9c;
+      border-bottom: none;
+      border-radius: 3px 3px 0 0;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .xp-tab.active {
+      background: #fff;
+      border-top: 2px solid #e68b2c;
+      font-weight: bold;
+      margin-bottom: -1px;
+      padding-bottom: 6px;
+    }
+
+    .xp-listview-container {
+      flex: 1;
+      background: #fff;
+      border: 1px solid #7f9db9;
+      overflow: auto;
+      padding: 8px;
+      min-height: 150px;
+    }
+
+    .xp-section-subtitle {
+      font-weight: bold;
+      color: #003399;
+      margin: 10px 0 4px 0;
+      font-size: 12px;
+    }
+
+    .xp-section-subtitle:first-child {
+      margin-top: 0;
+    }
+
+    table.xp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+
+    table.xp-table th {
+      background: linear-gradient(180deg, #fff 0%, #ebeadb 85%, #d8d5c4 100%);
+      border: 1px solid #aca899;
+      padding: 4px 7px;
+      text-align: left;
+      font-weight: normal;
+      color: #000;
+      position: sticky;
+      top: 0;
+    }
+
+    table.xp-table td {
+      border-bottom: 1px solid #ededed;
+      border-right: 1px solid #f3f3f3;
+      padding: 4px 7px;
+      color: #111;
+      user-select: text;
+    }
+
+    table.xp-table tr:nth-child(even) td {
+      background: #f8f9fc;
+    }
+
+    table.xp-table tr:hover td {
+      background: #316ac5;
+      color: #fff;
+    }
+
+    .xp-json {
+      margin: 0;
+      font-family: "Lucida Console", Consolas, monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      color: #102a43;
+      user-select: text;
+    }
+
+    .xp-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 11px;
+      border: 1px solid #919b9c;
+      background: #ece9d8;
+      box-shadow: inset 1px 1px 0 #fff;
+      user-select: text;
+    }
+
+    .xp-alert.error {
+      border-color: #c00000;
+      background: #fff5f5;
+    }
+
+    .xp-alert.success {
+      border-color: #2e7d32;
+      background: #f1f8f2;
+    }
+
+    .xp-alert-icon {
+      font-size: 20px;
+    }
+
+    .xp-statusbar {
+      height: 22px;
+      flex-shrink: 0;
+      background: #ece9d8;
+      border-top: 1px solid #aca899;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      font-size: 11px;
+      color: #333;
+    }
+
+    .items-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .item-chip {
+      background: #e3ecfa;
+      border: 1px solid #7f9db9;
+      padding: 2px 7px;
+      border-radius: 2px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .item-chip button {
+      border: none;
+      background: transparent;
+      color: #b00;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    /* ==================== VISOR DE FOTOS XP ==================== */
+    .visor-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #eef3fa;
+      min-height: 0;
+    }
+
+    .visor-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      overflow: hidden;
+      min-height: 0;
+      background: radial-gradient(circle, #ffffff 0%, #dce6f5 100%);
+    }
+
+    .visor-frame {
+      background: #fff;
+      padding: 8px;
+      border: 1px solid #9db4d4;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+      transition: transform 0.2s ease;
+      max-width: 100%;
+      max-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .visor-frame svg {
+      width: 390px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid #ccd6e4;
+    }
+
+    .visor-caption {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #21407a;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .visor-thumbs {
+      display: flex;
+      gap: 6px;
+      padding: 6px 10px;
+      background: #e2ebf7;
+      border-top: 1px solid #b8cbe4;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    .visor-thumb {
+      padding: 3px 8px;
+      border: 1px solid #96b0d6;
+      background: #fff;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .visor-thumb.active {
+      background: #316ac5;
+      color: #fff;
+      border-color: #0e387a;
+      font-weight: bold;
+    }
+
+    .visor-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 6px 10px;
+      background: linear-gradient(180deg, #f9fbfe 0%, #dde6f5 100%);
+      border-top: 1px solid #b5c6df;
+      flex-shrink: 0;
+    }
+
+    /* ==================== FARMASNAKE.EXE ==================== */
+    .snake-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      background: #ece9d8;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .snake-hud {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #d4d0c8;
+      border: 2px inset #fff;
+      padding: 6px 10px;
+      gap: 8px;
+    }
+
+    .lcd-counter {
+      background: #000;
+      color: #00ff66;
+      font-family: "Lucida Console", Consolas, monospace;
+      font-size: 15px;
+      font-weight: bold;
+      padding: 2px 8px;
+      border: 2px inset #808080;
+      letter-spacing: 1px;
+    }
+
+    .lcd-counter.red {
+      color: #ff2a2a;
+    }
+
+    #snake-canvas {
+      background: #102418;
+      border: 3px inset #919b9c;
+      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5);
+      display: block;
+    }
+
+    .snake-controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: 10px;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 28px);
+      grid-template-rows: repeat(2, 26px);
+      gap: 2px;
+    }
+
+    .dpad button {
+      padding: 0;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    /* ==================== BUSCAMINAS XP (FARMAMINAS) ==================== */
+    .mines-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      background: #c0c0c0;
+      gap: 10px;
+      overflow: auto;
+    }
+
+    .mines-panel {
+      background: #c0c0c0;
+      border: 3px outset #fff;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mines-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 2px inset #fff;
+      padding: 5px 8px;
+      background: #c0c0c0;
+    }
+
+    .mines-face {
+      width: 30px;
+      height: 30px;
+      font-size: 18px;
+      background: #c0c0c0;
+      border: 2px outset #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .mines-face:active {
+      border-style: inset;
+    }
+
+    .mines-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 25px);
+      grid-template-rows: repeat(9, 25px);
+      border: 3px inset #fff;
+      background: #808080;
+    }
+
+    .mine-cell {
+      width: 25px;
+      height: 25px;
+      background: #c0c0c0;
+      border: 2.5px outset #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .mine-cell.revealed {
+      border: 1px solid #999;
+      background: #d4d4d4;
+      cursor: default;
+    }
+
+    .mine-cell.boom {
+      background: #ff4c4c;
+    }
+
+    /* ==================== BLOC DE NOTAS & CMD ==================== */
+    .notepad-textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 10px;
+      resize: none;
+      font-family: "Lucida Console", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      background: #fff;
+      color: #000;
+      user-select: text;
+    }
+
+    .cmd-wrap {
+      flex: 1;
+      background: #0c0c0c;
+      color: #cccccc;
+      font-family: "Lucida Console", Consolas, monospace;
+      font-size: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      user-select: text;
+    }
+
+    .cmd-output {
+      white-space: pre-wrap;
+      line-height: 1.4;
+      user-select: text;
+    }
+
+    .cmd-input-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .cmd-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      user-select: text;
+    }
+
+    /* ==================== PAPELERA DE RECICLAJE ==================== */
+    .trash-list {
+      flex: 1;
+      background: #fff;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    .trash-item {
+      width: 112px;
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 4px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .trash-item:hover {
+      background: #e7f0fd;
+      border-color: #9dc2f5;
+    }
+
+    /* ==================== BARRA DE TAREAS & MENÚ INICIO ==================== */
+    .xp-taskbar {
+      height: 30px;
+      background: linear-gradient(
+        180deg,
+        #3168d5 0%,
+        #1941a5 10%,
+        #2257d5 50%,
+        #1941a5 92%,
+        #122e7a 100%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 9000;
+    }
+
+    .xp-start-btn {
+      height: 100%;
+      padding: 0 16px 0 10px;
+      background: linear-gradient(
+        180deg,
+        #68b847 0%,
+        #39951e 15%,
+        #378f1d 60%,
+        #266912 100%
+      );
+      border: none;
+      border-radius: 0 12px 12px 0;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.6), 2px 0 4px rgba(0,0,0,0.4);
+      color: #fff;
+      font-family: "Franklin Gothic Medium", "Tahoma", sans-serif;
+      font-size: 15px;
+      font-style: italic;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #0b3300;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .xp-start-btn:hover {
+      filter: brightness(1.08);
+    }
+
+    .xp-taskbar-tabs {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      gap: 4px;
+      overflow-x: auto;
+      min-width: 0;
+    }
+
+    .xp-taskbar-item {
+      background: linear-gradient(180deg, #3c81f3 0%, #245edb 100%);
+      border: 1px solid #1341a8;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 3px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      max-width: 185px;
+      min-width: 90px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      flex-shrink: 1;
+    }
+
+    .xp-taskbar-item:hover {
+      filter: brightness(1.1);
+    }
+
+    .xp-taskbar-item.active {
+      background: linear-gradient(180deg, #1644a3 0%, #1c50b8 100%);
+      border-color: #0b245e;
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,0.55);
+      font-weight: bold;
+    }
+
+    .xp-taskbar-item span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .xp-systray {
+      height: 100%;
+      background: linear-gradient(180deg, #1691e8 0%, #0d7bd5 50%, #0c62b3 100%);
+      border-left: 1px solid #0b498c;
+      padding: 0 12px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    /* Menú Inicio emergente */
+    .xp-start-menu {
+      position: fixed;
+      bottom: 30px;
+      left: 0;
+      width: 365px;
+      background: #fff;
+      border: 2px solid #0054e3;
+      border-radius: 6px 6px 0 0;
+      box-shadow: 4px 4px 16px rgba(0,0,0,0.55);
+      z-index: 9500;
+      display: none;
+      overflow: hidden;
+    }
+
+    .xp-start-menu.open {
+      display: block;
+    }
+
+    .xp-start-header {
+      background: linear-gradient(180deg, #1565df 0%, #2b7ae8 100%);
+      color: #fff;
+      padding: 8px 10px;
+      font-weight: bold;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid #e68b2c;
+    }
+
+    .xp-start-avatar {
+      width: 36px;
+      height: 36px;
+      background: #d6dff7;
+      border: 2px solid #fff;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .xp-start-columns {
+      display: flex;
+    }
+
+    .xp-start-left {
+      flex: 1;
+      padding: 8px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .xp-start-right {
+      width: 152px;
+      padding: 8px;
+      background: #d3e5fa;
+      border-left: 1px solid #95bdee;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 11px;
+      color: #0a246a;
+    }
+
+    .xp-start-item {
+      padding: 5px 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      border-radius: 3px;
+      color: #111;
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    .xp-start-item:hover {
+      background: #316ac5;
+      color: #fff;
+    }
+
+    .xp-start-sep {
+      border: 0;
+      border-top: 1px solid #d5d5d5;
+      margin: 4px 0;
+    }
+
+    .xp-start-footer {
+      background: linear-gradient(180deg, #3c7be2 0%, #1d57c1 100%);
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      font-size: 11px;
+    }
+
+    /* Globito de notificación XP (Balloon Tip) */
+    .xp-balloon {
+      position: fixed;
+      right: 12px;
+      bottom: 40px;
+      max-width: 280px;
+      background: #ffffe1;
+      border: 1px solid #000;
+      border-radius: 6px;
+      padding: 9px 12px;
+      box-shadow: 3px 3px 8px rgba(0,0,0,0.35);
+      z-index: 9400;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .xp-balloon-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      color: #003399;
+    }
+
+    .xp-balloon-close {
+      cursor: pointer;
+      border: 1px solid #bbb;
+      background: #f5f5d0;
+      border-radius: 2px;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      line-height: 14px;
+      text-align: center;
+    }
+
+    /* Pantalla Azul Easter Egg (BSOD) */
+    .xp-bsod {
+      position: fixed;
+      inset: 0;
+      background: #0000aa;
+      color: #fff;
+      font-family: "Lucida Console", Consolas, monospace;
+      font-size: 15px;
+      padding: 48px 56px;
+      z-index: 99999;
+      display: none;
+      line-height: 1.6;
+      cursor: pointer;
+    }
+
+    .xp-bsod.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="xp-desktop" id="xp-desktop" onclick="clickEscritorio(event)">
+    <!-- Íconos del Escritorio en 2 columnas ordenadas -->
+    <div class="desktop-icons" id="desktop-icons">
+      <!-- Columna 1: FarmaRed Backoffice -->
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirFarmaEn('q01'))">
+        <div class="icon-glyph">🏥</div>
+        <span>FarmaRed Backoffice</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirFarmaEn('q08'))">
+        <div class="icon-glyph">📦</div>
+        <span>Stock Bajo (Q08)</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirFarmaEn('q13'))">
+        <div class="icon-glyph">👥</div>
+        <span>ABM Clientes (Q13)</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirFarmaEn('q14'))">
+        <div class="icon-glyph">🛒</div>
+        <span>Venta Saga (Q14)</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirFarmaEn('q15'))">
+        <div class="icon-glyph">⚡</div>
+        <span>Stock FEFO (Q15)</span>
+      </div>
+      <a class="desktop-icon" href="/docs" target="_blank">
+        <div class="icon-glyph">🌐</div>
+        <span>Swagger API (/docs)</span>
+      </a>
+
+      <!-- Columna 2: Apps Divertidas, Fotos y Juegos -->
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirVentana('win-visor'))">
+        <div class="icon-glyph">🖼️</div>
+        <span>Mis Imágenes</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirVentana('win-snake'))">
+        <div class="icon-glyph">🐍</div>
+        <span>FarmaSnake.exe</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirVentana('win-minas'))">
+        <div class="icon-glyph">💣</div>
+        <span>FarmaMinas XP</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirVentana('win-notepad'))">
+        <div class="icon-glyph">📝</div>
+        <span>Notas_TP.txt</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirVentana('win-cmd'))">
+        <div class="icon-glyph">💻</div>
+        <span>cmd.exe</span>
+      </div>
+      <div class="desktop-icon" onclick="seleccionarIcono(this, () => abrirVentana('win-papelera'))">
+        <div class="icon-glyph">🗑️</div>
+        <span>Papelera de reciclaje</span>
+      </div>
+    </div>
+
+    <!-- ==================== VENTANA 1: FARMARED BACKOFFICE ==================== -->
+    <div class="xp-window open focused" id="win-farmared"
+         data-title="FarmaRed Backoffice" data-icon="🏥"
+         style="left: 196px; top: 14px; width: calc(100vw - 214px); height: calc(100vh - 58px); max-width: 1080px;">
+      <div class="xp-titlebar" ondblclick="toggleMaximizar('win-farmared')">
+        <div class="xp-titlebar-left">
+          <span>🏥</span>
+          <span id="win-title">FarmaRed S.A. - Sistema de Gestión Políglota (MongoDB + Redis)</span>
+        </div>
+        <div class="xp-titlebar-controls">
+          <div class="xp-win-btn" title="Minimizar" onclick="minimizarVentana('win-farmared')">_</div>
+          <div class="xp-win-btn" title="Maximizar / Restaurar" onclick="toggleMaximizar('win-farmared')">□</div>
+          <div class="xp-win-btn close" title="Cerrar" onclick="cerrarVentana('win-farmared')">✕</div>
+        </div>
+      </div>
+
+      <div class="xp-menubar">
+        <div class="xp-menubar-items">
+          <span onclick="seleccionarConsulta('q01')">Consultas (Q01–Q12)</span>
+          <span onclick="seleccionarConsulta('q13')">ABM Clientes (Q13)</span>
+          <span onclick="seleccionarConsulta('q14')">Venta Saga (Q14)</span>
+          <span onclick="seleccionarConsulta('q15')">Stock FEFO (Q15)</span>
+          <span onclick="abrirVentana('win-visor')">🖼️ Fotos</span>
+          <span onclick="abrirVentana('win-snake')">🐍 Snake</span>
+          <a href="/docs" target="_blank">OpenAPI</a>
+        </div>
+        <div class="xp-badge-motors" id="motor-badges">
+          <span class="motor-pill mongo">MongoDB 7 (rs0)</span>
+        </div>
+      </div>
+
+      <div class="xp-addressbar">
+        <label>Dirección HTTP:</label>
+        <input id="http-address" class="xp-address-input" readonly value="GET http://localhost:8000/productos/activos" />
+        <button class="xp-btn primary" onclick="ejecutarConsultaActual()">▶ Ejecutar</button>
+      </div>
+
+      <div class="xp-body">
+        <div class="xp-sidebar">
+          <div class="xp-taskbox">
+            <div class="xp-taskbox-header">1. Relaciones y Catálogo</div>
+            <div class="xp-taskbox-list">
+              <div class="xp-q-link" id="nav-q01" onclick="seleccionarConsulta('q01')">
+                <span class="xp-q-code">Q01</span><span>Productos activos + prov.</span>
+              </div>
+              <div class="xp-q-link" id="nav-q02" onclick="seleccionarConsulta('q02')">
+                <span class="xp-q-code">Q02</span><span>Ventas pendientes</span>
+              </div>
+              <div class="xp-q-link" id="nav-q04" onclick="seleccionarConsulta('q04')">
+                <span class="xp-q-code">Q04</span><span>Clientes &gt; 1 receta</span>
+              </div>
+              <div class="xp-q-link" id="nav-q10" onclick="seleccionarConsulta('q10')">
+                <span class="xp-q-code">Q10</span><span>Clientes por sucursal</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="xp-taskbox">
+            <div class="xp-taskbox-header">2. Historial y Períodos</div>
+            <div class="xp-taskbox-list">
+              <div class="xp-q-link" id="nav-q03" onclick="seleccionarConsulta('q03')">
+                <span class="xp-q-code">Q03</span><span>Historial de cliente</span>
+              </div>
+              <div class="xp-q-link" id="nav-q05" onclick="seleccionarConsulta('q05')">
+                <span class="xp-q-code">Q05</span><span>Ventas últimos 60 días</span>
+              </div>
+              <div class="xp-q-link" id="nav-q06" onclick="seleccionarConsulta('q06')">
+                <span class="xp-q-code">Q06</span><span>Dispensas vencidas</span>
+              </div>
+              <div class="xp-q-link" id="nav-q11" onclick="seleccionarConsulta('q11')">
+                <span class="xp-q-code">Q11</span><span>Ingresos del mes actual</span>
+              </div>
+              <div class="xp-q-link" id="nav-q12" onclick="seleccionarConsulta('q12')">
+                <span class="xp-q-code">Q12</span><span>Clientes sin ventas (1 año)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="xp-taskbox">
+            <div class="xp-taskbox-header">3. Indicadores y Stock</div>
+            <div class="xp-taskbox-list">
+              <div class="xp-q-link" id="nav-q07" onclick="seleccionarConsulta('q07')">
+                <span class="xp-q-code">Q07</span><span>Top 5 más vendidos</span>
+              </div>
+              <div class="xp-q-link" id="nav-q08" onclick="seleccionarConsulta('q08')">
+                <span class="xp-q-code">Q08</span><span>Lotes &lt; 50 u. (Redis+Mongo)</span>
+              </div>
+              <div class="xp-q-link" id="nav-q09" onclick="seleccionarConsulta('q09')">
+                <span class="xp-q-code">Q09</span><span>Venta libre &lt; $5.000</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="xp-taskbox">
+            <div class="xp-taskbox-header">4. Servicios de Escritura</div>
+            <div class="xp-taskbox-list">
+              <div class="xp-q-link" id="nav-q13" onclick="seleccionarConsulta('q13')">
+                <span class="xp-q-code">Q13</span><span>ABM de Clientes</span>
+              </div>
+              <div class="xp-q-link" id="nav-q14" onclick="seleccionarConsulta('q14')">
+                <span class="xp-q-code">Q14</span><span>Registrar Venta (Saga)</span>
+              </div>
+              <div class="xp-q-link" id="nav-q15" onclick="seleccionarConsulta('q15')">
+                <span class="xp-q-code">Q15</span><span>Descontar Stock FEFO</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="xp-workspace">
+          <fieldset class="xp-fieldset">
+            <legend id="q-legend">Consulta Q01</legend>
+            <div class="query-header-title" id="q-title">Q01 · Productos activos con su proveedor</div>
+            <p class="query-desc" id="q-desc"></p>
+            <div id="q-controls"></div>
+          </fieldset>
+
+          <div id="status-banner"></div>
+
+          <div class="xp-tabs">
+            <div class="xp-tab active" id="tab-btn-table" onclick="cambiarVista('table')">📊 Vista de Tabla</div>
+            <div class="xp-tab" id="tab-btn-json" onclick="cambiarVista('json')">{ } Respuesta JSON Cruda</div>
+          </div>
+
+          <div class="xp-listview-container">
+            <div id="view-table"></div>
+            <pre id="view-json" class="xp-json" style="display:none"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="xp-statusbar">
+        <span id="status-text">Listo. Conectado a FastAPI.</span>
+        <span id="status-count">0 resultado(s)</span>
+      </div>
+    </div>
+
+    <!-- ==================== VENTANA 2: VISOR DE FOTOS XP (MIS IMÁGENES) ==================== -->
+    <div class="xp-window" id="win-visor"
+         data-title="Mis Imágenes - Visor XP" data-icon="🖼️"
+         style="left: 250px; top: 44px; width: 530px; height: 460px;">
+      <div class="xp-titlebar" ondblclick="toggleMaximizar('win-visor')">
+        <div class="xp-titlebar-left">
+          <span>🖼️</span>
+          <span id="visor-win-title">Visor de imágenes y fax de Windows - Mis Imágenes</span>
+        </div>
+        <div class="xp-titlebar-controls">
+          <div class="xp-win-btn" title="Minimizar" onclick="minimizarVentana('win-visor')">_</div>
+          <div class="xp-win-btn" title="Maximizar / Restaurar" onclick="toggleMaximizar('win-visor')">□</div>
+          <div class="xp-win-btn close" title="Cerrar" onclick="cerrarVentana('win-visor')">✕</div>
+        </div>
+      </div>
+      <div class="visor-wrap">
+        <div class="visor-thumbs" id="visor-thumbs"></div>
+        <div class="visor-stage">
+          <div class="visor-frame" id="visor-frame">
+            <div id="visor-svg-slot"></div>
+            <div class="visor-caption" id="visor-caption"></div>
+          </div>
+        </div>
+        <div class="visor-toolbar">
+          <div style="display:flex; gap:4px;">
+            <button class="xp-btn" onclick="visorMover(-1)">◀ Anterior</button>
+            <button class="xp-btn" onclick="visorMover(1)">Siguiente ▶</button>
+            <button class="xp-btn" onclick="visorZoom(0.15)">🔍+</button>
+            <button class="xp-btn" onclick="visorZoom(-0.15)">🔍-</button>
+            <button class="xp-btn" onclick="visorRotar()">↻ 90°</button>
+          </div>
+          <button class="xp-btn primary" onclick="establecerFondoDesdeFoto()">🖼️ Poner como fondo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VENTANA 3: FARMASNAKE.EXE ==================== -->
+    <div class="xp-window" id="win-snake"
+         data-title="FarmaSnake.exe" data-icon="🐍"
+         style="left: 340px; top: 56px; width: 390px; height: 495px;">
+      <div class="xp-titlebar" ondblclick="toggleMaximizar('win-snake')">
+        <div class="xp-titlebar-left">
+          <span>🐍</span>
+          <span>FarmaSnake.exe - Recolector de Lotes</span>
+        </div>
+        <div class="xp-titlebar-controls">
+          <div class="xp-win-btn" title="Minimizar" onclick="minimizarVentana('win-snake')">_</div>
+          <div class="xp-win-btn" title="Maximizar / Restaurar" onclick="toggleMaximizar('win-snake')">□</div>
+          <div class="xp-win-btn close" title="Cerrar" onclick="cerrarVentana('win-snake')">✕</div>
+        </div>
+      </div>
+      <div class="snake-wrap">
+        <div class="snake-hud">
+          <div>Puntaje: <span class="lcd-counter" id="snake-score">000</span></div>
+          <div>Récord: <span class="lcd-counter red" id="snake-best">000</span></div>
+        </div>
+        <canvas id="snake-canvas" width="320" height="320"></canvas>
+        <div class="snake-controls-row">
+          <div style="display:flex; flex-direction:column; gap:4px; font-size:11px;">
+            <div style="display:flex; gap:5px;">
+              <button class="xp-btn primary" id="snake-toggle-btn" onclick="snakeToggle()">▶ Jugar</button>
+              <button class="xp-btn" onclick="snakeReiniciar(true)">🔄 Reiniciar</button>
+            </div>
+            <span id="snake-msg" style="color:#003399; font-weight:bold;">Comé 💊 y 📜 sin chocar!</span>
+            <span style="color:#555;">Usá Flechas / WASD o botones →</span>
+          </div>
+          <div class="dpad">
+            <span></span>
+            <button class="xp-btn" onclick="snakeSetDir(0,-1)">▲</button>
+            <span></span>
+            <button class="xp-btn" onclick="snakeSetDir(-1,0)">◀</button>
+            <button class="xp-btn" onclick="snakeSetDir(0,1)">▼</button>
+            <button class="xp-btn" onclick="snakeSetDir(1,0)">▶</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VENTANA 4: FARMAMINAS XP (BUSCAMINAS) ==================== -->
+    <div class="xp-window" id="win-minas"
+         data-title="FarmaMinas XP" data-icon="💣"
+         style="left: 410px; top: 82px; width: 295px; height: 375px;">
+      <div class="xp-titlebar" ondblclick="toggleMaximizar('win-minas')">
+        <div class="xp-titlebar-left">
+          <span>💣</span>
+          <span>FarmaMinas XP (Lotes Vencidos)</span>
+        </div>
+        <div class="xp-titlebar-controls">
+          <div class="xp-win-btn" title="Minimizar" onclick="minimizarVentana('win-minas')">_</div>
+          <div class="xp-win-btn" title="Maximizar / Restaurar" onclick="toggleMaximizar('win-minas')">□</div>
+          <div class="xp-win-btn close" title="Cerrar" onclick="cerrarVentana('win-minas')">✕</div>
+        </div>
+      </div>
+      <div class="mines-wrap">
+        <div class="mines-panel">
+          <div class="mines-topbar">
+            <div class="lcd-counter red" id="mines-left">010</div>
+            <button class="mines-face" id="mines-face" onclick="iniciarMinas()" title="Nuevo juego">🙂</button>
+            <div class="lcd-counter red" id="mines-time">000</div>
+          </div>
+          <div class="mines-grid" id="mines-grid"></div>
+        </div>
+        <div style="font-size:10.5px; color:#222; text-align:center;">
+          Clic izq: revisar lote · Clic der: marcar vencido 🚩
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VENTANA 5: BLOC DE NOTAS (NOTAS_TP.TXT) ==================== -->
+    <div class="xp-window" id="win-notepad"
+         data-title="Notas_TP.txt - Bloc de notas" data-icon="📝"
+         style="left: 290px; top: 105px; width: 430px; height: 340px;">
+      <div class="xp-titlebar" ondblclick="toggleMaximizar('win-notepad')">
+        <div class="xp-titlebar-left">
+          <span>📝</span>
+          <span>Notas_TP.txt - Bloc de notas</span>
+        </div>
+        <div class="xp-titlebar-controls">
+          <div class="xp-win-btn" title="Minimizar" onclick="minimizarVentana('win-notepad')">_</div>
+          <div class="xp-win-btn" title="Maximizar / Restaurar" onclick="toggleMaximizar('win-notepad')">□</div>
+          <div class="xp-win-btn close" title="Cerrar" onclick="cerrarVentana('win-notepad')">✕</div>
+        </div>
+      </div>
+      <div class="xp-menubar">
+        <div class="xp-menubar-items">
+          <span onclick="guardarNota(true)">💾 Guardar</span>
+          <span onclick="restaurarNotaDefault()">↩️ Restaurar plantilla</span>
+        </div>
+        <span id="notepad-status" style="color:#555;">Guardado local</span>
+      </div>
+      <textarea id="notepad-area" class="notepad-textarea" spellcheck="false" oninput="guardarNota(false)"></textarea>
+    </div>
+
+    <!-- ==================== VENTANA 6: CMD.EXE ==================== -->
+    <div class="xp-window" id="win-cmd"
+         data-title="cmd.exe" data-icon="💻"
+         style="left: 230px; top: 130px; width: 520px; height: 340px;">
+      <div class="xp-titlebar" ondblclick="toggleMaximizar('win-cmd')">
+        <div class="xp-titlebar-left">
+          <span>💻</span>
+          <span>Símbolo del sistema - C:\FarmaRed\Grupo8</span>
+        </div>
+        <div class="xp-titlebar-controls">
+          <div class="xp-win-btn" title="Minimizar" onclick="minimizarVentana('win-cmd')">_</div>
+          <div class="xp-win-btn" title="Maximizar / Restaurar" onclick="toggleMaximizar('win-cmd')">□</div>
+          <div class="xp-win-btn close" title="Cerrar" onclick="cerrarVentana('win-cmd')">✕</div>
+        </div>
+      </div>
+      <div class="cmd-wrap" id="cmd-wrap" onclick="document.getElementById('cmd-input').focus()">
+        <div class="cmd-output" id="cmd-output">Microsoft Windows XP [Versión 5.1.2600]
+FarmaRed Políglota CLI · Grupo 8 (ITBA BD2)
+Escribí 'help' para ver comandos (ej. ping mongo, ping redis, snake, bsod).
+
+</div>
+        <div class="cmd-input-line">
+          <span>C:\FarmaRed&gt;</span>
+          <input id="cmd-input" class="cmd-input" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VENTANA 7: PAPELERA DE RECICLAJE ==================== -->
+    <div class="xp-window" id="win-papelera"
+         data-title="Papelera de reciclaje" data-icon="🗑️"
+         style="left: 315px; top: 120px; width: 440px; height: 290px;">
+      <div class="xp-titlebar" ondblclick="toggleMaximizar('win-papelera')">
+        <div class="xp-titlebar-left">
+          <span>🗑️</span>
+          <span>Papelera de reciclaje</span>
+        </div>
+        <div class="xp-titlebar-controls">
+          <div class="xp-win-btn" title="Minimizar" onclick="minimizarVentana('win-papelera')">_</div>
+          <div class="xp-win-btn" title="Maximizar / Restaurar" onclick="toggleMaximizar('win-papelera')">□</div>
+          <div class="xp-win-btn close" title="Cerrar" onclick="cerrarVentana('win-papelera')">✕</div>
+        </div>
+      </div>
+      <div class="xp-menubar">
+        <div class="xp-menubar-items">
+          <span onclick="vaciarPapelera()">🧹 Vaciar papelera</span>
+          <span onclick="restaurarPapelera()">♻️ Restaurar todo</span>
+        </div>
+      </div>
+      <div class="trash-list" id="trash-list"></div>
+      <div class="xp-statusbar">
+        <span id="trash-status">4 objeto(s) eliminados</span>
+        <span>Unidad C:\</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Globito de Notificación XP -->
+  <div class="xp-balloon" id="xp-balloon">
+    <div class="xp-balloon-head">
+      <span>💡 FarmaRed XP Multi-Ventana</span>
+      <button class="xp-balloon-close" onclick="document.getElementById('xp-balloon').style.display='none'">×</button>
+    </div>
+    <div>
+      Podés <b>mover y abrir varias ventanas</b> a la vez. Probá <b>Mis Imágenes</b> (fotos), <b>FarmaSnake</b>, <b>FarmaMinas</b> o <b>cmd.exe</b>!
+    </div>
+  </div>
+
+  <!-- Menú Inicio de Windows XP -->
+  <div class="xp-start-menu" id="start-menu">
+    <div class="xp-start-header">
+      <div class="xp-start-avatar">🧑‍⚕️</div>
+      <div>
+        <div>Administrador · FarmaRed</div>
+        <div style="font-size:10px; font-weight:normal; opacity:0.9;">ITBA · Base de Datos II · Grupo 8</div>
+      </div>
+    </div>
+    <div class="xp-start-columns">
+      <div class="xp-start-left">
+        <div class="xp-start-item" onclick="abrirFarmaEn('q01'); cerrarMenuInicioForce();">🏥 <b>FarmaRed Backoffice</b></div>
+        <div class="xp-start-item" onclick="abrirFarmaEn('q08'); cerrarMenuInicioForce();">📦 Q08 · Stock Bajo Redis</div>
+        <div class="xp-start-item" onclick="abrirFarmaEn('q14'); cerrarMenuInicioForce();">🛒 Q14 · Registrar Venta Saga</div>
+        <hr class="xp-start-sep" />
+        <div class="xp-start-item" onclick="abrirVentana('win-visor'); cerrarMenuInicioForce();">🖼️ <b>Mis Imágenes</b> (Visor XP)</div>
+        <div class="xp-start-item" onclick="abrirVentana('win-snake'); cerrarMenuInicioForce();">🐍 <b>FarmaSnake.exe</b></div>
+        <div class="xp-start-item" onclick="abrirVentana('win-minas'); cerrarMenuInicioForce();">💣 <b>FarmaMinas XP</b></div>
+        <div class="xp-start-item" onclick="abrirVentana('win-notepad'); cerrarMenuInicioForce();">📝 <b>Bloc de notas</b></div>
+        <div class="xp-start-item" onclick="abrirVentana('win-cmd'); cerrarMenuInicioForce();">💻 <b>Símbolo del sistema</b></div>
+        <a class="xp-start-item" href="/docs" target="_blank">🌐 Swagger OpenAPI (/docs)</a>
+      </div>
+      <div class="xp-start-right">
+        <div class="xp-start-item" onclick="abrirVentana('win-visor'); cerrarMenuInicioForce();">📁 Mis imágenes</div>
+        <div class="xp-start-item" onclick="abrirVentana('win-papelera'); cerrarMenuInicioForce();">🗑️ Papelera</div>
+        <hr style="border:0; border-top:1px solid #95bdee; width:100%" />
+        <b>Arquitectura</b>
+        <div>• <b>MongoDB 7</b> (rs0)</div>
+        <div>• <b>Redis 7</b> (AOF)</div>
+        <hr style="border:0; border-top:1px solid #95bdee; width:100%" />
+        <div><b>Grupo 8:</b><br/>T. Zakalik<br/>M. Othaceguy<br/>G. Tiscornia<br/>M. B. Petrikovich</div>
+      </div>
+    </div>
+    <div class="xp-start-footer">
+      <button class="xp-btn" onclick="organizarCascada(); cerrarMenuInicioForce();">🪟 Organizar en cascada</button>
+      <button class="xp-btn danger" onclick="activarBSOD(); cerrarMenuInicioForce();">🔌 Apagar equipo</button>
+    </div>
+  </div>
+
+  <!-- Barra de Tareas XP -->
+  <div class="xp-taskbar">
+    <button class="xp-start-btn" onclick="toggleMenuInicio(event)">
+      <span>🪟</span><span>inicio</span>
+    </button>
+    <div class="xp-taskbar-tabs" id="xp-taskbar-tabs"></div>
+    <div class="xp-systray">
+      <span title="MongoDB Replica Set + Redis AOF" style="cursor:pointer;" onclick="abrirVentana('win-cmd')">🟢 Mongo + Redis</span>
+      <span id="xp-clock">12:00</span>
+    </div>
+  </div>
+
+  <!-- Easter Egg Pantalla Azul (BSOD) -->
+  <div class="xp-bsod" id="xp-bsod" onclick="this.classList.remove('show')">
+    Se ha encontrado un problema y Windows ha sido apagado para evitar daños en el equipo.<br/><br/>
+    EXCEPCIÓN_NO_MANEJADA_POR_SAGA_DE_PRODUCTIVIDAD (0x00000BD2)<br/><br/>
+    Si es la primera vez que ves esta pantalla de error, probablemente sea porque intentaste hacer un JOIN en SQL teniendo MongoDB + Redis andando espectacular.<br/><br/>
+    Información técnica:<br/>
+    *** STOP: 0x000000FE (0xFAMA0008, 0xMONG0DB7, 0xRED1S07, 0xITBA2026)<br/><br/>
+    <b>[ Hacé clic en cualquier lugar para volver sano y salvo al escritorio ]</b>
+  </div>
+
+  <script>
+    // ==================== GESTOR DE VENTANAS WINDOWS XP ====================
+    let topZ = 20;
+    let ventanaActivaId = "win-farmared";
+    const dragState = { win: null, offsetX: 0, offsetY: 0 };
+
+    function abrirVentana(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.classList.add("open");
+      win.dataset.minimized = "0";
+      enfocarVentana(id);
+      renderTaskbar();
+      if (id === "win-cmd") setTimeout(() => document.getElementById("cmd-input")?.focus(), 40);
+      if (id === "win-snake") dibujarSnake();
+    }
+
+    function enfocarVentana(id) {
+      const win = document.getElementById(id);
+      if (!win || !win.classList.contains("open")) return;
+      document.querySelectorAll(".xp-window").forEach((w) => w.classList.remove("focused"));
+      topZ += 1;
+      win.style.zIndex = String(topZ);
+      win.classList.add("focused");
+      ventanaActivaId = id;
+      if (id !== "win-snake" && snakeCorriendo) {
+        snakePausar();
+      }
+      renderTaskbar();
+    }
+
+    function minimizarVentana(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.classList.remove("open", "focused");
+      win.dataset.minimized = "1";
+      if (id === "win-snake" && snakeCorriendo) snakePausar();
+      enfocarSiguienteVisible(id);
+      renderTaskbar();
+    }
+
+    function cerrarVentana(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.classList.remove("open", "focused");
+      win.dataset.minimized = "0";
+      if (id === "win-snake" && snakeCorriendo) snakePausar();
+      enfocarSiguienteVisible(id);
+      renderTaskbar();
+    }
+
+    function enfocarSiguienteVisible(exclId) {
+      const abiertas = [...document.querySelectorAll(".xp-window.open")].filter((w) => w.id !== exclId);
+      if (abiertas.length === 0) {
+        ventanaActivaId = null;
+        return;
+      }
+      abiertas.sort((a, b) => Number(b.style.zIndex || 0) - Number(a.style.zIndex || 0));
+      enfocarVentana(abiertas[0].id);
+    }
+
+    function toggleMaximizar(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      enfocarVentana(id);
+      win.classList.toggle("maximized");
+    }
+
+    function toggleDesdeTaskbar(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      if (!win.classList.contains("open")) {
+        abrirVentana(id);
+      } else if (ventanaActivaId === id) {
+        minimizarVentana(id);
+      } else {
+        enfocarVentana(id);
+      }
+    }
+
+    function renderTaskbar() {
+      const cont = document.getElementById("xp-taskbar-tabs");
+      const ventanas = [...document.querySelectorAll(".xp-window")].filter(
+        (w) => w.classList.contains("open") || w.dataset.minimized === "1"
+      );
+      cont.innerHTML = ventanas
+        .map((w) => {
+          const isAct = w.classList.contains("open") && ventanaActivaId === w.id;
+          const title = w.id === "win-farmared"
+            ? `FarmaRed - ${CONSULTAS[consultaActual].codigo}`
+            : w.dataset.title;
+          return `
+            <div class="xp-taskbar-item ${isAct ? "active" : ""}" onclick="toggleDesdeTaskbar('${w.id}')" title="${title}">
+              <span>${w.dataset.icon || "🪟"}</span>
+              <span>${title}</span>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function organizarCascada() {
+      const abiertas = [...document.querySelectorAll(".xp-window")];
+      let offset = 0;
+      abiertas.forEach((w) => {
+        if (!w.classList.contains("open") && w.dataset.minimized !== "1") return;
+        w.classList.remove("maximized");
+        w.classList.add("open");
+        w.dataset.minimized = "0";
+        w.style.left = `${196 + offset * 28}px`;
+        w.style.top = `${16 + offset * 28}px`;
+        offset += 1;
+        enfocarVentana(w.id);
+      });
+      renderTaskbar();
+    }
+
+    function inicializarVentanas() {
+      document.querySelectorAll(".xp-window").forEach((win) => {
+        win.addEventListener("mousedown", () => enfocarVentana(win.id));
+        const bar = win.querySelector(".xp-titlebar");
+        if (!bar) return;
+        bar.addEventListener("mousedown", (e) => {
+          if (e.target.closest(".xp-win-btn")) return;
+          if (win.classList.contains("maximized")) return;
+          dragState.win = win;
+          const rect = win.getBoundingClientRect();
+          dragState.offsetX = e.clientX - rect.left;
+          dragState.offsetY = e.clientY - rect.top;
+        });
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!dragState.win) return;
+        const desktop = document.getElementById("xp-desktop").getBoundingClientRect();
+        const wRect = dragState.win.getBoundingClientRect();
+        let x = e.clientX - desktop.left - dragState.offsetX;
+        let y = e.clientY - desktop.top - dragState.offsetY;
+        x = Math.max(-wRect.width + 90, Math.min(desktop.width - 90, x));
+        y = Math.max(0, Math.min(desktop.height - 32, y));
+        dragState.win.style.left = `${x}px`;
+        dragState.win.style.top = `${y}px`;
+      });
+
+      window.addEventListener("mouseup", () => {
+        dragState.win = null;
+      });
+    }
+
+    function seleccionarIcono(el, accion) {
+      document.querySelectorAll(".desktop-icon").forEach((i) => i.classList.remove("active"));
+      el.classList.add("active");
+      if (accion) accion();
+    }
+
+    function clickEscritorio(ev) {
+      cerrarMenuInicio(ev);
+      if (ev.target.id === "xp-desktop") {
+        document.querySelectorAll(".desktop-icon").forEach((i) => i.classList.remove("active"));
+      }
+    }
+
+    function abrirFarmaEn(clave) {
+      abrirVentana("win-farmared");
+      seleccionarConsulta(clave);
+    }
+
+    // ==================== VISOR DE FOTOS XP ("MIS IMÁGENES") ====================
+    const FOTOS_GALERIA = [
+      {
+        nombre: "Bliss_Sucursal.jpg",
+        titulo: "Sucursal Palermo en la colina de Windows XP",
+        wallpaper: `
+          radial-gradient(ellipse 140% 55% at 25% 105%, #4fa827 0%, #3d8e19 55%, transparent 56%),
+          radial-gradient(ellipse 130% 62% at 85% 110%, #68c138 0%, #489d20 62%, transparent 63%),
+          radial-gradient(ellipse 90% 25% at 65% 28%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 70%),
+          linear-gradient(180deg, #1f6ed4 0%, #4ca1f5 52%, #8ec8ff 72%, #5cb332 73%)`,
+        svg: `
+          <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1967d2"/>
+                <stop offset="100%" stop-color="#9ad0ff"/>
+              </linearGradient>
+            </defs>
+            <rect width="400" height="250" fill="url(#sky)"/>
+            <ellipse cx="95" cy="55" rx="52" ry="18" fill="#fff" opacity="0.88"/>
+            <ellipse cx="290" cy="42" rx="64" ry="20" fill="#fff" opacity="0.82"/>
+            <path d="M0 165 Q120 115 245 162 T400 148 L400 250 L0 250 Z" fill="#46a324"/>
+            <path d="M0 192 Q190 142 400 185 L400 250 L0 250 Z" fill="#63c436"/>
+            <!-- Edificio Farmacia -->
+            <rect x="148" y="96" width="104" height="66" rx="4" fill="#fffdf5" stroke="#1f3a60" stroke-width="3"/>
+            <rect x="144" y="84" width="112" height="18" rx="3" fill="#0d6efd" stroke="#1f3a60" stroke-width="2.5"/>
+            <text x="200" y="96" font-family="Tahoma" font-size="10" font-weight="bold" fill="#fff" text-anchor="middle">FARMARED XP</text>
+            <rect x="188" y="130" width="24" height="32" fill="#81d4fa" stroke="#1f3a60" stroke-width="2"/>
+            <rect x="193" y="106" width="14" height="14" rx="2" fill="#2e7d32"/>
+            <path d="M198 108 H202 V118 H198 Z M195 111 H205 V115 H195 Z" fill="#fff"/>
+          </svg>`,
+      },
+      {
+        nombre: "Atardecer_Poliglota.png",
+        titulo: "Atardecer Políglota: MongoDB 7 + Redis 7",
+        wallpaper: `
+          radial-gradient(circle at 75% 32%, rgba(255,213,79,0.7) 0%, transparent 35%),
+          linear-gradient(180deg, #1b1464 0%, #6f1e51 45%, #e55039 80%, #f6b93b 100%)`,
+        svg: `
+          <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sunset" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1b1464"/>
+                <stop offset="55%" stop-color="#b33939"/>
+                <stop offset="100%" stop-color="#f6b93b"/>
+              </linearGradient>
+            </defs>
+            <rect width="400" height="250" fill="url(#sunset)"/>
+            <circle cx="200" cy="118" r="48" fill="#ffd32a" opacity="0.9"/>
+            <!-- Mongo (Izquierda) -->
+            <circle cx="115" cy="145" r="38" fill="#1e824c" stroke="#fff" stroke-width="3"/>
+            <text x="115" y="140" font-family="Tahoma" font-size="13" font-weight="bold" fill="#fff" text-anchor="middle">MongoDB</text>
+            <text x="115" y="157" font-family="Tahoma" font-size="10" fill="#d9ffe6" text-anchor="middle">Entidades &amp; Sagas</text>
+            <!-- Redis (Derecha) -->
+            <circle cx="285" cy="145" r="38" fill="#c0392b" stroke="#fff" stroke-width="3"/>
+            <text x="285" y="140" font-family="Tahoma" font-size="13" font-weight="bold" fill="#fff" text-anchor="middle">Redis 7</text>
+            <text x="285" y="157" font-family="Tahoma" font-size="10" fill="#ffe4e1" text-anchor="middle">Lotes &amp; FEFO</text>
+            <!-- Flecha Saga -->
+            <path d="M158 145 H242" stroke="#fff" stroke-width="4" stroke-dasharray="6,4"/>
+            <rect x="172" y="128" width="56" height="18" rx="4" fill="#0054e3" stroke="#fff" stroke-width="1.5"/>
+            <text x="200" y="140" font-family="Tahoma" font-size="10" font-weight="bold" fill="#fff" text-anchor="middle">SAGA Q14</text>
+          </svg>`,
+      },
+      {
+        nombre: "Receta_Medico_Ilegible.jpg",
+        titulo: "Archivo Histórico: Receta RC006 sin entender la letra",
+        wallpaper: `
+          linear-gradient(135deg, #004e92 0%, #000428 100%)`,
+        svg: `
+          <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="250" fill="#d7ccc8"/>
+            <rect x="75" y="18" width="250" height="214" rx="4" fill="#fffef7" stroke="#5d4037" stroke-width="2.5"/>
+            <rect x="75" y="18" width="250" height="34" fill="#1976d2"/>
+            <text x="200" y="40" font-family="Tahoma" font-size="13" font-weight="bold" fill="#fff" text-anchor="middle">RP/ RECETA MÉDICA · RC006</text>
+            <path d="M98 85 Q115 70 125 90 T155 82 T185 95 T220 78 T260 92 T290 82" fill="none" stroke="#1a237e" stroke-width="3" stroke-linecap="round"/>
+            <path d="M98 118 Q125 102 145 122 T185 110 T235 125 T280 112" fill="none" stroke="#1a237e" stroke-width="3" stroke-linecap="round"/>
+            <text x="98" y="152" font-family="Tahoma" font-size="11" fill="#555">(Traductor BD2: "Amoxicilina 500mg × 1")</text>
+            <g transform="rotate(-12 245 190)">
+              <rect x="172" y="172" width="135" height="34" rx="4" fill="none" stroke="#2e7d32" stroke-width="3"/>
+              <text x="239" y="193" font-family="Tahoma" font-size="11" font-weight="bold" fill="#2e7d32" text-anchor="middle">DISPENSADO EN XP</text>
+            </g>
+          </svg>`,
+      },
+      {
+        nombre: "Noche_De_Entrega_ITBA.png",
+        titulo: "Grupo 8 probando el rollback de la Saga a las 2 AM",
+        wallpaper: `
+          radial-gradient(circle at 20% 20%, rgba(0, 210, 255, 0.28) 0%, transparent 45%),
+          linear-gradient(180deg, #0f2027 0%, #203a43 50%, #2c5364 100%)`,
+        svg: `
+          <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="250" fill="#102027"/>
+            <!-- Ventana noche -->
+            <rect x="26" y="22" width="90" height="72" fill="#1a237e" stroke="#607d8b" stroke-width="4"/>
+            <circle cx="52" cy="44" r="10" fill="#fff59d"/>
+            <circle cx="88" cy="36" r="2" fill="#fff"/><circle cx="96" cy="60" r="2" fill="#fff"/>
+            <!-- Monitor XP -->
+            <rect x="135" y="48" width="165" height="114" rx="6" fill="#eceff1" stroke="#37474f" stroke-width="4"/>
+            <rect x="145" y="58" width="145" height="90" fill="#1976d2"/>
+            <rect x="155" y="72" width="125" height="58" rx="3" fill="#fff"/>
+            <text x="217" y="96" font-family="Tahoma" font-size="11" font-weight="bold" fill="#2e7d32" text-anchor="middle">201 Created ✅</text>
+            <text x="217" y="114" font-family="Tahoma" font-size="9" fill="#333" text-anchor="middle">Lote FEFO descontado!</text>
+            <rect x="202" y="162" width="30" height="22" fill="#90a4ae"/>
+            <rect x="175" y="182" width="84" height="8" rx="3" fill="#78909c"/>
+            <!-- Escritorio y mate -->
+            <rect x="0" y="190" width="400" height="60" fill="#6d4c41"/>
+            <ellipse cx="90" cy="182" rx="18" ry="20" fill="#8d6e63" stroke="#3e2723" stroke-width="2.5"/>
+            <ellipse cx="90" cy="164" rx="14" ry="5" fill="#558b2f"/>
+            <line x1="90" y1="164" x2="108" y2="142" stroke="#cfd8dc" stroke-width="3"/>
+          </svg>`,
+      },
+      {
+        nombre: "Carrera_FEFO_Redis.jpg",
+        titulo: "Redis ordenando lotes por vencimiento (FEFO)",
+        wallpaper: `
+          linear-gradient(160deg, #134e5e 0%, #71b280 100%)`,
+        svg: `
+          <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="250" fill="#fff8e1"/>
+            <text x="200" y="34" font-family="Tahoma" font-size="15" font-weight="bold" fill="#b71c1c" text-anchor="middle">⚡ CARRERA FEFO EN REDIS ⚡</text>
+            <line x1="30" y1="205" x2="370" y2="205" stroke="#5d4037" stroke-width="4"/>
+            <!-- Lote vence pronto -->
+            <rect x="255" y="135" width="76" height="68" rx="6" fill="#ff7043" stroke="#2b1810" stroke-width="3"/>
+            <text x="293" y="162" font-family="Tahoma" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">LOTE #1</text>
+            <text x="293" y="180" font-family="Tahoma" font-size="10" fill="#fff3e0" text-anchor="middle">Vence pronto</text>
+            <!-- Lote lejano -->
+            <rect x="65" y="142" width="76" height="61" rx="6" fill="#42a5f5" stroke="#2b1810" stroke-width="3"/>
+            <text x="103" y="168" font-family="Tahoma" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">LOTE #2</text>
+            <text x="103" y="184" font-family="Tahoma" font-size="10" fill="#e3f2fd" text-anchor="middle">Vence 2028</text>
+            <text x="293" y="122" font-family="Tahoma" font-size="12" font-weight="bold" fill="#2e7d32" text-anchor="middle">🏃 SALE PRIMERO!</text>
+          </svg>`,
+      },
+    ];
+
+    let fotoIdx = 0;
+    let fotoZoom = 1;
+    let fotoRot = 0;
+
+    function inicializarVisor() {
+      const thumbs = document.getElementById("visor-thumbs");
+      thumbs.innerHTML = FOTOS_GALERIA.map(
+        (f, i) => `<button class="visor-thumb ${i === fotoIdx ? "active" : ""}" onclick="seleccionarFoto(${i})">🖼️ ${f.nombre}</button>`
+      ).join("");
+      renderFoto();
+    }
+
+    function seleccionarFoto(i) {
+      fotoIdx = (i + FOTOS_GALERIA.length) % FOTOS_GALERIA.length;
+      fotoZoom = 1;
+      fotoRot = 0;
+      inicializarVisor();
+    }
+
+    function visorMover(delta) {
+      seleccionarFoto(fotoIdx + delta);
+    }
+
+    function visorZoom(delta) {
+      fotoZoom = Math.max(0.6, Math.min(1.6, +(fotoZoom + delta).toFixed(2)));
+      aplicarTransformFoto();
+    }
+
+    function visorRotar() {
+      fotoRot = (fotoRot + 90) % 360;
+      aplicarTransformFoto();
+    }
+
+    function aplicarTransformFoto() {
+      const fr = document.getElementById("visor-frame");
+      fr.style.transform = `scale(${fotoZoom}) rotate(${fotoRot}deg)`;
+    }
+
+    function renderFoto() {
+      const f = FOTOS_GALERIA[fotoIdx];
+      document.getElementById("visor-svg-slot").innerHTML = f.svg;
+      document.getElementById("visor-caption").textContent = `${f.nombre} — ${f.titulo}`;
+      document.getElementById("visor-win-title").textContent = `${f.nombre} - Visor de imágenes y fax de Windows`;
+      aplicarTransformFoto();
+    }
+
+    function establecerFondoDesdeFoto() {
+      const f = FOTOS_GALERIA[fotoIdx];
+      document.getElementById("xp-desktop").style.background = f.wallpaper;
+      mostrarBalloon("🎨 Papel tapiz actualizado", `Ahora estás usando "${f.nombre}" como fondo de escritorio.`);
+    }
+
+    // ==================== FARMASNAKE.EXE ====================
+    const SNAKE_GRID = 16;
+    const SNAKE_CELL = 20;
+    let snakeBody = [];
+    let snakeDir = { x: 1, y: 0 };
+    let snakeNextDir = { x: 1, y: 0 };
+    let snakeFood = { x: 10, y: 8, tipo: "💊", pts: 10 };
+    let snakeScore = 0;
+    let snakeBest = Number(localStorage.getItem("farmasnake_best") || "0");
+    let snakeTimer = null;
+    let snakeCorriendo = false;
+    let snakeComidas = 0;
+
+    function snakeReiniciar(autoStart = false) {
+      snakeBody = [
+        { x: 6, y: 8 },
+        { x: 5, y: 8 },
+        { x: 4, y: 8 },
+      ];
+      snakeDir = { x: 1, y: 0 };
+      snakeNextDir = { x: 1, y: 0 };
+      snakeScore = 0;
+      snakeComidas = 0;
+      snakeSpawnFood();
+      document.getElementById("snake-score").textContent = "000";
+      document.getElementById("snake-best").textContent = String(snakeBest).padStart(3, "0");
+      document.getElementById("snake-msg").textContent = "Comé 💊 y 📜 sin chocar!";
+      snakePausar();
+      dibujarSnake();
+      if (autoStart) snakePlay();
+    }
+
+    function snakeSpawnFood() {
+      let x, y;
+      do {
+        x = Math.floor(Math.random() * SNAKE_GRID);
+        y = Math.floor(Math.random() * SNAKE_GRID);
+      } while (snakeBody.some((p) => p.x === x && p.y === y));
+      const esBonus = snakeComidas > 0 && snakeComidas % 5 === 0;
+      snakeFood = esBonus
+        ? { x, y, tipo: "📜", pts: 30 }
+        : Math.random() < 0.5
+        ? { x, y, tipo: "💊", pts: 10 }
+        : { x, y, tipo: "🧪", pts: 15 };
+    }
+
+    function snakeSetDir(dx, dy) {
+      if (dx === -snakeDir.x && dy === -snakeDir.y) return;
+      snakeNextDir = { x: dx, y: dy };
+      if (!snakeCorriendo) snakePlay();
+    }
+
+    function snakeToggle() {
+      if (snakeCorriendo) snakePausar();
+      else snakePlay();
+    }
+
+    function snakePlay() {
+      if (snakeCorriendo) return;
+      snakeCorriendo = true;
+      document.getElementById("snake-toggle-btn").textContent = "⏸ Pausar";
+      snakeTimer = setInterval(snakeTick, 135);
+    }
+
+    function snakePausar() {
+      snakeCorriendo = false;
+      clearInterval(snakeTimer);
+      snakeTimer = null;
+      const btn = document.getElementById("snake-toggle-btn");
+      if (btn) btn.textContent = "▶ Jugar";
+    }
+
+    function snakeTick() {
+      snakeDir = snakeNextDir;
+      const head = { x: snakeBody[0].x + snakeDir.x, y: snakeBody[0].y + snakeDir.y };
+
+      if (
+        head.x < 0 || head.x >= SNAKE_GRID ||
+        head.y < 0 || head.y >= SNAKE_GRID ||
+        snakeBody.some((s) => s.x === head.x && s.y === head.y)
+      ) {
+        snakePausar();
+        document.getElementById("snake-msg").textContent = `💥 ¡Choque! Final: ${snakeScore} pts`;
+        dibujarSnake(true);
+        return;
+      }
+
+      snakeBody.unshift(head);
+      if (head.x === snakeFood.x && head.y === snakeFood.y) {
+        snakeScore += snakeFood.pts;
+        snakeComidas += 1;
+        document.getElementById("snake-score").textContent = String(snakeScore).padStart(3, "0");
+        if (snakeScore > snakeBest) {
+          snakeBest = snakeScore;
+          localStorage.setItem("farmasnake_best", String(snakeBest));
+          document.getElementById("snake-best").textContent = String(snakeBest).padStart(3, "0");
+        }
+        document.getElementById("snake-msg").textContent = `¡Lote recogido! +${snakeFood.pts} pts`;
+        snakeSpawnFood();
+      } else {
+        snakeBody.pop();
+      }
+      dibujarSnake();
+    }
+
+    function dibujarSnake(gameOver = false) {
+      const canvas = document.getElementById("snake-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#102418";
+      ctx.fillRect(0, 0, 320, 320);
+
+      // Cuadrícula sutil
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= SNAKE_GRID; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * SNAKE_CELL, 0);
+        ctx.lineTo(i * SNAKE_CELL, 320);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * SNAKE_CELL);
+        ctx.lineTo(320, i * SNAKE_CELL);
+        ctx.stroke();
+      }
+
+      // Comida
+      ctx.font = "16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(snakeFood.tipo, snakeFood.x * SNAKE_CELL + 10, snakeFood.y * SNAKE_CELL + 11);
+
+      // Viborita
+      snakeBody.forEach((seg, idx) => {
+        ctx.fillStyle = gameOver ? "#e53935" : idx === 0 ? "#66ff66" : "#2eb82e";
+        ctx.fillRect(seg.x * SNAKE_CELL + 2, seg.y * SNAKE_CELL + 2, SNAKE_CELL - 4, SNAKE_CELL - 4);
+        if (idx === 0) {
+          ctx.fillStyle = "#000";
+          ctx.fillRect(seg.x * SNAKE_CELL + 5, seg.y * SNAKE_CELL + 5, 3, 3);
+          ctx.fillRect(seg.x * SNAKE_CELL + 12, seg.y * SNAKE_CELL + 5, 3, 3);
+        }
+      });
+    }
+
+    // ==================== FARMAMINAS XP (BUSCAMINAS) ====================
+    const MINAS_ROWS = 9;
+    const MINAS_TOTAL = 10;
+    let minasBoard = [];
+    let minasFin = false;
+    let minasSegs = 0;
+    let minasClock = null;
+    let minasIniciado = false;
+
+    function iniciarMinas() {
+      clearInterval(minasClock);
+      minasClock = null;
+      minasSegs = 0;
+      minasFin = false;
+      minasIniciado = false;
+      document.getElementById("mines-time").textContent = "000";
+      document.getElementById("mines-left").textContent = String(MINAS_TOTAL).padStart(3, "0");
+      document.getElementById("mines-face").textContent = "🙂";
+
+      minasBoard = Array.from({ length: MINAS_ROWS }, () =>
+        Array.from({ length: MINAS_ROWS }, () => ({ mina: false, rev: false, flag: false, adj: 0, boom: false }))
+      );
+      let puestas = 0;
+      while (puestas < MINAS_TOTAL) {
+        const r = Math.floor(Math.random() * MINAS_ROWS);
+        const c = Math.floor(Math.random() * MINAS_ROWS);
+        if (!minasBoard[r][c].mina) {
+          minasBoard[r][c].mina = true;
+          puestas += 1;
+        }
+      }
+      for (let r = 0; r < MINAS_ROWS; r++) {
+        for (let c = 0; c < MINAS_ROWS; c++) {
+          if (minasBoard[r][c].mina) continue;
+          let cnt = 0;
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const nr = r + dr, nc = c + dc;
+              if (nr >= 0 && nr < MINAS_ROWS && nc >= 0 && nc < MINAS_ROWS && minasBoard[nr][nc].mina) cnt++;
+            }
+          }
+          minasBoard[r][c].adj = cnt;
+        }
+      }
+      renderMinas();
+    }
+
+    function abrirCeldaMina(r, c) {
+      if (minasFin) return;
+      const cell = minasBoard[r][c];
+      if (cell.rev || cell.flag) return;
+      if (!minasIniciado) {
+        minasIniciado = true;
+        minasClock = setInterval(() => {
+          minasSegs = Math.min(999, minasSegs + 1);
+          document.getElementById("mines-time").textContent = String(minasSegs).padStart(3, "0");
+        }, 1000);
+      }
+
+      if (cell.mina) {
+        cell.rev = true;
+        cell.boom = true;
+        minasFin = true;
+        clearInterval(minasClock);
+        document.getElementById("mines-face").textContent = "😵";
+        minasBoard.forEach((row) => row.forEach((x) => { if (x.mina) x.rev = true; }));
+        renderMinas();
+        return;
+      }
+
+      const stack = [[r, c]];
+      while (stack.length) {
+        const [cr, cc] = stack.pop();
+        const cur = minasBoard[cr][cc];
+        if (cur.rev || cur.flag) continue;
+        cur.rev = true;
+        if (cur.adj === 0) {
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const nr = cr + dr, nc = cc + dc;
+              if (nr >= 0 && nr < MINAS_ROWS && nc >= 0 && nc < MINAS_ROWS && !minasBoard[nr][nc].rev) {
+                stack.push([nr, nc]);
+              }
+            }
+          }
+        }
+      }
+
+      const sinAbrir = minasBoard.flat().filter((x) => !x.rev && !x.mina).length;
+      if (sinAbrir === 0) {
+        minasFin = true;
+        clearInterval(minasClock);
+        document.getElementById("mines-face").textContent = "😎";
+        document.getElementById("mines-left").textContent = "000";
+      }
+      renderMinas();
+    }
+
+    function toggleBanderaMina(e, r, c) {
+      e.preventDefault();
+      if (minasFin) return;
+      const cell = minasBoard[r][c];
+      if (cell.rev) return;
+      cell.flag = !cell.flag;
+      const flags = minasBoard.flat().filter((x) => x.flag).length;
+      document.getElementById("mines-left").textContent = String(Math.max(0, MINAS_TOTAL - flags)).padStart(3, "0");
+      renderMinas();
+    }
+
+    function renderMinas() {
+      const colores = ["", "#0000ff", "#008000", "#ff0000", "#000080", "#800000", "#008080", "#000", "#808080"];
+      const grid = document.getElementById("mines-grid");
+      grid.innerHTML = minasBoard
+        .map((row, r) =>
+          row
+            .map((cell, c) => {
+              let txt = "";
+              let style = "";
+              if (cell.rev) {
+                if (cell.mina) txt = "🦠";
+                else if (cell.adj > 0) {
+                  txt = String(cell.adj);
+                  style = `color:${colores[cell.adj]}`;
+                }
+              } else if (cell.flag) {
+                txt = "🚩";
+              }
+              return `<div class="mine-cell ${cell.rev ? "revealed" : ""} ${cell.boom ? "boom" : ""}" style="${style}"
+                        onclick="abrirCeldaMina(${r},${c})" oncontextmenu="toggleBanderaMina(event,${r},${c})">${txt}</div>`;
+            })
+            .join("")
+        )
+        .join("");
+    }
+
+    // ==================== BLOC DE NOTAS, CMD Y PAPELERA ====================
+    const NOTA_DEFAULT = `==========================================
+  FARMARED S.A. - AYUDA RÁPIDA GRUPO 8
+==========================================
+
+IDs útiles para probar en el Backoffice:
+- Clientes: C001, C006, C007, C009 (C999 -> 404)
+- Sucursales: S001 (Palermo), S006 (Caballito)
+- Receta válida: RC006 (pertenece a C007)
+- Productos: PRD001, PRD002, PRD003
+- Farmacéutico farmacia: F001 | droguería: F007
+- Ventas completadas p/ Q15: V016, V021 (V011 -> Pendiente)
+
+Podés editar y guardar tus propias notas acá arriba.
+`;
+
+    function inicializarNotepad() {
+      const area = document.getElementById("notepad-area");
+      area.value = localStorage.getItem("farmared_xp_nota") || NOTA_DEFAULT;
+    }
+
+    function guardarNota(manual) {
+      localStorage.setItem("farmared_xp_nota", document.getElementById("notepad-area").value);
+      document.getElementById("notepad-status").textContent = manual ? "💾 Guardado ahora" : "Autoguardado";
+    }
+
+    function restaurarNotaDefault() {
+      document.getElementById("notepad-area").value = NOTA_DEFAULT;
+      guardarNota(true);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function inicializarCMD() {
+      const input = document.getElementById("cmd-input");
+      const out = document.getElementById("cmd-output");
+      const wrap = document.getElementById("cmd-wrap");
+
+      const print = (txt) => {
+        out.textContent += txt + "\n";
+        wrap.scrollTop = wrap.scrollHeight;
+      };
+
+      input.addEventListener("keydown", async (e) => {
+        if (e.key !== "Enter") return;
+        const raw = input.value.trim();
+        input.value = "";
+        print(`C:\\FarmaRed>${raw}`);
+        const cmd = raw.toLowerCase();
+        if (!cmd) return;
+
+        if (cmd === "help") {
+          print("Comandos: help, ping mongo, ping redis, snake, minas, fotos, notepad, clear, matrix, whoami, bsod");
+        } else if (cmd === "clear" || cmd === "cls") {
+          out.textContent = "";
+        } else if (cmd === "whoami") {
+          print("farmared\\administrador (ITBA BD2 Grupo 8)");
+        } else if (cmd === "snake") {
+          abrirVentana("win-snake");
+          print("Abriendo FarmaSnake.exe...");
+        } else if (cmd === "minas") {
+          abrirVentana("win-minas");
+          print("Abriendo FarmaMinas XP...");
+        } else if (cmd === "fotos") {
+          abrirVentana("win-visor");
+          print("Abriendo Mis Imágenes...");
+        } else if (cmd === "notepad") {
+          abrirVentana("win-notepad");
+          print("Abriendo Bloc de notas...");
+        } else if (cmd === "matrix") {
+          wrap.style.color = wrap.style.color === "rgb(0, 255, 102)" ? "#cccccc" : "#00ff66";
+          print("Modo Matrix alternado.");
+        } else if (cmd === "bsod") {
+          activarBSOD();
+        } else if (cmd === "ping mongo" || cmd === "ping redis" || cmd === "status") {
+          const ruta = cmd === "ping redis" ? "/stock/lotes-bajos" : "/productos/activos";
+          const t0 = performance.now();
+          try {
+            const r = await fetch(ruta);
+            const data = await r.json();
+            const ms = Math.round(performance.now() - t0);
+            print(`Respuesta desde ${ruta}: status=${r.status} items=${Array.isArray(data) ? data.length : 1} tiempo=${ms}ms`);
+          } catch (err) {
+            print(`Error consultando ${ruta}: ${err.message}`);
+          }
+        } else {
+          print(`'${raw}' no se reconoce como un comando interno. Escribí 'help'.`);
+        }
+      });
+    }
+
+    const ITEMS_PAPELERA_BASE = [
+      { ico: "📄", nom: "final_FINAL_v9.sql", msg: "Lo borramos porque ahora usamos MongoDB + Redis Políglota 😎" },
+      { ico: "💣", nom: "DROP_ALL_sin_where.sh", msg: "Menos mal que quedó en la papelera antes de la entrega..." },
+      { ico: "🔑", nom: "claves_prod.txt", msg: "Buen intento 👀 ¡Acá solo hay datos de prueba del TPO!" },
+      { ico: "🧾", nom: "compra_sin_saga.log", msg: "Error histórico: descontó stock pero no guardó la venta. ¡Por eso hicimos Q14 con Saga!" },
+    ];
+    let itemsPapelera = [...ITEMS_PAPELERA_BASE];
+
+    function renderPapelera() {
+      const cont = document.getElementById("trash-list");
+      cont.innerHTML = itemsPapelera.length
+        ? itemsPapelera
+            .map(
+              (it, i) => `
+          <div class="trash-item" onclick="mostrarBalloon('🗑️ ${it.nom}', '${it.msg.replace(/'/g, "\\'")}')">
+            <div style="font-size:28px;">${it.ico}</div>
+            <div style="font-size:11px;">${it.nom}</div>
+          </div>`
+            )
+            .join("")
+        : '<div style="color:#666; padding:12px;">La Papelera de reciclaje está vacía ✨</div>';
+      document.getElementById("trash-status").textContent = `${itemsPapelera.length} objeto(s) eliminados`;
+    }
+
+    function vaciarPapelera() {
+      itemsPapelera = [];
+      renderPapelera();
+      mostrarBalloon("🧹 Papelera vaciada", "Se liberaron 42 MB imaginarios del disco C:\\.");
+    }
+
+    function restaurarPapelera() {
+      itemsPapelera = [...ITEMS_PAPELERA_BASE];
+      renderPapelera();
+    }
+
+    let balloonTimer = null;
+    function mostrarBalloon(titulo, texto) {
+      const b = document.getElementById("xp-balloon");
+      b.innerHTML = `
+        <div class="xp-balloon-head">
+          <span>${escapeHtml(titulo)}</span>
+          <button class="xp-balloon-close" onclick="document.getElementById('xp-balloon').style.display='none'">×</button>
+        </div>
+        <div>${escapeHtml(texto)}</div>
+      `;
+      b.style.display = "flex";
+      clearTimeout(balloonTimer);
+      balloonTimer = setTimeout(() => {
+        b.style.display = "none";
+      }, 6500);
+    }
+
+    function activarBSOD() {
+      document.getElementById("xp-bsod").classList.add("show");
+    }
+
+    // ==================== CONSULTAS FARMARED (Q01–Q15 REALES) ====================
+    let consultaActual = "q01";
+    let vistaActual = "table";
+    let itemsQ14 = [
+      { id_producto: "PRD001", cantidad: 2 },
+      { id_producto: "PRD002", cantidad: 1 },
+    ];
+
+    const formatoPesos = (v) =>
+      v == null ? "-" : "$ " + Number(v).toLocaleString("es-AR");
+
+    const formatoFecha = (v) => {
+      if (!v) return "-";
+      const s = String(v).slice(0, 10);
+      const partes = s.split("-");
+      return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : s;
+    };
+
+    const formatoSiNo = (v) => (v ? "Sí" : "No");
+
+    const CONSULTAS = {
+      q01: {
+        codigo: "Q01",
+        titulo: "Q01 · Productos activos con todos los datos de su proveedor",
+        descripcion: "Cruza la colección productos con proveedores mediante $lookup en MongoDB.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/productos/activos",
+        autoEjecutar: true,
+        columnas: [
+          { h: "ID", f: (r) => r._id },
+          { h: "Producto", f: (r) => r.nombre },
+          { h: "Principio activo", f: (r) => r.principio_activo },
+          { h: "Categoría", f: (r) => r.categoria },
+          { h: "Condición", f: (r) => r.condicion_venta },
+          { h: "Precio", f: (r) => formatoPesos(r.precio_unit) },
+          { h: "Proveedor", f: (r) => r.proveedor?.razon_social },
+          { h: "CUIT", f: (r) => r.proveedor?.cuit },
+          { h: "Tipo Prov.", f: (r) => r.proveedor?.tipo },
+          { h: "Ciudad", f: (r) => r.proveedor?.ciudad },
+        ],
+      },
+      q02: {
+        codigo: "Q02",
+        titulo: "Q02 · Ventas en estado 'Pendiente' con el farmacéutico asignado y el total",
+        descripcion: "Resuelve la relación ventas → farmaceuticos → sucursales mediante dos etapas $lookup en MongoDB.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/ventas/pendientes",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Venta", f: (r) => r.id_venta },
+          { h: "Total", f: (r) => formatoPesos(r.total) },
+          { h: "Farmacéutico", f: (r) => `${r.farmaceutico?.nombre} ${r.farmaceutico?.apellido}` },
+          { h: "Matrícula", f: (r) => r.farmaceutico?.matricula },
+          { h: "Sucursal", f: (r) => r.farmaceutico?.sucursal },
+        ],
+      },
+      q03: {
+        codigo: "Q03",
+        titulo: "Q03 · Historial completo de un cliente (ventas y recetas ordenadas por fecha)",
+        descripcion: "Unifica las colecciones ventas y recetas del cliente mediante $unionWith y ordena cronológicamente.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => `/clientes/${encodeURIComponent(val("q03-cliente", "C001"))}/historial`,
+        controles: () => `
+          <div class="xp-form-row">
+            <div class="xp-field">
+              <label>ID Cliente:</label>
+              <input id="q03-cliente" class="xp-input" value="C001" placeholder="Ej. C001, C006, C009" />
+            </div>
+            <button class="xp-btn primary" onclick="ejecutarConsultaActual()">Consultar Historial</button>
+            <button class="xp-btn" onclick="setValAndRun('q03-cliente','C001')">C001</button>
+            <button class="xp-btn" onclick="setValAndRun('q03-cliente','C006')">C006</button>
+            <button class="xp-btn" onclick="setValAndRun('q03-cliente','C999')">Probar 404 (C999)</button>
+          </div>
+        `,
+        autoEjecutar: true,
+        transformarFilas: (resp) => resp.historial || [],
+        columnas: [
+          { h: "Fecha", f: (r) => formatoFecha(r.fecha) },
+          { h: "Tipo", f: (r) => (r.tipo === "venta" ? "Venta" : "Receta") },
+          { h: "ID", f: (r) => r.datos?._id },
+          {
+            h: "Detalle",
+            f: (r) =>
+              r.tipo === "venta"
+                ? `${r.datos.tipo} · ${r.datos.medio_pago} · ${formatoPesos(r.datos.total)} · ${r.datos.estado}`
+                : `${r.datos.medico} · ${r.datos.tipo} · ${r.datos.dispensas_realizadas}/${r.datos.dispensas_autorizadas} disp. · ${r.datos.estado}`,
+          },
+        ],
+      },
+      q04: {
+        codigo: "Q04",
+        titulo: "Q04 · Clientes con más de una receta registrada",
+        descripcion: "Agrupa recetas por id_cliente ($group), filtra cantidad > 1 y cruza con clientes ($lookup).",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/clientes/varias-recetas",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Cliente", f: (r) => r.id_cliente },
+          { h: "Nombre", f: (r) => `${r.nombre} ${r.apellido}` },
+          { h: "Cantidad de Recetas", f: (r) => r.cantidad_recetas },
+        ],
+      },
+      q05: {
+        codigo: "Q05",
+        titulo: "Q05 · Farmacéuticos activos y cantidad de ventas en los últimos 60 días",
+        descripcion: "Incluye farmacéuticos con 0 ventas usando $lookup con sub-pipeline filtrado por fecha del sistema y excluyendo anuladas.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/farmaceuticos/ventas-recientes",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Farmacéutico", f: (r) => r.id_farmaceutico },
+          { h: "Nombre", f: (r) => `${r.nombre} ${r.apellido}` },
+          { h: "Matrícula", f: (r) => r.matricula },
+          { h: "Sucursal", f: (r) => r.id_sucursal },
+          { h: "Ventas (60 días)", f: (r) => r.cantidad_ventas },
+        ],
+      },
+      q06: {
+        codigo: "Q06",
+        titulo: "Q06 · Recetas de tratamiento prolongado vigentes con próxima dispensa vencida",
+        descripcion: "Filtra recetas vigentes con proxima_dispensa anterior a hoy y obtiene los datos del cliente con $lookup.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/recetas/dispensas-vencidas",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Receta", f: (r) => r.id_receta },
+          { h: "Próx. dispensa", f: (r) => formatoFecha(r.proxima_dispensa) },
+          { h: "Dispensas", f: (r) => `${r.dispensas_realizadas}/${r.dispensas_autorizadas}` },
+          { h: "Médico", f: (r) => r.medico },
+          { h: "Cliente", f: (r) => `${r.cliente?.id_cliente} - ${r.cliente?.nombre} ${r.cliente?.apellido}` },
+          { h: "DNI", f: (r) => r.cliente?.dni },
+          { h: "Obra Social", f: (r) => r.cliente?.obra_social },
+        ],
+      },
+      q07: {
+        codigo: "Q07",
+        titulo: "Q07 · Top 5 productos más vendidos por unidades (ventas 'Completada')",
+        descripcion: "Desarma el arreglo embebido items[] con $unwind, suma cantidades por producto y limita a los 5 mayores.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/productos/mas-vendidos",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Producto", f: (r) => r.id_producto },
+          { h: "Unidades vendidas", f: (r) => r.unidades_vendidas },
+        ],
+      },
+      q08: {
+        codigo: "Q08",
+        titulo: "Q08 · Lotes con menos de 50 unidades (Producto, Sucursal y Proveedor)",
+        descripcion: "Consulta híbrida políglota: filtra los hashes lote:* en Redis y enriquece con productos, proveedores y sucursales desde MongoDB.",
+        motores: ["redis", "mongo"],
+        metodo: "GET",
+        ruta: () => "/stock/lotes-bajos",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Lote", f: (r) => r.id_lote },
+          { h: "Nro. Lote", f: (r) => r.nro_lote },
+          { h: "Unidades", f: (r) => r.unidades },
+          { h: "Vencimiento", f: (r) => formatoFecha(r.vencimiento) },
+          { h: "Producto", f: (r) => `${r.producto?.id_producto} - ${r.producto?.nombre}` },
+          { h: "Sucursal", f: (r) => `${r.sucursal?.id_sucursal} - ${r.sucursal?.nombre}` },
+          { h: "Proveedor", f: (r) => r.proveedor?.razon_social },
+        ],
+      },
+      q09: {
+        codigo: "Q09",
+        titulo: "Q09 · Ventas de tipo 'Venta libre' con total menor a $5.000 (sin anuladas)",
+        descripcion: "Filtra en MongoDB ventas de tipo 'Venta libre' con total < 5000 y estado distinto de 'Anulada'.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/ventas/venta-libre",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Venta", f: (r) => r.id_venta },
+          { h: "Fecha", f: (r) => formatoFecha(r.fecha) },
+          { h: "Cliente", f: (r) => r.id_cliente },
+          { h: "Farmacéutico", f: (r) => r.id_farmaceutico },
+          { h: "Sucursal", f: (r) => r.id_sucursal },
+          { h: "Medio de pago", f: (r) => r.medio_pago },
+          { h: "Estado", f: (r) => r.estado },
+          { h: "Ítems", f: (r) => (r.items || []).map((i) => `${i.id_producto} x${i.cantidad}`).join(", ") },
+          { h: "Total", f: (r) => formatoPesos(r.total) },
+        ],
+      },
+      q10: {
+        codigo: "Q10",
+        titulo: "Q10 · Clientes atendidos en una sucursal determinada",
+        descripcion: "Aprovecha el campo desnormalizado id_sucursal en ventas, agrupa por cliente y cruza con clientes ($lookup).",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => `/sucursales/${encodeURIComponent(val("q10-sucursal", "S001"))}/clientes`,
+        controles: () => `
+          <div class="xp-form-row">
+            <div class="xp-field">
+              <label>ID Sucursal:</label>
+              <input id="q10-sucursal" class="xp-input" value="S001" placeholder="Ej. S001, S002, S006" />
+            </div>
+            <button class="xp-btn primary" onclick="ejecutarConsultaActual()">Buscar Clientes</button>
+            <button class="xp-btn" onclick="setValAndRun('q10-sucursal','S001')">S001 (Palermo)</button>
+            <button class="xp-btn" onclick="setValAndRun('q10-sucursal','S006')">S006 (Caballito)</button>
+            <button class="xp-btn" onclick="setValAndRun('q10-sucursal','S999')">Probar 404 (S999)</button>
+          </div>
+        `,
+        autoEjecutar: true,
+        columnas: [
+          { h: "Cliente", f: (r) => r.id_cliente },
+          { h: "Nombre", f: (r) => `${r.nombre} ${r.apellido}` },
+          { h: "DNI", f: (r) => r.dni },
+          { h: "Email", f: (r) => r.email },
+          { h: "Teléfono", f: (r) => r.telefono },
+          { h: "Obra Social", f: (r) => r.obra_social },
+          { h: "Activo", f: (r) => formatoSiNo(r.activo) },
+          { h: "Compras en sucursal", f: (r) => r.cantidad_ventas },
+        ],
+      },
+      q11: {
+        codigo: "Q11",
+        titulo: "Q11 · Ingresos totales por farmacéutico en el mes actual (ventas 'Completada')",
+        descripcion: "Agrupa las ventas completadas del mes en curso por farmacéutico y suma el total facturado.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/farmaceuticos/ingresos-mes",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Farmacéutico", f: (r) => r.id_farmaceutico },
+          { h: "Nombre", f: (r) => `${r.nombre} ${r.apellido}` },
+          { h: "Matrícula", f: (r) => r.matricula },
+          { h: "Sucursal", f: (r) => r.id_sucursal },
+          { h: "Cant. Ventas", f: (r) => r.cantidad_ventas },
+          { h: "Ingresos Totales", f: (r) => formatoPesos(r.ingresos_totales) },
+        ],
+      },
+      q12: {
+        codigo: "Q12",
+        titulo: "Q12 · Clientes sin ventas registradas en el último año",
+        descripcion: "Busca clientes que no registran ventas no anuladas en los últimos 12 meses mediante $lookup.",
+        motores: ["mongo"],
+        metodo: "GET",
+        ruta: () => "/clientes/sin-ventas",
+        autoEjecutar: true,
+        columnas: [
+          { h: "Cliente", f: (r) => r._id || r.id_cliente },
+          { h: "Nombre", f: (r) => `${r.nombre} ${r.apellido}` },
+          { h: "DNI", f: (r) => r.dni },
+          { h: "Email", f: (r) => r.email },
+          { h: "Teléfono", f: (r) => r.telefono },
+          { h: "Ciudad", f: (r) => r.ciudad },
+          { h: "Obra Social", f: (r) => r.obra_social },
+          { h: "Activo", f: (r) => formatoSiNo(r.activo) },
+        ],
+      },
+      q13: {
+        codigo: "Q13",
+        titulo: "Q13 · Servicio ABM completo de Clientes (Alta, Modificación y Baja Lógica)",
+        descripcion: "Servicio de escritura en MongoDB: valida DNI único en el alta, consistencia de cobertura en modificaciones y aplica baja lógica (activo = False).",
+        motores: ["mongo"],
+        metodo: "POST",
+        ruta: () => "/clientes",
+        autoEjecutar: false,
+        controles: () => `
+          <div class="xp-form-row">
+            <div class="xp-field"><label>ID (opcional):</label><input id="q13-id" class="xp-input" value="C900" style="min-width:70px" /></div>
+            <div class="xp-field"><label>Nombre:</label><input id="q13-nombre" class="xp-input" value="Ana" style="min-width:95px" /></div>
+            <div class="xp-field"><label>Apellido:</label><input id="q13-apellido" class="xp-input" value="Pérez" style="min-width:95px" /></div>
+            <div class="xp-field"><label>DNI (único):</label><input id="q13-dni" class="xp-input" value="44123456" style="min-width:95px" /></div>
+            <div class="xp-field"><label>Email:</label><input id="q13-email" class="xp-input" value="ana.perez@gmail.com" /></div>
+            <div class="xp-field"><label>Teléfono:</label><input id="q13-tel" class="xp-input" value="1145556677" style="min-width:100px" /></div>
+          </div>
+          <div class="xp-form-row">
+            <div class="xp-field"><label>Ciudad:</label><input id="q13-ciudad" class="xp-input" value="Rosario" style="min-width:100px" /></div>
+            <div class="xp-field"><label>Provincia:</label><input id="q13-prov" class="xp-input" value="Santa Fe" style="min-width:100px" /></div>
+            <div class="xp-field">
+              <label>Obra Social:</label>
+              <select id="q13-os" class="xp-select">
+                <option value="OSDE">OSDE</option>
+                <option value="Swiss Medical">Swiss Medical</option>
+                <option value="PAMI">PAMI</option>
+                <option value="IOMA">IOMA</option>
+                <option value="Galeno">Galeno</option>
+                <option value="Sin cobertura">Sin cobertura</option>
+              </select>
+            </div>
+            <div class="xp-field"><label>Nro. Afiliado:</label><input id="q13-afiliado" class="xp-input" value="OS-400123" style="min-width:100px" /></div>
+          </div>
+          <div class="xp-form-row" style="margin-top:10px">
+            <button class="xp-btn primary" onclick="ejecutarQ13('alta')">➕ 1. Dar de Alta (POST /clientes)</button>
+            <button class="xp-btn" onclick="ejecutarQ13('modificar')">✏️ 2. Modificar (PATCH)</button>
+            <button class="xp-btn danger" onclick="ejecutarQ13('baja')">🗑️ 3. Baja Lógica (DELETE)</button>
+            <button class="xp-btn" onclick="probarRechazoDNI()">⚠️ Rechazo DNI Duplicado</button>
+          </div>
+        `,
+        columnas: [
+          { h: "ID Cliente", f: (r) => r.id_cliente },
+          { h: "Nombre", f: (r) => `${r.nombre} ${r.apellido}` },
+          { h: "DNI", f: (r) => r.dni },
+          { h: "Email", f: (r) => r.email },
+          { h: "Teléfono", f: (r) => r.telefono },
+          { h: "Ciudad / Prov.", f: (r) => `${r.ciudad}, ${r.provincia}` },
+          { h: "Obra Social", f: (r) => r.obra_social },
+          { h: "Nro. Afiliado", f: (r) => r.nro_afiliado || "-" },
+          { h: "Activo", f: (r) => formatoSiNo(r.activo) },
+        ],
+      },
+      q14: {
+        codigo: "Q14",
+        titulo: "Q14 · Registrar nueva venta 'Completada' (FEFO en Redis + Transacción MongoDB + Saga)",
+        descripcion: "Valida reglas de negocio, descuenta stock por FEFO en Redis (Paso 1) y registra venta + receta en transacción de MongoDB (Paso 2) coordinado por Saga.",
+        motores: ["redis", "mongo"],
+        metodo: "POST",
+        ruta: () => "/ventas",
+        autoEjecutar: false,
+        controles: () => `
+          <div class="xp-form-row">
+            <div class="xp-field"><label>ID Cliente:</label><input id="q14-cliente" class="xp-input" value="C001" style="min-width:80px" /></div>
+            <div class="xp-field"><label>ID Farmacéutico:</label><input id="q14-farm" class="xp-input" value="F001" style="min-width:80px" /></div>
+            <div class="xp-field">
+              <label>Medio de Pago:</label>
+              <select id="q14-pago" class="xp-select">
+                <option value="Efectivo">Efectivo</option>
+                <option value="Débito">Débito</option>
+                <option value="Crédito">Crédito</option>
+                <option value="Transferencia">Transferencia</option>
+                <option value="Obra social">Obra social</option>
+              </select>
+            </div>
+            <div class="xp-field"><label>ID Receta (opcional):</label><input id="q14-receta" class="xp-input" value="" placeholder="Vacío en venta libre" style="min-width:120px" /></div>
+          </div>
+          <div class="xp-form-row">
+            <div class="xp-field"><label>Agregar Producto:</label><input id="q14-prod" class="xp-input" value="PRD001" style="min-width:90px" /></div>
+            <div class="xp-field"><label>Cantidad:</label><input id="q14-cant" type="number" min="1" class="xp-input" value="1" style="min-width:65px" /></div>
+            <button class="xp-btn" onclick="agregarItemQ14()">+ Agregar ítem</button>
+            <button class="xp-btn primary" onclick="ejecutarQ14()">🛒 Registrar Venta (POST /ventas)</button>
+          </div>
+          <div class="items-chip-list" id="q14-items-list"></div>
+          <div class="xp-form-row" style="margin-top:8px">
+            <span style="font-size:11px; color:#444;">Escenarios rápidos:</span>
+            <button class="xp-btn" onclick="cargarPresetQ14('libre')">✅ Venta Libre</button>
+            <button class="xp-btn" onclick="cargarPresetQ14('receta')">✅ Con Receta (C007)</button>
+            <button class="xp-btn danger" onclick="cargarPresetQ14('sin_stock')">⚠️ Sin Stock</button>
+            <button class="xp-btn danger" onclick="cargarPresetQ14('drogueria')">⚠️ Droguería (F007)</button>
+          </div>
+        `,
+      },
+      q15: {
+        codigo: "Q15",
+        titulo: "Q15 · Actualización masiva del stock por venta registrada (FEFO e idempotente)",
+        descripcion: "Descuenta en Redis las unidades de cada ítem de una venta completada aplicando FEFO y omitiendo lotes vencidos.",
+        motores: ["redis", "mongo"],
+        metodo: "POST",
+        ruta: () => `/stock/ventas/${encodeURIComponent(val("q15-venta", "V016"))}/descuento`,
+        autoEjecutar: false,
+        controles: () => `
+          <div class="xp-form-row">
+            <div class="xp-field">
+              <label>ID Venta Completada:</label>
+              <input id="q15-venta" class="xp-input" value="V016" placeholder="Ej. V016, V017, V021" />
+            </div>
+            <button class="xp-btn primary" onclick="ejecutarQ15()">⚡ Descontar Stock FEFO</button>
+            <button class="xp-btn" onclick="setVal('q15-venta','V016'); ejecutarQ15();">V016</button>
+            <button class="xp-btn" onclick="setVal('q15-venta','V021'); ejecutarQ15();">V021</button>
+            <button class="xp-btn danger" onclick="setVal('q15-venta','V011'); ejecutarQ15();">⚠️ V011 Pendiente</button>
+          </div>
+        `,
+        transformarFilas: (resp) => resp.lotes_descontados || [],
+        columnas: [
+          { h: "Lote", f: (r) => r.id_lote },
+          { h: "Nro. Lote", f: (r) => r.nro_lote },
+          { h: "Producto", f: (r) => r.id_producto },
+          { h: "Vencimiento", f: (r) => formatoFecha(r.vencimiento) },
+          { h: "Unidades Descontadas", f: (r) => r.cantidad },
+          { h: "Unidades Restantes", f: (r) => r.unidades_restantes },
+        ],
+      },
+    };
+
+    function val(id, fallback = "") {
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : fallback;
+    }
+
+    function setVal(id, v) {
+      const el = document.getElementById(id);
+      if (el) el.value = v;
+    }
+
+    function setValAndRun(id, v) {
+      setVal(id, v);
+      ejecutarConsultaActual();
+    }
+
+    function actualizarReloj() {
+      const ahora = new Date();
+      document.getElementById("xp-clock").textContent = ahora.toLocaleTimeString("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+    setInterval(actualizarReloj, 10000);
+    actualizarReloj();
+
+    function toggleMenuInicio(ev) {
+      if (ev) ev.stopPropagation();
+      document.getElementById("start-menu").classList.toggle("open");
+    }
+
+    function cerrarMenuInicioForce() {
+      document.getElementById("start-menu").classList.remove("open");
+    }
+
+    function cerrarMenuInicio(ev) {
+      if (!ev.target.closest("#start-menu") && !ev.target.closest(".xp-start-btn")) {
+        cerrarMenuInicioForce();
+      }
+    }
+
+    function cambiarVista(vista) {
+      vistaActual = vista;
+      document.getElementById("tab-btn-table").classList.toggle("active", vista === "table");
+      document.getElementById("tab-btn-json").classList.toggle("active", vista === "json");
+      document.getElementById("view-table").style.display = vista === "table" ? "block" : "none";
+      document.getElementById("view-json").style.display = vista === "json" ? "block" : "none";
+    }
+
+    function seleccionarConsulta(clave) {
+      consultaActual = clave;
+      const cfg = CONSULTAS[clave];
+
+      document.querySelectorAll(".xp-q-link").forEach((el) => el.classList.remove("active"));
+      document.getElementById(`nav-${clave}`)?.classList.add("active");
+
+      document.getElementById("q-legend").textContent = `Consulta / Servicio ${cfg.codigo}`;
+      document.getElementById("q-title").textContent = cfg.titulo;
+      document.getElementById("q-desc").textContent = cfg.descripcion;
+      document.getElementById("q-controls").innerHTML = cfg.controles ? cfg.controles() : "";
+
+      const badges = cfg.motores
+        .map((m) =>
+          m === "mongo"
+            ? '<span class="motor-pill mongo">MongoDB 7 (rs0)</span>'
+            : '<span class="motor-pill redis">Redis 7 (AOF)</span>'
+        )
+        .join("");
+      document.getElementById("motor-badges").innerHTML = badges;
+
+      actualizarBarraDireccion(cfg.metodo, cfg.ruta());
+      limpiarResultado();
+      renderTaskbar();
+
+      if (clave === "q14") renderizarItemsQ14();
+      if (cfg.autoEjecutar) ejecutarConsultaActual();
+    }
+
+    function actualizarBarraDireccion(metodo, ruta) {
+      document.getElementById("http-address").value = `${metodo} ${window.location.origin}${ruta}`;
+    }
+
+    function limpiarResultado() {
+      document.getElementById("status-banner").innerHTML = "";
+      document.getElementById("view-table").innerHTML =
+        '<div style="color:#666; padding:12px;">Presione "Ejecutar" o elija una acción del formulario para ver los resultados.</div>';
+      document.getElementById("view-json").textContent = "";
+      document.getElementById("status-count").textContent = "Listo";
+    }
+
+    function mostrarBanner(tipo, mensaje) {
+      const icono = tipo === "error" ? "🛑" : "✅";
+      document.getElementById("status-banner").innerHTML = `
+        <div class="xp-alert ${tipo}">
+          <span class="xp-alert-icon">${icono}</span>
+          <div>${mensaje}</div>
+        </div>
+      `;
+    }
+
+    function construirTablaHTML(columnas, filas, subtitulo = "") {
+      if (!filas || filas.length === 0) {
+        return `${subtitulo ? `<div class="xp-section-subtitle">${subtitulo}</div>` : ""}<div style="padding:8px; color:#555;">Sin resultados para mostrar.</div>`;
+      }
+      const ths = columnas.map((c) => `<th>${c.h}</th>`).join("");
+      const trs = filas
+        .map(
+          (fila) =>
+            `<tr>${columnas
+              .map((c) => {
+                const v = c.f(fila);
+                return `<td>${v == null || v === "" ? "-" : v}</td>`;
+              })
+              .join("")}</tr>`
+        )
+        .join("");
+      return `
+        ${subtitulo ? `<div class="xp-section-subtitle">${subtitulo}</div>` : ""}
+        <table class="xp-table">
+          <thead><tr>${ths}</tr></thead>
+          <tbody>${trs}</tbody>
+        </table>
+      `;
+    }
+
+    async function llamarAPI(metodo, ruta, cuerpo = null) {
+      actualizarBarraDireccion(metodo, ruta);
+      document.getElementById("status-text").textContent = `Ejecutando ${metodo} ${ruta}...`;
+      document.getElementById("status-banner").innerHTML = "";
+
+      try {
+        const opciones = { method: metodo, headers: {} };
+        if (cuerpo !== null) {
+          opciones.headers["Content-Type"] = "application/json";
+          opciones.body = JSON.stringify(cuerpo);
+        }
+        const resp = await fetch(ruta, opciones);
+        const datos = await resp.json();
+        document.getElementById("view-json").textContent = JSON.stringify(datos, null, 2);
+
+        if (!resp.ok) {
+          const detalle = Array.isArray(datos.detail)
+            ? datos.detail.map((e) => `${e.loc.slice(1).join(".")}: ${e.msg}`).join("; ")
+            : datos.detail || resp.statusText;
+          mostrarBanner("error", `<b>Error HTTP ${resp.status}:</b> ${detalle}`);
+          document.getElementById("view-table").innerHTML = "";
+          document.getElementById("status-text").textContent = `Operación rechazada (HTTP ${resp.status}).`;
+          document.getElementById("status-count").textContent = "0 resultado(s)";
+          return null;
+        }
+        document.getElementById("status-text").textContent = `Completado (${resp.status} OK).`;
+        return datos;
+      } catch (err) {
+        mostrarBanner("error", `<b>Error de conexión:</b> ${err.message}`);
+        document.getElementById("status-text").textContent = "Error de red.";
+        return null;
+      }
+    }
+
+    async function ejecutarConsultaActual() {
+      if (consultaActual === "q13") return ejecutarQ13("alta");
+      if (consultaActual === "q14") return ejecutarQ14();
+      if (consultaActual === "q15") return ejecutarQ15();
+
+      const cfg = CONSULTAS[consultaActual];
+      const datos = await llamarAPI(cfg.metodo, cfg.ruta());
+      if (!datos) return;
+
+      const filas = cfg.transformarFilas ? cfg.transformarFilas(datos) : datos;
+      document.getElementById("view-table").innerHTML = construirTablaHTML(cfg.columnas, filas);
+      document.getElementById("status-count").textContent = `${filas.length} resultado(s)`;
+    }
+
+    async function ejecutarQ13(accion) {
+      const cfg = CONSULTAS.q13;
+      const id = val("q13-id", "C900");
+      let datos = null;
+
+      if (accion === "alta") {
+        const cuerpo = {
+          id_cliente: id || null,
+          nombre: val("q13-nombre"),
+          apellido: val("q13-apellido"),
+          dni: val("q13-dni"),
+          email: val("q13-email"),
+          telefono: val("q13-tel"),
+          ciudad: val("q13-ciudad"),
+          provincia: val("q13-prov"),
+          obra_social: val("q13-os"),
+          nro_afiliado: val("q13-afiliado") || null,
+        };
+        datos = await llamarAPI("POST", "/clientes", cuerpo);
+        if (datos) mostrarBanner("success", `<b>Cliente dado de alta:</b> ${datos.id_cliente} (${datos.nombre} ${datos.apellido})`);
+      } else if (accion === "modificar") {
+        const cuerpo = {
+          email: val("q13-email") || undefined,
+          telefono: val("q13-tel") || undefined,
+          ciudad: val("q13-ciudad") || undefined,
+          provincia: val("q13-prov") || undefined,
+          obra_social: val("q13-os") || undefined,
+          nro_afiliado: val("q13-afiliado") || null,
+        };
+        datos = await llamarAPI("PATCH", `/clientes/${encodeURIComponent(id)}`, cuerpo);
+        if (datos) mostrarBanner("success", `<b>Cliente modificado:</b> ${datos.id_cliente}`);
+      } else if (accion === "baja") {
+        datos = await llamarAPI("DELETE", `/clientes/${encodeURIComponent(id)}`);
+        if (datos) mostrarBanner("success", `<b>Baja lógica aplicada:</b> ${datos.id_cliente} (activo = False)`);
+      }
+
+      if (datos) {
+        document.getElementById("view-table").innerHTML = construirTablaHTML(cfg.columnas, [datos]);
+        document.getElementById("status-count").textContent = "1 cliente actualizado";
+      }
+    }
+
+    function probarRechazoDNI() {
+      setVal("q13-dni", "31245678");
+      ejecutarQ13("alta");
+    }
+
+    function renderizarItemsQ14() {
+      const cont = document.getElementById("q14-items-list");
+      if (!cont) return;
+      cont.innerHTML = itemsQ14
+        .map(
+          (it, idx) => `
+          <span class="item-chip">
+            <b>${it.id_producto}</b> × ${it.cantidad}
+            <button onclick="quitarItemQ14(${idx})" title="Quitar ítem">×</button>
+          </span>
+        `
+        )
+        .join("");
+    }
+
+    function agregarItemQ14() {
+      const prod = val("q14-prod");
+      const cant = parseInt(val("q14-cant", "1"), 10);
+      if (!prod || isNaN(cant) || cant <= 0) return;
+      itemsQ14.push({ id_producto: prod, cantidad: cant });
+      renderizarItemsQ14();
+    }
+
+    function quitarItemQ14(idx) {
+      itemsQ14.splice(idx, 1);
+      renderizarItemsQ14();
+    }
+
+    function cargarPresetQ14(tipo) {
+      if (tipo === "libre") {
+        setVal("q14-cliente", "C001");
+        setVal("q14-farm", "F001");
+        setVal("q14-pago", "Efectivo");
+        setVal("q14-receta", "");
+        itemsQ14 = [
+          { id_producto: "PRD001", cantidad: 2 },
+          { id_producto: "PRD002", cantidad: 1 },
+        ];
+      } else if (tipo === "receta") {
+        setVal("q14-cliente", "C007");
+        setVal("q14-farm", "F001");
+        setVal("q14-pago", "Obra social");
+        setVal("q14-receta", "RC006");
+        itemsQ14 = [{ id_producto: "PRD003", cantidad: 1 }];
+      } else if (tipo === "sin_stock") {
+        setVal("q14-cliente", "C001");
+        setVal("q14-farm", "F001");
+        setVal("q14-pago", "Efectivo");
+        setVal("q14-receta", "");
+        itemsQ14 = [{ id_producto: "PRD001", cantidad: 9999 }];
+      } else if (tipo === "drogueria") {
+        setVal("q14-cliente", "C001");
+        setVal("q14-farm", "F007");
+        setVal("q14-pago", "Efectivo");
+        setVal("q14-receta", "");
+        itemsQ14 = [{ id_producto: "PRD001", cantidad: 1 }];
+      }
+      renderizarItemsQ14();
+      ejecutarQ14();
+    }
+
+    async function ejecutarQ14() {
+      const cuerpo = {
+        id_cliente: val("q14-cliente"),
+        id_farmaceutico: val("q14-farm"),
+        medio_pago: val("q14-pago"),
+        id_receta: val("q14-receta") || null,
+        items: itemsQ14,
+      };
+      const resp = await llamarAPI("POST", "/ventas", cuerpo);
+      if (!resp) return;
+
+      const v = resp.venta;
+      mostrarBanner(
+        "success",
+        `<b>Venta ${v.id_venta} registrada con éxito.</b> Saga ID: <code>${resp.id_saga}</code> (Estado: Completado)`
+      );
+
+      const htmlVenta = construirTablaHTML(
+        [
+          { h: "Venta", f: (r) => r.id_venta },
+          { h: "Fecha", f: (r) => formatoFecha(r.fecha) },
+          { h: "Cliente", f: (r) => r.id_cliente },
+          { h: "Farmacéutico", f: (r) => r.id_farmaceutico },
+          { h: "Sucursal", f: (r) => r.id_sucursal },
+          { h: "Tipo", f: (r) => r.tipo },
+          { h: "Receta", f: (r) => r.id_receta || "-" },
+          { h: "Medio de Pago", f: (r) => r.medio_pago },
+          { h: "Total", f: (r) => formatoPesos(r.total) },
+          { h: "Estado", f: (r) => r.estado },
+        ],
+        [v],
+        "1. Cabecera de la Venta (MongoDB)"
+      );
+
+      const htmlItems = construirTablaHTML(
+        [
+          { h: "Detalle", f: (r) => r.id_detalle },
+          { h: "Producto", f: (r) => r.id_producto },
+          { h: "Cantidad", f: (r) => r.cantidad },
+          { h: "Precio Unit.", f: (r) => formatoPesos(r.precio_unit) },
+          { h: "Subtotal", f: (r) => formatoPesos(r.cantidad * r.precio_unit) },
+        ],
+        v.items || [],
+        `2. Ítems Embebidos de ${v.id_venta}`
+      );
+
+      const htmlLotes = construirTablaHTML(
+        [
+          { h: "Lote", f: (r) => r.id_lote },
+          { h: "Nro. Lote", f: (r) => r.nro_lote },
+          { h: "Producto", f: (r) => r.id_producto },
+          { h: "Vencimiento", f: (r) => formatoFecha(r.vencimiento) },
+          { h: "Descontado", f: (r) => r.cantidad },
+          { h: "Restante en Redis", f: (r) => r.unidades_restantes },
+        ],
+        resp.lotes_descontados || [],
+        "3. Lotes Descontados por FEFO (Redis)"
+      );
+
+      document.getElementById("view-table").innerHTML = htmlVenta + htmlItems + htmlLotes;
+      document.getElementById("status-count").textContent = `Venta ${v.id_venta} completada`;
+    }
+
+    async function ejecutarQ15() {
+      const cfg = CONSULTAS.q15;
+      const resp = await llamarAPI("POST", cfg.ruta());
+      if (!resp) return;
+
+      mostrarBanner(
+        "success",
+        `<b>Descuento FEFO aplicado para la venta ${resp.id_venta}</b> en la sucursal <b>${resp.id_sucursal}</b>.`
+      );
+      const filas = resp.lotes_descontados || [];
+      document.getElementById("view-table").innerHTML = construirTablaHTML(cfg.columnas, filas);
+      document.getElementById("status-count").textContent = `${filas.length} lote(s) afectado(s)`;
+    }
+
+    // Controles de teclado exclusivos para Snake cuando está enfocada
+    window.addEventListener("keydown", (e) => {
+      const tag = (document.activeElement?.tagName || "").toUpperCase();
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+      if (ventanaActivaId !== "win-snake") return;
+
+      const k = e.key.toLowerCase();
+      if (e.key === "ArrowUp" || k === "w") { e.preventDefault(); snakeSetDir(0, -1); }
+      else if (e.key === "ArrowDown" || k === "s") { e.preventDefault(); snakeSetDir(0, 1); }
+      else if (e.key === "ArrowLeft" || k === "a") { e.preventDefault(); snakeSetDir(-1, 0); }
+      else if (e.key === "ArrowRight" || k === "d") { e.preventDefault(); snakeSetDir(1, 0); }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      inicializarVentanas();
+      inicializarVisor();
+      snakeReiniciar(false);
+      iniciarMinas();
+      inicializarNotepad();
+      inicializarCMD();
+      renderPapelera();
+      seleccionarConsulta("q01");
+      renderTaskbar();
+      setTimeout(() => {
+        const b = document.getElementById("xp-balloon");
+        if (b) b.style.display = "none";
+      }, 7500);
+    });
+  </script>
+</body>
+</html>

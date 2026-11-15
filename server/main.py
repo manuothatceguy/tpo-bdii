@@ -1,7 +1,9 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pymongo.errors import PyMongoError
 from redis.exceptions import RedisError
 
@@ -11,6 +13,8 @@ from .routers import clientes, farmaceuticos, productos, recetas, stock, sucursa
 from .servicios.saga import recuperar_sagas
 
 logger = logging.getLogger("uvicorn.error")
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+INDEX_HTML = STATIC_DIR / "index.html"
 
 
 @asynccontextmanager
@@ -29,6 +33,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="FarmaRed", lifespan=lifespan)
+
+
+@app.get("/", include_in_schema=False)
+async def interfaz_web() -> FileResponse:
+    return FileResponse(INDEX_HTML)
+
 
 for modulo in (productos, ventas, clientes, recetas, farmaceuticos, sucursales, stock):
     app.include_router(modulo.router)
