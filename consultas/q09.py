@@ -8,7 +8,7 @@ def items(venta: dict) -> str:
 def main() -> None:
     ventas = obtener("/ventas/venta-libre")
     mostrar(
-        "Q09 · Ventas libres menores a $ 5.000",
+        "Q09 - Ventas libres menores a $ 5.000",
         ventas,
         [
             Columna("Venta", "id_venta"),

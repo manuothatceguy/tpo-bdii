@@ -4,7 +4,7 @@ from .base import Columna, mostrar, nombre_completo, obtener, pesos
 def main() -> None:
     farmaceuticos = obtener("/farmaceuticos/ingresos-mes")
     mostrar(
-        "Q11 · Ingresos por farmacéutico en el mes actual",
+        "Q11 - Ingresos por farmacéutico en el mes actual",
         farmaceuticos,
         [
             Columna("Farmacéutico", "id_farmaceutico"),

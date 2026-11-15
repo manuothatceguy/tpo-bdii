@@ -28,7 +28,7 @@ def main() -> None:
     venta = respuesta["venta"]
 
     mostrar(
-        "Q14 · Venta registrada",
+        "Q14 - Venta registrada",
         [venta],
         [
             Columna("Venta", "id_venta"),

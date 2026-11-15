@@ -6,9 +6,9 @@ from .base import Columna, fecha, mostrar, obtener, pesos
 def detalle(evento: dict) -> str:
     datos = evento["datos"]
     if evento["tipo"] == "venta":
-        return f"{datos['tipo']} · {datos['medio_pago']} · {pesos(datos['total'])} · {datos['estado']}"
+        return f"{datos['tipo']} - {datos['medio_pago']} - {pesos(datos['total'])} - {datos['estado']}"
     dispensas = f"{datos['dispensas_realizadas']}/{datos['dispensas_autorizadas']} dispensas"
-    return f"{datos['medico']} · {datos['tipo']} · {dispensas} · {datos['estado']}"
+    return f"{datos['medico']} - {datos['tipo']} - {dispensas} - {datos['estado']}"
 
 
 def main() -> None:
@@ -18,7 +18,7 @@ def main() -> None:
 
     respuesta = obtener(f"/clientes/{args.id_cliente}/historial")
     mostrar(
-        f"Q03 · Historial del cliente {respuesta['id_cliente']}",
+        f"Q03 - Historial del cliente {respuesta['id_cliente']}",
         respuesta["historial"],
         [
             Columna("Fecha", "fecha", fecha),

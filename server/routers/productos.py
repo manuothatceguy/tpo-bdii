@@ -8,7 +8,7 @@ from ..dependencies.mongo import get_mongo_database
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
 
-@router.get("/activos", summary="Q01 · Productos activos con su proveedor")
+@router.get("/activos", summary="Q01 - Productos activos con su proveedor")
 async def productos_activos(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
@@ -38,7 +38,7 @@ async def productos_activos(
     return await cursor.to_list()
 
 
-@router.get("/mas-vendidos", summary="Q07 · Top 5 productos más vendidos")
+@router.get("/mas-vendidos", summary="Q07 - Top 5 productos más vendidos")
 async def productos_mas_vendidos(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:

@@ -8,7 +8,7 @@ from ..dependencies.mongo import get_mongo_database
 router = APIRouter(prefix="/sucursales", tags=["Sucursales"])
 
 
-@router.get("/{id_sucursal}/clientes", summary="Q10 · Clientes atendidos en una sucursal")
+@router.get("/{id_sucursal}/clientes", summary="Q10 - Clientes atendidos en una sucursal")
 async def clientes_de_sucursal(
     id_sucursal: str,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],

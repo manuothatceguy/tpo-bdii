@@ -71,7 +71,7 @@ async def generar_id_cliente(db: AsyncDatabase) -> str:
     return f"C{max_num + 1:03d}"
 
 
-@router.get("/varias-recetas", summary="Q04 · Clientes con más de una receta")
+@router.get("/varias-recetas", summary="Q04 - Clientes con más de una receta")
 async def clientes_con_varias_recetas(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
@@ -116,7 +116,7 @@ async def clientes_con_varias_recetas(
     return await cursor.to_list()
 
 
-@router.get("/sin-ventas", summary="Q12 · Clientes sin ventas en el último año")
+@router.get("/sin-ventas", summary="Q12 - Clientes sin ventas en el último año")
 async def clientes_sin_ventas_recientes(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
@@ -160,7 +160,7 @@ async def clientes_sin_ventas_recientes(
     return await cursor.to_list()
 
 
-@router.get("/{id_cliente}/historial", summary="Q03 · Historial de un cliente")
+@router.get("/{id_cliente}/historial", summary="Q03 - Historial de un cliente")
 async def historial_cliente(
     id_cliente: str,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
@@ -213,7 +213,7 @@ async def historial_cliente(
     return {"id_cliente": id_cliente, "historial": await cursor.to_list()}
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, summary="Q13 · Alta de cliente")
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Q13 - Alta de cliente")
 async def alta_cliente(
     datos: AltaClienteRequest,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
@@ -274,7 +274,7 @@ async def alta_cliente(
     return formatear_cliente(documento)
 
 
-@router.patch("/{id_cliente}", summary="Q13 · Modificación de cliente")
+@router.patch("/{id_cliente}", summary="Q13 - Modificación de cliente")
 async def modificar_cliente(
     id_cliente: str,
     datos: ModificarClienteRequest,
@@ -334,7 +334,7 @@ async def modificar_cliente(
     return formatear_cliente(actualizado)
 
 
-@router.delete("/{id_cliente}", summary="Q13 · Baja lógica de cliente")
+@router.delete("/{id_cliente}", summary="Q13 - Baja lógica de cliente")
 async def baja_cliente(
     id_cliente: str,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],

@@ -4,7 +4,7 @@ from .base import Columna, fecha, mostrar, obtener
 def main() -> None:
     lotes = obtener("/stock/lotes-bajos")
     mostrar(
-        "Q08 · Lotes con menos de 50 unidades",
+        "Q08 - Lotes con menos de 50 unidades",
         lotes,
         [
             Columna("Lote", "id_lote"),

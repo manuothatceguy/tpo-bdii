@@ -4,7 +4,7 @@ from .base import Columna, mostrar, obtener, pesos
 def main() -> None:
     productos = obtener("/productos/activos")
     mostrar(
-        "Q01 · Productos activos con su proveedor",
+        "Q01 - Productos activos con su proveedor",
         productos,
         [
             Columna("ID", "_id"),

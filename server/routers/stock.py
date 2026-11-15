@@ -12,7 +12,7 @@ from ..servicios.ventas import descontar_stock_de_venta
 router = APIRouter(prefix="/stock", tags=["Stock"])
 
 
-@router.get("/lotes-bajos", summary="Q08 · Lotes con menos de 50 unidades")
+@router.get("/lotes-bajos", summary="Q08 - Lotes con menos de 50 unidades")
 async def lotes_con_stock_bajo(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
     redis: Annotated[Redis, Depends(get_redis)],
@@ -129,7 +129,7 @@ async def lotes_con_stock_bajo(
     return resultado
 
 
-@router.post("/ventas/{id_venta}/descuento", summary="Q15 · Descontar stock de una venta")
+@router.post("/ventas/{id_venta}/descuento", summary="Q15 - Descontar stock de una venta")
 async def descontar_lotes_de_venta(
     id_venta: str,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],

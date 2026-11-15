@@ -9,7 +9,7 @@ from ..dependencies.mongo import get_mongo_database
 router = APIRouter(prefix="/recetas", tags=["Recetas"])
 
 
-@router.get("/dispensas-vencidas", summary="Q06 · Tratamientos prolongados con dispensa vencida")
+@router.get("/dispensas-vencidas", summary="Q06 - Tratamientos prolongados con dispensa vencida")
 async def recetas_con_dispensa_vencida(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:

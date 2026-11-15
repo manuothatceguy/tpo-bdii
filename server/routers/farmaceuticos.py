@@ -9,7 +9,7 @@ from ..dependencies.mongo import get_mongo_database
 router = APIRouter(prefix="/farmaceuticos", tags=["Farmacéuticos"])
 
 
-@router.get("/ventas-recientes", summary="Q05 · Ventas por farmacéutico en los últimos 60 días")
+@router.get("/ventas-recientes", summary="Q05 - Ventas por farmacéutico en los últimos 60 días")
 async def ventas_recientes_por_farmaceutico(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
@@ -65,7 +65,7 @@ async def ventas_recientes_por_farmaceutico(
     return await cursor.to_list()
 
 
-@router.get("/ingresos-mes", summary="Q11 · Ingresos por farmacéutico en el mes actual")
+@router.get("/ingresos-mes", summary="Q11 - Ingresos por farmacéutico en el mes actual")
 async def ingresos_mes_por_farmaceutico(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:

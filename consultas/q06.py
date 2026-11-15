@@ -4,7 +4,7 @@ from .base import Columna, fecha, mostrar, nombre_completo, obtener
 def main() -> None:
     recetas = obtener("/recetas/dispensas-vencidas")
     mostrar(
-        "Q06 · Tratamientos prolongados con dispensa vencida",
+        "Q06 - Tratamientos prolongados con dispensa vencida",
         recetas,
         [
             Columna("Receta", "id_receta"),

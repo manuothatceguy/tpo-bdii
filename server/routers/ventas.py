@@ -28,7 +28,7 @@ class RegistrarVentaRequest(BaseModel):
     items: list[ItemVentaRequest] = Field(..., min_length=1)
 
 
-@router.get("/pendientes", summary="Q02 · Ventas pendientes con su farmacéutico")
+@router.get("/pendientes", summary="Q02 - Ventas pendientes con su farmacéutico")
 async def ventas_pendientes(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
@@ -81,7 +81,7 @@ async def ventas_pendientes(
     return await cursor.to_list()
 
 
-@router.get("/venta-libre", summary="Q09 · Ventas libres menores a $5.000")
+@router.get("/venta-libre", summary="Q09 - Ventas libres menores a $5.000")
 async def ventas_libres_bajo_monto(
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],
 ) -> list[dict]:
@@ -124,7 +124,7 @@ async def ventas_libres_bajo_monto(
     return await cursor.to_list()
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, summary="Q14 · Registrar venta")
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Q14 - Registrar venta")
 async def registrar_nueva_venta(
     datos: RegistrarVentaRequest,
     db: Annotated[AsyncDatabase, Depends(get_mongo_database)],

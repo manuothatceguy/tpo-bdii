@@ -10,7 +10,7 @@ def main() -> None:
 
     clientes = obtener(f"/sucursales/{args.id_sucursal}/clientes")
     mostrar(
-        f"Q10 · Clientes atendidos en la sucursal {args.id_sucursal}",
+        f"Q10 - Clientes atendidos en la sucursal {args.id_sucursal}",
         clientes,
         [
             Columna("Cliente", "id_cliente"),

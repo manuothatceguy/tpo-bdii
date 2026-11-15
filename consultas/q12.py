@@ -4,7 +4,7 @@ from .base import Columna, mostrar, nombre_completo, obtener, si_no
 def main() -> None:
     clientes = obtener("/clientes/sin-ventas")
     mostrar(
-        "Q12 · Clientes sin ventas en el último año",
+        "Q12 - Clientes sin ventas en el último año",
         clientes,
         [
             Columna("Cliente", "_id"),

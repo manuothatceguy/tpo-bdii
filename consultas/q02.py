@@ -4,7 +4,7 @@ from .base import Columna, mostrar, nombre_completo, obtener, pesos
 def main() -> None:
     ventas = obtener("/ventas/pendientes")
     mostrar(
-        "Q02 · Ventas pendientes con su farmacéutico",
+        "Q02 - Ventas pendientes con su farmacéutico",
         ventas,
         [
             Columna("Venta", "id_venta"),

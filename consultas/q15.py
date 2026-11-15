@@ -10,7 +10,7 @@ def main() -> None:
 
     respuesta = pedir("POST", f"/stock/ventas/{args.id_venta}/descuento")
     mostrar(
-        f"Q15 · Lotes descontados para {respuesta['id_venta']} en {respuesta['id_sucursal']}",
+        f"Q15 - Lotes descontados para {respuesta['id_venta']} en {respuesta['id_sucursal']}",
         respuesta["lotes_descontados"],
         [
             Columna("Lote", "id_lote"),

@@ -45,14 +45,14 @@ def main() -> None:
 
     if args.accion == "alta":
         cliente = pedir("POST", "/clientes", datos)
-        titulo = "Q13 · Cliente dado de alta"
+        titulo = "Q13 - Cliente dado de alta"
     elif args.accion == "modificar":
         cambios = {campo: datos[campo] for campo in CAMPOS_MODIFICABLES if campo in datos}
         cliente = pedir("PATCH", f"/clientes/{args.id_cliente}", cambios)
-        titulo = "Q13 · Cliente modificado"
+        titulo = "Q13 - Cliente modificado"
     else:
         cliente = pedir("DELETE", f"/clientes/{args.id_cliente}")
-        titulo = "Q13 · Cliente dado de baja"
+        titulo = "Q13 - Cliente dado de baja"
 
     mostrar(titulo, [cliente], COLUMNAS)
 
