@@ -28,7 +28,7 @@ class AltaClienteRequest(BaseModel):
     )
     nombre: str = Field(..., min_length=1)
     apellido: str = Field(..., min_length=1)
-    dni: str = Field(..., min_length=1)
+    dni: str = Field(..., pattern=r"^\s*\d{7,8}\s*$", description="DNI numérico de 7 u 8 dígitos")
     email: str = Field(..., min_length=1)
     telefono: str = Field(..., min_length=1)
     ciudad: str = Field(..., min_length=1)
