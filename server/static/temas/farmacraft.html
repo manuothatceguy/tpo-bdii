@@ -1,0 +1,1150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>FarmaCraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script src="core.js"></script>
+<style>
+:root{--mc-font:"VT323",ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff;font:20px/1.15 var(--mc-font);image-rendering:pixelated}
+button,input,select{font:inherit}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+.sh{text-shadow:2px 2px 0 #3f3f3f}
+
+.dirt{background-color:#3b2a1d;background-size:64px 64px;image-rendering:pixelated}
+#loading{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+#loading .lt{font-size:28px}
+#loading .lbar{width:min(420px,80vw);height:6px;background:#808080;border:0}
+#loading .lbar i{display:block;height:100%;width:0;background:#80ff20;transition:width .2s}
+#loading .ls{color:#c0c0c0}
+
+#title{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s}
+#title.out{opacity:0;pointer-events:none}
+#title::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,.35));pointer-events:none}
+.logo{position:relative;margin-top:-12vh;text-align:center;animation:logoIn 1.4s cubic-bezier(.2,1.4,.4,1) both}
+.logo h1{margin:0;font:700 clamp(46px,9.5vw,118px)/1 Silkscreen,monospace;letter-spacing:.02em;color:transparent;background-size:48px 48px;-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 4px 0 #2a2a2a) drop-shadow(0 4px 0 #1d1d1d) drop-shadow(0 3px 0 #111) drop-shadow(0 0 18px rgba(0,0,0,.5))}
+.logo .ed{font:400 clamp(14px,2vw,22px) Silkscreen,monospace;color:#e8e8e8;letter-spacing:.35em;margin-top:10px;text-shadow:2px 2px 0 #3f3f3f}
+.splash{position:absolute;right:-6%;bottom:-8px;color:#ffff00;font-size:clamp(18px,2.4vw,28px);text-shadow:2px 2px 0 #3f3f00;transform:rotate(-18deg);transform-origin:center;white-space:nowrap;animation:splash .55s ease-in-out infinite alternate}
+@keyframes splash{to{scale:1.08}}
+@keyframes logoIn{from{opacity:0;transform:translateY(-60px) scale(.8)}}
+.menu{position:relative;margin-top:7vh;display:grid;gap:10px;width:min(420px,86vw);animation:fadeUp .9s .5s both}
+.menu .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}}
+.foot{position:absolute;bottom:6px;left:8px;right:8px;display:flex;justify-content:space-between;color:#fff;font-size:18px;text-shadow:2px 2px 0 #3f3f3f}
+
+.mcb{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 14px;border:2px solid #000;cursor:pointer;color:#e0e0e0;text-shadow:2px 2px 0 #383838;background-color:#6f6f6f;background-size:48px 48px;image-rendering:pixelated;box-shadow:inset 2px 2px 0 rgba(255,255,255,.35),inset -2px -3px 0 rgba(0,0,0,.4);text-decoration:none;font-size:21px;white-space:nowrap}
+.mcb:hover{color:#ffffa0;outline:2px solid #fff;outline-offset:-4px;filter:brightness(1.12) hue-rotate(-10deg)}
+.mcb:active{filter:brightness(.9)}
+.mcb:disabled{color:#a0a0a0;filter:grayscale(1) brightness(.75);cursor:default;outline:none}
+select.mcb{appearance:none;-webkit-appearance:none;text-align:center;text-align-last:center}
+select.mcb option{background:#2b2b2b;color:#fff}
+
+#hud{position:fixed;inset:0;z-index:20;pointer-events:none;display:none}
+#hud.on{display:block}
+#cross{position:absolute;left:50%;top:50%;width:22px;height:22px;translate:-50% -50%;mix-blend-mode:difference}
+#cross::before,#cross::after{content:"";position:absolute;background:#fff}
+#cross::before{left:10px;top:0;width:2px;height:22px}
+#cross::after{left:0;top:10px;width:22px;height:2px}
+#debug{position:absolute;left:6px;top:4px;font-size:19px;line-height:1.15}
+#debug span{background:rgba(80,80,80,.55);padding:0 4px;display:inline-block}
+#hotbar{position:absolute;left:50%;bottom:8px;translate:-50% 0;display:flex;padding:3px;background:rgba(0,0,0,.45);border:2px solid #222;box-shadow:inset 0 0 0 2px #8b8b8b}
+.slot{width:46px;height:46px;position:relative;display:grid;place-items:center;border:2px solid transparent;border-color:#373737 #8b8b8b #8b8b8b #373737}
+.slot canvas{width:34px;height:34px;image-rendering:pixelated}
+.slot.sel{outline:3px solid #fff;outline-offset:-1px;z-index:1;box-shadow:0 0 0 2px #000}
+#itemname{position:absolute;left:50%;bottom:72px;translate:-50% 0;font-size:22px;text-shadow:2px 2px 0 #3f3f3f;transition:opacity .4s;white-space:nowrap}
+#target{position:absolute;left:50%;top:calc(50% + 26px);translate:-50% 0;font-size:20px;padding:2px 8px;background:rgba(16,0,16,.85);border:2px solid #25015b;box-shadow:inset 0 0 0 1px #5000aa;opacity:0;transition:opacity .15s;white-space:nowrap}
+#target.on{opacity:1}
+#target b{color:#55ffff;font-weight:400}
+#target small{display:block;color:#aaaaaa;font-size:18px}
+#chat{position:absolute;left:6px;bottom:78px;width:min(560px,70vw);display:flex;flex-direction:column;gap:0}
+#chat div{background:rgba(0,0,0,.45);padding:1px 6px;transition:opacity 1s}
+#chat div.old{opacity:0}
+#chatin{position:fixed;left:6px;right:6px;bottom:4px;z-index:25;display:none;background:rgba(0,0,0,.6);border:0;color:#fff;padding:4px 8px;font-size:22px;outline:none}
+#chatin.on{display:block}
+.touchbtn{position:fixed;z-index:22;display:none;pointer-events:auto}
+
+.overlay{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(16,16,16,.75),rgba(16,16,16,.85));padding:12px}
+.overlay.on{display:flex}
+.panel{background:#c6c6c6;border:3px solid;border-color:#fff #555 #555 #fff;outline:2px solid #000;color:#3f3f3f;padding:12px 14px;max-width:100%;max-height:100%;display:flex;flex-direction:column;animation:pop .18s ease-out}
+@keyframes pop{from{transform:scale(.96);opacity:.4}}
+.panel h2{margin:0 0 8px;font-weight:400;font-size:24px;color:#3f3f3f}
+.pause{display:grid;gap:10px;width:min(420px,90vw)}
+.pause h2{text-align:center;color:#fff;text-shadow:2px 2px 0 #3f3f3f;font-size:28px;margin-bottom:14px}
+.pause .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.inv{width:min(760px,96vw)}
+.inv .grp{margin-bottom:10px}
+.inv .grp h3{margin:0 0 3px;font-weight:400;font-size:20px;color:#404040}
+.inv .slots{display:flex;flex-wrap:wrap}
+.inv .slot{width:54px;height:54px;background:#8b8b8b;cursor:pointer}
+.inv .slot:hover{background:#c5c5c5}
+.inv .slot canvas{width:40px;height:40px}
+.inv .hint{color:#555;font-size:18px;margin-top:4px}
+#tip{position:fixed;z-index:90;pointer-events:none;padding:4px 8px;background:rgba(16,0,16,.94);border:2px solid #25015b;box-shadow:inset 0 0 0 1px #5000aa;color:#fff;font-size:20px;display:none;max-width:340px}
+#tip b{font-weight:400}
+#tip .g{color:#aaaaaa}
+#tip .c{color:#5555ff}
+
+.qwin{width:min(1180px,98vw);height:min(88vh,860px)}
+.qtabs{display:flex;gap:4px;margin:-4px 0 8px;flex-wrap:wrap}
+.qtabs button{border:2px solid;border-color:#fff #555 #555 #fff;background:#a8a8a8;color:#3f3f3f;padding:3px 10px;cursor:pointer;font-size:20px}
+.qtabs button.on{background:#c6c6c6;color:#000;border-color:#fff #555 #c6c6c6 #fff;position:relative;top:2px}
+.qtabs button:hover{color:#000}
+.qtop{display:flex;align-items:center;gap:10px}
+.qtop h2{flex:1;margin:0}
+.qbody{flex:1;min-height:0;display:flex;flex-direction:column}
+
+.fp{display:flex;flex-direction:column;flex:1;min-height:0}
+.fp-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.fp-code{width:40px;height:40px;display:grid;place-items:center;background:#8b8b8b;border:2px solid;border-color:#373737 #fff #fff #373737;color:#fff;text-shadow:2px 2px 0 #3f3f3f;font-size:18px}
+.fp-titles{flex:1;min-width:0}
+.fp-cat{color:#555;font-size:18px}
+.fp-title{margin:0;font-weight:400;font-size:24px;color:#3f3f3f;line-height:1}
+.fp-ep{color:#3a6cd8;font-size:18px;word-break:break-all}
+.fp-actions:empty{display:none}
+.fp-form{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;margin-bottom:4px}
+.fp-modes{display:flex;gap:6px;width:100%}
+.fp-modes button{flex:1;height:34px;border:2px solid #000;background:#6f6f6f;color:#e0e0e0;text-shadow:2px 2px 0 #383838;cursor:pointer;box-shadow:inset 2px 2px 0 rgba(255,255,255,.3),inset -2px -2px 0 rgba(0,0,0,.4)}
+.fp-modes button.on{background:#7b8fbf;color:#ffffa0}
+.fp-field{display:flex;flex-direction:column;gap:2px;color:#404040;font-size:19px}
+.fp-field[hidden]{display:none}
+.fp-field.fp-wide{width:100%}
+.fp-field input,.fp-field select{height:32px;background:#000;border:2px solid #a0a0a0;color:#e0e0e0;padding:0 6px;min-width:150px;outline:none;font-size:21px}
+.fp-field input:focus,.fp-field select:focus{border-color:#fff}
+.fp-items{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.fp-item{display:flex;gap:6px;align-items:center}
+.fp-item .fp-ip{width:140px;min-width:0}.fp-item .fp-ic{width:70px;min-width:0}
+.fp-btn{height:34px;padding:0 12px;border:2px solid #000;background:#6f6f6f;color:#e0e0e0;text-shadow:2px 2px 0 #383838;cursor:pointer;font-size:20px;box-shadow:inset 2px 2px 0 rgba(255,255,255,.3),inset -2px -2px 0 rgba(0,0,0,.4)}
+.fp-btn:hover{color:#ffffa0;outline:2px solid #fff;outline-offset:-4px}
+.fp-btn.fp-sm{height:30px;font-size:19px}
+.fp-run{background:#3c8527;min-width:150px}
+.fp-run:disabled{filter:grayscale(1);cursor:wait}
+.fp-bar{display:flex;gap:10px;align-items:center;margin:6px 0 8px;flex-wrap:wrap}
+.fp-seg{display:inline-flex;gap:4px}
+.fp-seg button{height:30px;border:2px solid;border-color:#fff #555 #555 #fff;background:#a8a8a8;color:#3f3f3f;padding:0 10px;cursor:pointer;font-size:19px}
+.fp-seg button.on{border-color:#555 #fff #fff #555;background:#8b8b8b;color:#fff}
+.fp-stat{margin-left:auto;color:#404040;font-size:19px}
+.fp-stat b{color:#000;font-weight:400}
+.fp-out{flex:1;min-height:0;overflow:auto;background:#1d1d1d;border:2px solid;border-color:#373737 #fff #fff #373737;padding:8px;color:#e0e0e0}
+.fp-sec{margin-bottom:12px}
+.fp-sec h4{margin:0 0 4px;font-weight:400;color:#ffff55;font-size:21px;text-shadow:2px 2px 0 #3f3f00}
+.fp-table{border-collapse:collapse;width:100%;font-size:20px}
+.fp-table th{position:sticky;top:-8px;background:#2b2b2b;text-align:left;font-weight:400;color:#55ffff;padding:3px 10px;cursor:pointer;white-space:nowrap;border-bottom:2px solid #555}
+.fp-table th[data-s]::after{content:attr(data-s);margin-left:4px;font-size:14px}
+.fp-table td{padding:2px 10px;white-space:nowrap;text-shadow:2px 2px 0 #000}
+.fp-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.04)}
+.fp-table tbody tr:hover td{background:rgba(85,255,85,.12)}
+.fp-r{text-align:right!important}
+.fp-chip{padding:0}
+.fp-ok{color:#55ff55}.fp-warn{color:#ffff55}.fp-bad{color:#ff5555}.fp-info{color:#55ffff}
+.fp-barcell{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.fp-track{width:100px;height:10px;background:#000;border:1px solid #555}
+.fp-track i{display:block;height:100%;background:#80ff20}
+.fp-empty{padding:24px;text-align:center;color:#aaa}
+.fp-json{margin:0;font:19px/1.1 var(--mc-font);color:#55ff55;white-space:pre-wrap;word-break:break-word}
+.fp-error{color:#ff5555;white-space:pre-wrap}
+.fp-error b{display:block;font-weight:400;color:#ff5555}
+.fp-error div{color:#ffaaaa}
+.fp-note{color:#aaaaaa}
+.fp-loading{padding:24px;text-align:center;color:#e0e0e0}
+.fp-loading i{display:inline-block;width:10px;height:10px;background:#80ff20;margin:0 3px;animation:blink .9s steps(2) infinite}
+.fp-loading i:nth-child(2){animation-delay:.3s}.fp-loading i:nth-child(3){animation-delay:.6s}
+.fp-loading span{display:block;margin-top:6px}
+@keyframes blink{50%{opacity:.15}}
+
+@media (max-width:700px){
+  .slot{width:36px;height:36px}.slot canvas{width:26px;height:26px}
+  #debug{font-size:16px}
+  .touchbtn{display:flex}
+}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="loading" class="dirt">
+  <div class="lt sh">Generando mundo</div>
+  <div class="ls sh" id="lstep">Preparando terreno...</div>
+  <div class="lbar"><i id="lbar"></i></div>
+</div>
+
+<div id="title" style="display:none">
+  <div class="logo">
+    <h1 id="logoTxt">FARMACRAFT</h1>
+    <div class="ed">EDICIÓN BASES DE DATOS II</div>
+    <div class="splash" id="splash"></div>
+  </div>
+  <div class="menu">
+    <button class="mcb" id="play">Entrar al mundo</button>
+    <button class="mcb" id="tinv">Ver consultas</button>
+    <div class="row">
+      <button class="mcb" id="tsound"></button>
+      <span id="tthemes"></span>
+    </div>
+    <a class="mcb" id="tdocs" target="_blank" rel="noopener">Abrir Swagger de la API</a>
+  </div>
+  <div class="foot"><span>FarmaCraft 1.0 · MongoDB + Redis</span><span id="tapi">API: ...</span></div>
+</div>
+
+<div id="hud">
+  <div id="cross"></div>
+  <div id="debug"></div>
+  <div id="target"></div>
+  <div id="chat"></div>
+  <div id="itemname"></div>
+  <div id="hotbar"></div>
+</div>
+<button class="mcb touchbtn" id="touchInv" style="right:8px;bottom:70px">Consultas</button>
+<input id="chatin" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Escribí /ayuda">
+
+<div class="overlay" id="pause">
+  <div class="pause">
+    <h2>Menú del juego</h2>
+    <button class="mcb" id="resume">Volver al juego</button>
+    <button class="mcb" id="pinv">Consultas (E)</button>
+    <div class="row"><button class="mcb" id="psound"></button><button class="mcb" id="preset">Regenerar mundo</button></div>
+    <div class="row"><a class="mcb" id="pdocs" target="_blank" rel="noopener">Swagger</a><span id="pthemes"></span></div>
+    <button class="mcb" id="ptitle">Volver al título</button>
+  </div>
+</div>
+
+<div class="overlay" id="invov">
+  <div class="panel inv">
+    <h2>Consultas de FarmaRed</h2>
+    <div id="invgrid"></div>
+    <div class="hint">Clic en un bloque para abrir la consulta · E o Esc para cerrar</div>
+  </div>
+</div>
+
+<div class="overlay" id="qov">
+  <div class="panel qwin">
+    <div class="qtop"><h2 id="qst"></h2><button class="fp-btn" id="qclose">Cerrar (Esc)</button></div>
+    <div class="qtabs" id="qtabs"></div>
+    <div class="qbody" id="qbody"></div>
+  </div>
+</div>
+<div id="tip"></div>
+
+<script>
+(() => {
+"use strict";
+const F = window.Farma, { el } = F;
+const $ = id => document.getElementById(id);
+if (!window.THREE) {
+  document.body.innerHTML = '<div style="padding:40px;font:22px VT323,monospace;color:#fff">No se pudo cargar Three.js desde el CDN. FarmaCraft necesita internet para la librería 3D.</div>';
+  return;
+}
+
+let seed = 1337;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+const pickc = a => a[Math.floor(rnd() * a.length)];
+
+const TILE = 16;
+const TILES = ["grass_top", "grass_side", "dirt", "stone", "cobble", "planks", "log_side", "log_top", "leaves", "glass", "quartz", "green", "lamp", "bricks", "shelf", "books"];
+const AT = 4;
+const atlas = document.createElement("canvas");
+atlas.width = atlas.height = TILE * AT;
+const ag = atlas.getContext("2d");
+const tilePos = {};
+const tileCanvas = {};
+
+function paintTile(name, g) {
+  const px = (x, y, c) => { g.fillStyle = c; g.fillRect(x, y, 1, 1); };
+  const fill = cs => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) px(x, y, pickc(cs)); };
+  const DIRT = ["#866043", "#79553a", "#966c4a", "#8b6a4d", "#79553a", "#6c4c33"];
+  const STONE = ["#7d7d7d", "#747474", "#8a8a8a", "#6b6b6b", "#7f7f7f", "#868686"];
+  const PL = ["#a0824f", "#9a7b48", "#b08f58", "#a5854f"];
+  if (name === "dirt") fill(DIRT);
+  else if (name === "grass_top") fill(["#5f9f35", "#6aab3d", "#579130", "#74b44a", "#64a43a"]);
+  else if (name === "grass_side") {
+    fill(DIRT);
+    for (let x = 0; x < 16; x++) {
+      const d = 2 + Math.floor(rnd() * 3);
+      for (let y = 0; y < d; y++) px(x, y, pickc(["#5f9f35", "#6aab3d", "#579130", "#74b44a"]));
+    }
+  } else if (name === "stone") fill(STONE);
+  else if (name === "cobble") {
+    fill(["#5a5a5a", "#636363"]);
+    for (let i = 0; i < 14; i++) {
+      const x = Math.floor(rnd() * 14), y = Math.floor(rnd() * 14), w = 2 + Math.floor(rnd() * 4), h = 2 + Math.floor(rnd() * 3), c = pickc(["#8f8f8f", "#7f7f7f", "#9a9a9a", "#868686"]);
+      for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) px((x + xx) % 16, (y + yy) % 16, yy === h - 1 || xx === w - 1 ? "#4f4f4f" : c);
+    }
+  } else if (name === "planks") {
+    fill(PL);
+    for (let y = 0; y < 16; y += 4) for (let x = 0; x < 16; x++) px(x, y + 3, "#7a5f36");
+    for (let r = 0; r < 4; r++) { const x = (r * 7 + 3) % 16; for (let y = 0; y < 3; y++) px(x, r * 4 + y, "#86683c"); }
+  } else if (name === "log_side") {
+    for (let x = 0; x < 16; x++) { const c = pickc(["#6b5132", "#5a4328", "#7a5c38", "#634a2d"]); for (let y = 0; y < 16; y++) px(x, y, rnd() < .2 ? pickc(["#4e3a22", "#6b5132"]) : c); }
+  } else if (name === "log_top") {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const d = Math.max(Math.abs(x - 7.5), Math.abs(y - 7.5));
+      px(x, y, d > 6.5 ? "#5a4328" : (Math.floor(d) % 2 ? "#b8945f" : "#a07f4c"));
+    }
+  } else if (name === "leaves") {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      if (rnd() < .16) { g.clearRect(x, y, 1, 1); continue; }
+      px(x, y, pickc(["#3c7a26", "#2f6a1e", "#4a8a2f", "#356f22", "#28581a"]));
+    }
+  } else if (name === "glass") {
+    g.clearRect(0, 0, 16, 16);
+    for (let i = 0; i < 16; i++) { px(i, 0, "#dbeefc"); px(i, 15, "#a9c8de"); px(0, i, "#dbeefc"); px(15, i, "#a9c8de"); }
+    for (const [x, y] of [[3, 3], [4, 4], [5, 5], [4, 3], [10, 9], [11, 10], [9, 3], [10, 2]]) px(x, y, "#f4fbff");
+  } else if (name === "quartz") {
+    fill(["#ecebe4", "#e7e5dd", "#f1f0ea", "#e9e7df"]);
+    for (let i = 0; i < 16; i++) { px(i, 0, "#f8f8f4"); px(0, i, "#f8f8f4"); px(i, 15, "#cfccc2"); px(15, i, "#cfccc2"); }
+  } else if (name === "green") fill(["#3fae48", "#359c3e", "#4cc255", "#3aa443"]);
+  else if (name === "lamp") {
+    fill(["#d9a441", "#e3b04d", "#cf9a3a"]);
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      if (x % 5 === 0 || y % 5 === 0) px(x, y, "#8a6326");
+      else if (rnd() < .45) px(x, y, pickc(["#ffe08a", "#fff1b8", "#ffd36b"]));
+    }
+  } else if (name === "bricks") {
+    fill(["#7a7a7a", "#727272", "#818181"]);
+    for (let y = 0; y < 16; y += 4) {
+      for (let x = 0; x < 16; x++) px(x, y + 3, "#555");
+      const off = (y / 4) % 2 ? 4 : 0;
+      for (let x = off; x < 16; x += 8) for (let yy = 0; yy < 3; yy++) px(x, y + yy, "#555");
+    }
+  } else if (name === "shelf" || name === "books") {
+    fill(PL);
+    for (let x = 0; x < 16; x++) { px(x, 0, "#7a5f36"); px(x, 7, "#7a5f36"); px(x, 8, "#7a5f36"); px(x, 15, "#7a5f36"); }
+    const cols = name === "shelf" ? ["#e6edf3", "#59c36a", "#4aa3e0", "#e85d75", "#f2c14e", "#ffffff"] : ["#a33", "#336", "#3a6", "#963", "#639", "#c93"];
+    for (const row of [1, 9]) {
+      let x = 1;
+      while (x < 15) {
+        const w = name === "shelf" ? 2 + Math.floor(rnd() * 2) : 1 + Math.floor(rnd() * 2), c = pickc(cols), h = name === "shelf" ? 4 + Math.floor(rnd() * 2) : 5 + Math.floor(rnd() * 2);
+        for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w && x + xx < 15; xx++) px(x + xx, row + 6 - yy, c);
+        if (name === "shelf") px(x, row + 7 - h, "#ff4d4d");
+        x += w + (name === "shelf" ? 1 : 0);
+      }
+    }
+  }
+}
+TILES.forEach((n, i) => {
+  const c = document.createElement("canvas");
+  c.width = c.height = TILE;
+  const g = c.getContext("2d");
+  paintTile(n, g);
+  tileCanvas[n] = c;
+  const tx = i % AT, ty = Math.floor(i / AT);
+  ag.drawImage(c, tx * TILE, ty * TILE);
+  tilePos[n] = [tx, ty];
+});
+const dirtURL = (() => { const c = document.createElement("canvas"); c.width = c.height = 16; const g = c.getContext("2d"); g.drawImage(tileCanvas.dirt, 0, 0); g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(0, 0, 16, 16); return c.toDataURL(); })();
+const stoneURL = tileCanvas.stone.toDataURL();
+document.querySelectorAll(".dirt,#title").forEach(n => { n.style.backgroundImage = `url(${dirtURL})`; n.style.backgroundSize = "64px 64px"; });
+$("title").style.backgroundImage = "none";
+const style = document.createElement("style");
+style.textContent = `.mcb{background-image:linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.12)),url(${stoneURL})} .logo h1{background-image:url(${stoneURL})}`;
+document.head.append(style);
+
+const atlasTex = new THREE.CanvasTexture(atlas);
+atlasTex.magFilter = THREE.NearestFilter;
+atlasTex.minFilter = THREE.NearestFilter;
+atlasTex.generateMipmaps = false;
+atlasTex.encoding = THREE.sRGBEncoding;
+
+const B = {
+  1: { n: "Bloque de pasto", t: ["grass_top", "dirt", "grass_side"] },
+  2: { n: "Tierra", t: ["dirt", "dirt", "dirt"] },
+  3: { n: "Piedra", t: ["stone", "stone", "stone"] },
+  4: { n: "Piedra rústica", t: ["cobble", "cobble", "cobble"] },
+  5: { n: "Tablones de roble", t: ["planks", "planks", "planks"] },
+  6: { n: "Tronco", t: ["log_top", "log_top", "log_side"] },
+  7: { n: "Hojas", t: ["leaves", "leaves", "leaves"], see: true },
+  8: { n: "Vidrio", t: ["glass", "glass", "glass"], see: true },
+  9: { n: "Bloque blanco", t: ["quartz", "quartz", "quartz"] },
+  10: { n: "Lana verde", t: ["green", "green", "green"] },
+  11: { n: "Lámpara", t: ["lamp", "lamp", "lamp"] },
+  12: { n: "Ladrillos de piedra", t: ["bricks", "bricks", "bricks"] },
+  13: { n: "Góndola de remedios", t: ["planks", "planks", "shelf"] },
+  14: { n: "Archivo de recetas", t: ["planks", "planks", "books"] },
+};
+const QBLOCK = 20;
+const HOTBAR = [1, 2, 3, 4, 5, 6, 8, 9, 10];
+
+const SX = 64, SY = 32, SZ = 64, OX = 32, OZ = 32, H = 9;
+let vox = new Uint8Array(SX * SY * SZ);
+const inside = (x, y, z) => x >= -OX && x < SX - OX && z >= -OZ && z < SZ - OZ && y >= 0 && y < SY;
+const idx = (x, y, z) => (x + OX) + SX * ((z + OZ) + SZ * y);
+const getB = (x, y, z) => (y < 0 ? 3 : inside(x, y, z) ? vox[idx(x, y, z)] : 0);
+const setB = (x, y, z, v) => { if (inside(x, y, z)) vox[idx(x, y, z)] = v; };
+const solid = id => id !== 0;
+const opaque = id => id !== 0 && !(B[id] && B[id].see) && id !== QBLOCK;
+
+function noise2(seedN) {
+  const g = new Float32Array(17 * 17);
+  for (let i = 0; i < g.length; i++) g[i] = rnd();
+  return (x, z) => {
+    const fx = (x + OX) / 64 * 8, fz = (z + OZ) / 64 * 8, ix = Math.floor(fx), iz = Math.floor(fz), tx = fx - ix, tz = fz - iz;
+    const s = t => t * t * (3 - 2 * t);
+    const a = g[ix + iz * 17], b = g[ix + 1 + iz * 17], c = g[ix + (iz + 1) * 17], d = g[ix + 1 + (iz + 1) * 17];
+    return (a + (b - a) * s(tx)) + ((c + (d - c) * s(tx)) - (a + (b - a) * s(tx))) * s(tz);
+  };
+}
+
+const QPOS = new Map();
+const STATIONS = {
+  caja: { tag: [0, H + 3.3, 0], blocks: [[-3, 0], [-1, 0], [1, 0], [3, 0]].map(([x, z]) => [x, H + 1, z]), spawn: [0, H, 3, Math.PI * 0] },
+  estanteria: { tag: [-6, H + 3.3, -4], blocks: [[-7, H + 1, -4], [-5, H + 1, -4]], spawn: [-6, H, -1, 0] },
+  recetas: { tag: [6, H + 3.3, -4], blocks: [[5, H + 1, -4], [7, H + 1, -4]], spawn: [6, H, -1, 0] },
+  clientes: { tag: [-7, H + 3.3, 3], blocks: [[-7, H + 1, 0], [-7, H + 1, 2], [-7, H + 1, 4], [-7, H + 1, 6]], spawn: [-4, H, 3, -Math.PI / 2] },
+  gerencia: { tag: [7, H + 3.3, 3], blocks: [[7, H + 1, 1], [7, H + 1, 3], [7, H + 1, 5]], spawn: [4, H, 3, Math.PI / 2] },
+};
+
+function generate() {
+  seed = 1337;
+  vox = new Uint8Array(SX * SY * SZ);
+  const n1 = noise2(), n2 = noise2();
+  for (let x = -OX; x < SX - OX; x++) for (let z = -OZ; z < SZ - OZ; z++) {
+    const d = Math.max(0, Math.max(Math.abs(x) - 13, (z < 0 ? Math.abs(z) - 11 : z - 20)));
+    const blend = Math.min(1, d / 8);
+    const raw = H + Math.round((n1(x, z) - .5) * 9 + (n2(x * 2 % 64, z * 2 % 64) - .5) * 3);
+    const h = Math.round(H + (raw - H) * blend);
+    for (let y = 0; y < h; y++) setB(x, y, z, y === h - 1 ? 1 : y >= h - 4 ? 2 : 3);
+  }
+  seed = 4242;
+  for (let i = 0; i < 70; i++) {
+    const x = -30 + Math.floor(rnd() * 60), z = -30 + Math.floor(rnd() * 60);
+    if (x > -16 && x < 16 && z > -14 && z < 24) continue;
+    let y = SY - 1; while (y > 0 && getB(x, y, z) === 0) y--;
+    if (getB(x, y, z) !== 1) continue;
+    const th = 4 + Math.floor(rnd() * 2);
+    for (let k = 1; k <= th; k++) setB(x, y + k, z, 6);
+    for (let dy = th - 2; dy <= th + 1; dy++) {
+      const r = dy >= th ? 1 : 2;
+      for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
+        if (Math.abs(dx) === r && Math.abs(dz) === r && (rnd() < .5 || dy >= th)) continue;
+        if (getB(x + dx, y + dy, z + dz) === 0) setB(x + dx, y + dy, z + dz, 7);
+      }
+    }
+    setB(x, y, z, 2);
+  }
+  for (let x = -10; x <= 10; x++) for (let z = -8; z <= 8; z++) {
+    for (let y = H; y <= H + 9; y++) setB(x, y, z, 0);
+    setB(x, H - 1, z, x === -10 || x === 10 || z === -8 || z === 8 ? 12 : 5);
+    setB(x, H + 5, z, 12);
+    const wall = x === -10 || x === 10 || z === -8 || z === 8, corner = (x === -10 || x === 10) && (z === -8 || z === 8);
+    if (wall) for (let y = H; y < H + 5; y++) setB(x, y, z, corner ? 6 : 9);
+  }
+  for (let x = -6; x <= 6; x += 4) for (let z = -4; z <= 4; z += 4) setB(x, H + 5, z, 11);
+  for (let x = -8; x <= 8; x++) if (Math.abs(x) >= 3) for (let y = H + 1; y <= H + 2; y++) setB(x, y, 8, 8);
+  for (let z = -5; z <= 5; z++) for (let y = H + 1; y <= H + 2; y++) { setB(-10, y, z, 8); setB(10, y, z, 8); }
+  for (let x = -1; x <= 1; x++) for (let y = H; y <= H + 2; y++) setB(x, y, 8, 0);
+  for (let x = -1; x <= 1; x++) for (let z = 9; z <= 22; z++) setB(x, H - 1, z, 4);
+  for (const [x, y] of [[0, 6], [0, 7], [0, 8], [-1, 7], [1, 7]]) setB(x, H + y, 8, 10);
+  for (const x of [-2, 2]) setB(x, H + 6, 8, 11);
+  for (let x = -9; x <= -3; x++) for (let y = H; y <= H + 2; y++) setB(x, y, -7, 13);
+  for (let x = 3; x <= 9; x++) for (let y = H; y <= H + 2; y++) setB(x, y, -7, 14);
+  for (let x = -4; x <= 4; x++) setB(x, H, 0, 5);
+  for (let x = -3; x <= 3; x++) setB(x, H, -3, 13);
+  for (let x = -8; x <= -4; x++) setB(x, H, -4, 5);
+  for (let x = 4; x <= 8; x++) setB(x, H, -4, 5);
+  for (let z = 0; z <= 6; z++) setB(-7, H, z, 5);
+  for (let z = 1; z <= 5; z++) setB(7, H, z, 5);
+  for (const [x, z] of [[-9, 7], [9, 7]]) { setB(x, H, z, 2); setB(x, H + 1, z, 7); }
+  QPOS.clear();
+  for (const s of F.STATIONS) STATIONS[s.id].blocks.forEach((p, i) => {
+    const code = s.queries[i];
+    setB(p[0], p[1], p[2], QBLOCK);
+    QPOS.set(p.join(","), { code, station: s.id });
+  });
+}
+
+const FACES = [
+  { n: [1, 0, 0], c: [[1, 0, 1], [1, 0, 0], [1, 1, 0], [1, 1, 1]], s: .8, t: 2 },
+  { n: [-1, 0, 0], c: [[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0]], s: .8, t: 2 },
+  { n: [0, 1, 0], c: [[0, 1, 1], [1, 1, 1], [1, 1, 0], [0, 1, 0]], s: 1, t: 0 },
+  { n: [0, -1, 0], c: [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]], s: .5, t: 1 },
+  { n: [0, 0, 1], c: [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], s: .9, t: 2 },
+  { n: [0, 0, -1], c: [[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]], s: .65, t: 2 },
+];
+const AO = [.45, .65, .82, 1];
+const EPS = .5 / (TILE * AT);
+function uvFor(name) {
+  const [tx, ty] = tilePos[name];
+  return [tx / AT + EPS, (tx + 1) / AT - EPS, 1 - (ty + 1) / AT + EPS, 1 - ty / AT - EPS];
+}
+function pushFace(arr, x, y, z, f, id, ao, light = 1) {
+  const [u0, u1, v0, v1] = uvFor(B[id].t[f.t]);
+  const uvs = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]];
+  const base = arr.pos.length / 3;
+  const glow = id === 11 ? 1.25 : 1;
+  for (let i = 0; i < 4; i++) {
+    const c = f.c[i];
+    arr.pos.push(x + c[0], y + c[1], z + c[2]);
+    arr.uv.push(...uvs[i]);
+    const b = Math.min(1.3, f.s * (ao ? AO[ao[i]] : 1) * light * glow);
+    arr.col.push(b, b, b);
+  }
+  if (ao && ao[0] + ao[2] < ao[1] + ao[3]) arr.idx.push(base + 1, base + 2, base + 3, base + 1, base + 3, base);
+  else arr.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+}
+function vertexAO(x, y, z, f, c) {
+  const n = f.n, ax = [0, 1, 2].filter(a => n[a] === 0);
+  const p = [x + n[0], y + n[1], z + n[2]];
+  const s1 = [...p], s2 = [...p];
+  s1[ax[0]] += c[ax[0]] ? 1 : -1;
+  s2[ax[1]] += c[ax[1]] ? 1 : -1;
+  const cr = [...s1]; cr[ax[1]] += c[ax[1]] ? 1 : -1;
+  const a = opaque(getB(...s1)) ? 1 : 0, b = opaque(getB(...s2)) ? 1 : 0, d = opaque(getB(...cr)) ? 1 : 0;
+  return a && b ? 0 : 3 - (a + b + d);
+}
+
+const material = new THREE.MeshBasicMaterial({ map: atlasTex, vertexColors: true, alphaTest: .5, side: THREE.FrontSide });
+const CH = 16;
+const chunks = new Map();
+const scene = new THREE.Scene();
+const SKY = 0x88b4f5;
+scene.background = new THREE.Color(SKY);
+scene.fog = new THREE.Fog(SKY, 34, 78);
+
+function buildChunk(cx, cz) {
+  const arr = { pos: [], uv: [], col: [], idx: [] };
+  for (let y = 0; y < SY; y++) for (let z = cz * CH - OZ; z < cz * CH - OZ + CH; z++) for (let x = cx * CH - OX; x < cx * CH - OX + CH; x++) {
+    const id = getB(x, y, z);
+    if (!id || id === QBLOCK) continue;
+    for (const f of FACES) {
+      const nb = getB(x + f.n[0], y + f.n[1], z + f.n[2]);
+      if (opaque(nb)) continue;
+      if (nb === id && B[id].see) continue;
+      const ao = f.c.map(c => vertexAO(x, y, z, f, c));
+      pushFace(arr, x, y, z, f, id, ao);
+    }
+  }
+  const key = cx + "," + cz;
+  const old = chunks.get(key);
+  if (old) { scene.remove(old); old.geometry.dispose(); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(arr.pos, 3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(arr.uv, 2));
+  g.setAttribute("color", new THREE.Float32BufferAttribute(arr.col, 3));
+  g.setIndex(arr.idx);
+  const m = new THREE.Mesh(g, material);
+  scene.add(m);
+  chunks.set(key, m);
+}
+function rebuildAround(x, z) {
+  const cx = Math.floor((x + OX) / CH), cz = Math.floor((z + OZ) / CH);
+  const set = new Set([[cx, cz]].concat([[-1, 0], [1, 0], [0, -1], [0, 1]].map(([dx, dz]) => [Math.floor((x + dx + OX) / CH), Math.floor((z + dz + OZ) / CH)])).map(a => a.join(",")));
+  for (const k of set) { const [a, b] = k.split(",").map(Number); if (a >= 0 && b >= 0 && a < SX / CH && b < SZ / CH) buildChunk(a, b); }
+}
+
+function blockGeometry(id) {
+  const arr = { pos: [], uv: [], col: [], idx: [] };
+  for (const f of FACES) pushFace(arr, -.5, -.5, -.5, f, id, null);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(arr.pos, 3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(arr.uv, 2));
+  g.setAttribute("color", new THREE.Float32BufferAttribute(arr.col, 3));
+  g.setIndex(arr.idx);
+  return g;
+}
+
+const DIG = { 0: "111101101101111", 1: "010110010010111", 2: "111001111100111", 3: "111001111001111", 4: "101101111001001", 5: "111100111001111", 6: "111100111101111", 7: "111001010010010", 8: "111101111101111", 9: "111101111001111" };
+const qTex = {}, qIcon = {};
+function queryCanvas(q) {
+  const c = document.createElement("canvas");
+  c.width = c.height = 32;
+  const g = c.getContext("2d");
+  g.fillStyle = "#2b2b2b"; g.fillRect(0, 0, 32, 32);
+  g.fillStyle = "#5a5a5a"; g.fillRect(0, 0, 32, 2); g.fillRect(0, 0, 2, 32);
+  g.fillStyle = "#151515"; g.fillRect(30, 0, 2, 32); g.fillRect(0, 30, 32, 2);
+  g.fillStyle = "#101418"; g.fillRect(4, 4, 24, 24);
+  g.fillStyle = q.color; g.fillRect(4, 4, 24, 4);
+  g.fillStyle = "#ffffff";
+  const ds = q.code.slice(1).split("");
+  ds.forEach((d, k) => {
+    const bits = DIG[d], sx = 7 + k * 10;
+    for (let i = 0; i < 15; i++) if (bits[i] === "1") g.fillRect(sx + (i % 3) * 3, 11 + Math.floor(i / 3) * 3, 3, 3);
+  });
+  g.fillStyle = q.color; g.globalAlpha = .35; g.fillRect(4, 26, 24, 2); g.globalAlpha = 1;
+  return c;
+}
+for (const q of F.QUERIES) {
+  const c = queryCanvas(q);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.encoding = THREE.sRGBEncoding;
+  qTex[q.code] = { canvas: c, tex: t };
+}
+
+function isoIcon(top, left, right, size = 32) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d");
+  g.imageSmoothingEnabled = false;
+  const s = size / 32;
+  g.setTransform(s * .9, s * .45, -s * .9, s * .45, size / 2, s * 1);
+  g.drawImage(top, 0, 0, 16, 16, 0, 0, 16, 16);
+  g.setTransform(s * .9, s * .45, 0, s * 1.05, size / 2 - s * 14.4, s * 8.2);
+  g.drawImage(left, 0, 0, left.width, left.height, 0, 0, 16, 16);
+  g.fillStyle = "rgba(0,0,0,.22)"; g.fillRect(0, 0, 16, 16);
+  g.setTransform(s * .9, -s * .45, 0, s * 1.05, size / 2, s * 15.4);
+  g.drawImage(right, 0, 0, right.width, right.height, 0, 0, 16, 16);
+  g.fillStyle = "rgba(0,0,0,.4)"; g.fillRect(0, 0, 16, 16);
+  return c;
+}
+const blockIcon = id => { const t = B[id].t; return isoIcon(tileCanvas[t[0]], tileCanvas[t[2]], tileCanvas[t[2]]); };
+for (const q of F.QUERIES) { const c = qTex[q.code].canvas; qIcon[q.code] = () => isoIcon(c, c, c); }
+
+const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, .05, 200);
+camera.rotation.order = "YXZ";
+scene.add(camera);
+const renderer = new THREE.WebGLRenderer({ canvas: $("gl"), antialias: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+const qMeshes = [];
+function placeQueryBlocks() {
+  qMeshes.forEach(m => scene.remove(m));
+  qMeshes.length = 0;
+  for (const [k, v] of QPOS) {
+    const [x, y, z] = k.split(",").map(Number);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ map: qTex[v.code].tex }));
+    m.position.set(x + .5, y + .5, z + .5);
+    m.userData = v;
+    scene.add(m);
+    qMeshes.push(m);
+  }
+}
+
+function nameTag(text, sub, color) {
+  const c = document.createElement("canvas");
+  const g = c.getContext("2d");
+  g.font = "48px VT323, monospace";
+  const w = Math.ceil(Math.max(g.measureText(text).width, g.measureText(sub).width * .62)) + 28;
+  c.width = w; c.height = 92;
+  g.fillStyle = "rgba(0,0,0,.42)"; g.fillRect(0, 0, w, 92);
+  g.font = "48px VT323, monospace"; g.textAlign = "center";
+  g.fillStyle = "#3f3f3f"; g.fillText(text, w / 2 + 3, 45);
+  g.fillStyle = color; g.fillText(text, w / 2, 42);
+  g.font = "30px VT323, monospace"; g.fillStyle = "#e0e0e0"; g.fillText(sub, w / 2, 80);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.NearestFilter; t.encoding = THREE.sRGBEncoding;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: true, fog: false }));
+  sp.scale.set(w / 92 * .8, .8, 1);
+  return sp;
+}
+const tags = [];
+function placeTags() {
+  tags.forEach(t => scene.remove(t));
+  tags.length = 0;
+  for (const s of F.STATIONS) {
+    const sp = nameTag(s.title, s.queries.join(" · "), s.color);
+    sp.position.set(...STATIONS[s.id].tag);
+    scene.add(sp);
+    tags.push(sp);
+  }
+}
+
+const sun = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshBasicMaterial({ color: 0xfffbe0, fog: false }));
+scene.add(sun);
+const cloudGeo = new THREE.BufferGeometry();
+(() => {
+  const pos = [], ids = [];
+  seed = 99;
+  for (let i = 0; i < 90; i++) {
+    const x = -140 + rnd() * 280, z = -140 + rnd() * 280, w = 8 + Math.floor(rnd() * 4) * 4, d = 6 + Math.floor(rnd() * 4) * 4;
+    const b = pos.length / 3;
+    pos.push(x, 0, z, x + w, 0, z, x + w, 0, z + d, x, 0, z + d);
+    ids.push(b, b + 2, b + 1, b, b + 3, b + 2);
+  }
+  cloudGeo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  cloudGeo.setIndex(ids);
+})();
+const clouds = new THREE.Mesh(cloudGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .82, side: THREE.DoubleSide, fog: false, depthWrite: false }));
+clouds.position.y = 46;
+scene.add(clouds);
+
+const outline = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.004, 1.004, 1.004)), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: .55 }));
+outline.visible = false;
+scene.add(outline);
+
+const held = new THREE.Mesh(blockGeometry(1), new THREE.MeshBasicMaterial({ map: atlasTex, vertexColors: true, alphaTest: .5, depthTest: false, fog: false }));
+held.renderOrder = 999;
+held.scale.setScalar(.36);
+held.position.set(.55, -.5, -.85);
+held.rotation.set(.1, -.7, 0);
+camera.add(held);
+
+const parts = [];
+const partGeo = new THREE.BoxGeometry(.1, .1, .1);
+function burst(x, y, z, id) {
+  const tc = tileCanvas[B[id] ? B[id].t[2] : "stone"].getContext("2d");
+  for (let i = 0; i < 14; i++) {
+    const d = tc.getImageData(Math.floor(rnd() * 16), Math.floor(rnd() * 16), 1, 1).data;
+    const m = new THREE.Mesh(partGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(`rgb(${d[0]},${d[1]},${d[2]})`) }));
+    m.position.set(x + .2 + rnd() * .6, y + .2 + rnd() * .6, z + .2 + rnd() * .6);
+    m.userData = { v: new THREE.Vector3((rnd() - .5) * 3, 2 + rnd() * 2.5, (rnd() - .5) * 3), life: .6 + rnd() * .4 };
+    scene.add(m);
+    parts.push(m);
+  }
+}
+
+const player = { p: new THREE.Vector3(0, H, 18), v: new THREE.Vector3(), yaw: 0, pitch: -.05, ground: false };
+const keys = {};
+let mode = "loading";
+let selSlot = 0;
+
+function collides(p) {
+  const r = .3;
+  for (let x = Math.floor(p.x - r); x <= Math.floor(p.x + r); x++)
+    for (let y = Math.floor(p.y); y <= Math.floor(p.y + 1.79); y++)
+      for (let z = Math.floor(p.z - r); z <= Math.floor(p.z + r); z++)
+        if (solid(getB(x, y, z))) return true;
+  return false;
+}
+function physics(dt) {
+  const sp = keys.ControlLeft || keys.ShiftLeft ? 6 : 4.4;
+  const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw);
+  let mx = 0, mz = 0;
+  if (keys.KeyW || keys.ArrowUp) { mx += fx; mz += fz; }
+  if (keys.KeyS || keys.ArrowDown) { mx -= fx; mz -= fz; }
+  if (keys.KeyA || keys.ArrowLeft) { mx += fz; mz -= fx; }
+  if (keys.KeyD || keys.ArrowRight) { mx -= fz; mz += fx; }
+  const ml = Math.hypot(mx, mz) || 1;
+  const target = new THREE.Vector3(mx / ml * sp, 0, mz / ml * sp);
+  const acc = player.ground ? 14 : 4;
+  player.v.x += (target.x - player.v.x) * Math.min(1, acc * dt);
+  player.v.z += (target.z - player.v.z) * Math.min(1, acc * dt);
+  player.v.y -= 30 * dt;
+  if (keys.Space && player.ground) { player.v.y = 8.6; player.ground = false; }
+  const p = player.p;
+  for (const ax of ["x", "z", "y"]) {
+    const old = p[ax];
+    p[ax] += player.v[ax] * dt;
+    if (collides(p)) {
+      if (ax !== "y" && player.ground && !collides(new THREE.Vector3(p.x, p.y + 1.01, p.z).setComponent(ax === "x" ? 0 : 2, p[ax]))) {
+        p.y = Math.floor(p.y) + 1.001;
+        if (!collides(p)) continue;
+        p.y -= 1;
+      }
+      p[ax] = old;
+      if (ax === "y") { if (player.v.y < 0) player.ground = true; player.v.y = 0; }
+      else player.v[ax] = 0;
+    } else if (ax === "y") player.ground = false;
+  }
+  if (p.y < -10) respawn();
+}
+function respawn() { player.p.set(0, H, 18); player.v.set(0, 0, 0); player.yaw = 0; player.pitch = -.05; }
+
+function raycast() {
+  const o = camera.position, d = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  let x = Math.floor(o.x), y = Math.floor(o.y), z = Math.floor(o.z);
+  const sx = Math.sign(d.x), sy = Math.sign(d.y), sz = Math.sign(d.z);
+  const td = v => (v === 0 ? Infinity : Math.abs(1 / v));
+  const dx = td(d.x), dy = td(d.y), dz = td(d.z);
+  let tx = d.x > 0 ? (x + 1 - o.x) * dx : (o.x - x) * dx;
+  let ty = d.y > 0 ? (y + 1 - o.y) * dy : (o.y - y) * dy;
+  let tz = d.z > 0 ? (z + 1 - o.z) * dz : (o.z - z) * dz;
+  let n = [0, 0, 0], t = 0;
+  while (t < 6) {
+    const id = getB(x, y, z);
+    if (id && t > 0) return { x, y, z, id, n };
+    if (tx < ty && tx < tz) { x += sx; t = tx; tx += dx; n = [-sx, 0, 0]; }
+    else if (ty < tz) { y += sy; t = ty; ty += dy; n = [0, -sy, 0]; }
+    else { z += sz; t = tz; tz += dz; n = [0, 0, -sz]; }
+  }
+  return null;
+}
+
+const hotbar = $("hotbar");
+HOTBAR.forEach((id, i) => {
+  const s = el("div", { class: "slot" + (i === 0 ? " sel" : "") });
+  s.append(blockIcon(id));
+  hotbar.append(s);
+});
+let nameT;
+function selectSlot(i) {
+  selSlot = (i + 9) % 9;
+  [...hotbar.children].forEach((s, k) => s.classList.toggle("sel", k === selSlot));
+  held.geometry.dispose();
+  held.geometry = blockGeometry(HOTBAR[selSlot]);
+  const n = $("itemname");
+  n.textContent = B[HOTBAR[selSlot]].n;
+  n.style.opacity = 1;
+  clearTimeout(nameT);
+  nameT = setTimeout(() => (n.style.opacity = 0), 1600);
+  F.Sound.tone(1400, 0, .03, "square", .02);
+}
+
+function chat(msg, color = "#ffffff") {
+  const line = el("div", { style: `color:${color}`, text: msg });
+  $("chat").append(line);
+  while ($("chat").children.length > 8) $("chat").firstChild.remove();
+  setTimeout(() => line.classList.add("old"), 9000);
+}
+
+let swing = 0;
+function act(button) {
+  const hit = raycast();
+  swing = 1;
+  if (!hit) return;
+  if (hit.id === QBLOCK) {
+    const q = QPOS.get([hit.x, hit.y, hit.z].join(","));
+    if (q) openQuery(q.station, q.code);
+    return;
+  }
+  if (button === 0) {
+    if (hit.y <= 0) return;
+    setB(hit.x, hit.y, hit.z, 0);
+    burst(hit.x, hit.y, hit.z, hit.id);
+    rebuildAround(hit.x, hit.z);
+    F.Sound.noise(0, .14, .12, 600 + Math.random() * 500);
+  } else if (button === 2) {
+    const px = hit.x + hit.n[0], py = hit.y + hit.n[1], pz = hit.z + hit.n[2];
+    if (!inside(px, py, pz) || getB(px, py, pz)) return;
+    setB(px, py, pz, HOTBAR[selSlot]);
+    if (collides(player.p)) { setB(px, py, pz, 0); return; }
+    rebuildAround(px, pz);
+    F.Sound.noise(0, .1, .1, 350);
+  }
+}
+
+const canvas = $("gl");
+let locked = false, drag = null, lockFailed = false;
+function lock() {
+  if (lockFailed || !canvas.requestPointerLock) return;
+  try {
+    const r = canvas.requestPointerLock();
+    if (r && r.catch) r.catch(() => { lockFailed = true; });
+  } catch { lockFailed = true; }
+}
+document.addEventListener("pointerlockchange", () => {
+  locked = document.pointerLockElement === canvas;
+  if (!locked && mode === "play" && !suppressPause) showPause();
+  suppressPause = false;
+});
+let suppressPause = false;
+document.addEventListener("pointerlockerror", () => { lockFailed = true; });
+document.addEventListener("mousemove", e => {
+  if (mode !== "play") return;
+  if (locked) look(e.movementX, e.movementY);
+  else if (drag) { look(e.clientX - drag[0], e.clientY - drag[1]); drag = [e.clientX, e.clientY]; }
+});
+function look(dx, dy) {
+  player.yaw -= dx * .0025;
+  player.pitch = Math.max(-1.55, Math.min(1.55, player.pitch - dy * .0025));
+}
+canvas.addEventListener("mousedown", e => {
+  if (mode !== "play") return;
+  if (!locked) {
+    drag = [e.clientX, e.clientY];
+    drag.start = [e.clientX, e.clientY];
+    drag.button = e.button;
+    if (!lockFailed) lock();
+    return;
+  }
+  act(e.button);
+});
+addEventListener("mouseup", e => {
+  if (drag && mode === "play" && !locked && Math.hypot(e.clientX - drag.start[0], e.clientY - drag.start[1]) < 5 && lockFailed) {
+    const r = canvas.getBoundingClientRect();
+    const m = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    const rc = new THREE.Raycaster(); rc.setFromCamera(m, camera);
+    const h = rc.intersectObjects(qMeshes)[0];
+    if (h && h.distance < 8) openQuery(h.object.userData.station, h.object.userData.code);
+    else act(drag.button);
+  }
+  drag = null;
+});
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+canvas.addEventListener("touchstart", e => { if (mode === "play") { lockFailed = true; drag = [e.touches[0].clientX, e.touches[0].clientY]; drag.start = [...drag]; } }, { passive: true });
+canvas.addEventListener("touchmove", e => { if (mode === "play" && drag) { look((e.touches[0].clientX - drag[0]) * 1.4, (e.touches[0].clientY - drag[1]) * 1.4); drag[0] = e.touches[0].clientX; drag[1] = e.touches[0].clientY; } }, { passive: true });
+canvas.addEventListener("touchend", e => {
+  if (mode !== "play" || !drag) return;
+  const t = e.changedTouches[0];
+  if (Math.hypot(t.clientX - drag.start[0], t.clientY - drag.start[1]) < 8) {
+    const r = canvas.getBoundingClientRect();
+    const m = new THREE.Vector2(((t.clientX - r.left) / r.width) * 2 - 1, -((t.clientY - r.top) / r.height) * 2 + 1);
+    const rc = new THREE.Raycaster(); rc.setFromCamera(m, camera);
+    const h = rc.intersectObjects(qMeshes)[0];
+    if (h) openQuery(h.object.userData.station, h.object.userData.code);
+  }
+  drag = null;
+});
+addEventListener("wheel", e => { if (mode === "play") selectSlot(selSlot + (e.deltaY > 0 ? 1 : -1)); }, { passive: true });
+
+addEventListener("keydown", e => {
+  if (mode === "chat") return;
+  const typing = ["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName);
+  if (e.key === "Escape") {
+    if (mode === "query" || mode === "inv") { closeOverlays(); return; }
+    if (mode === "pause") { resume(); return; }
+    if (mode === "play") { showPause(); return; }
+  }
+  if (typing) return;
+  if (mode === "play") {
+    keys[e.code] = true;
+    if (e.code === "Space") e.preventDefault();
+    if (e.code === "KeyE") { e.preventDefault(); openInventory(); }
+    else if (e.code === "KeyT" || e.key === "/") { e.preventDefault(); openChat(e.key === "/" ? "/" : ""); }
+    else if (/^Digit[1-9]$/.test(e.code)) selectSlot(+e.code.slice(5) - 1);
+  } else if (mode === "inv" && e.code === "KeyE") closeOverlays();
+});
+addEventListener("keyup", e => { keys[e.code] = false; });
+addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
+
+const chatin = $("chatin");
+function openChat(prefix) {
+  mode = "chat";
+  for (const k in keys) keys[k] = false;
+  suppressPause = true;
+  if (document.pointerLockElement) document.exitPointerLock();
+  chatin.value = prefix;
+  chatin.classList.add("on");
+  setTimeout(() => chatin.focus(), 0);
+}
+chatin.addEventListener("keydown", e => {
+  if (e.key === "Escape") { chatin.classList.remove("on"); mode = "play"; lock(); e.stopPropagation(); return; }
+  if (e.key !== "Enter") return;
+  const v = chatin.value.trim();
+  chatin.classList.remove("on");
+  mode = "play";
+  if (v) command(v);
+  if (mode === "play") lock();
+});
+function command(v) {
+  const [cmd, arg = ""] = v.replace(/^\//, "").split(/\s+/);
+  const c = cmd.toLowerCase();
+  if (!v.startsWith("/")) { chat(`<Farmacéutico> ${v}`); return; }
+  if (c === "ayuda" || c === "help") {
+    chat("Comandos: /q 07 · /tp caja|estanteria|recetas|clientes|gerencia · /spawn · /consultas", "#ffff55");
+  } else if (c === "q") {
+    const q = F.byCode("Q" + String(+arg).padStart(2, "0"));
+    if (!q) { chat(`No existe la consulta ${arg}`, "#ff5555"); return; }
+    const st = F.STATIONS.find(s => s.queries.includes(q.code));
+    openQuery(st.id, q.code);
+  } else if (c === "tp") {
+    const s = STATIONS[arg.toLowerCase()];
+    if (!s) { chat("Estaciones: caja, estanteria, recetas, clientes, gerencia", "#ff5555"); return; }
+    player.p.set(s.spawn[0] + .5, s.spawn[1], s.spawn[2] + .5); player.v.set(0, 0, 0);
+    player.yaw = s.spawn[3]; player.pitch = -.25;
+    chat(`Teletransportado a ${F.STATIONS.find(x => x.id === arg.toLowerCase()).title}`, "#aaaaaa");
+  } else if (c === "spawn") { respawn(); chat("Volviste al spawn", "#aaaaaa"); }
+  else if (c === "consultas") openInventory();
+  else chat(`Comando desconocido. Probá /ayuda`, "#ff5555");
+}
+
+function showOverlay(id) {
+  ["pause", "invov", "qov"].forEach(o => $(o).classList.toggle("on", o === id));
+}
+function showPause() {
+  if (mode !== "play") return;
+  mode = "pause";
+  for (const k in keys) keys[k] = false;
+  showOverlay("pause");
+}
+function resume() {
+  mode = "play";
+  showOverlay(null);
+  $("tip").style.display = "none";
+  lock();
+}
+function closeOverlays() { resume(); }
+
+function openInventory(fromTitle) {
+  mode = fromTitle ? "titleinv" : "inv";
+  for (const k in keys) keys[k] = false;
+  suppressPause = true;
+  if (document.pointerLockElement) document.exitPointerLock();
+  const grid = $("invgrid");
+  grid.replaceChildren(...F.STATIONS.map(s => el("div", { class: "grp" },
+    el("h3", { text: s.title }),
+    el("div", { class: "slots" }, s.queries.map(code => {
+      const q = F.byCode(code);
+      const slot = el("div", { class: "slot", onclick: () => { $("tip").style.display = "none"; openQuery(s.id, code, fromTitle); } });
+      slot.append(qIcon[code]());
+      slot.addEventListener("mousemove", e => tip(e, q));
+      slot.addEventListener("mouseleave", () => ($("tip").style.display = "none"));
+      return slot;
+    })))));
+  showOverlay("invov");
+  F.Sound.tone(500, 0, .05, "square", .02);
+}
+function tip(e, q) {
+  const t = $("tip");
+  t.replaceChildren(el("b", { style: `color:${q.color}`, text: `${q.code} · ${q.short}` }), el("div", { class: "g", text: q.title }), el("div", { class: "c", text: `${q.method} ${q.path}` }), el("div", { class: "g", text: q.engine }));
+  t.style.display = "block";
+  t.style.left = Math.min(innerWidth - 350, e.clientX + 16) + "px";
+  t.style.top = e.clientY - 10 + "px";
+}
+
+let fromTitleQuery = false;
+function openQuery(stationId, code, fromTitle) {
+  fromTitleQuery = !!fromTitle || mode === "titleinv" || mode === "title";
+  mode = "query";
+  for (const k in keys) keys[k] = false;
+  suppressPause = true;
+  if (document.pointerLockElement) document.exitPointerLock();
+  const st = F.STATIONS.find(s => s.id === stationId);
+  $("qst").textContent = st.title;
+  $("qtabs").replaceChildren(...st.queries.map(c => el("button", { "data-c": c, text: c, title: F.byCode(c).short, onclick: () => showQ(c) })));
+  showOverlay("qov");
+  showQ(code);
+  F.Sound.tone(300, 0, .08, "square", .03); F.Sound.tone(450, .05, .08, "square", .02);
+  chat(`Abriste ${code} · ${F.byCode(code).short}`, "#aaaaaa");
+}
+function showQ(code) {
+  [...$("qtabs").children].forEach(b => b.classList.toggle("on", b.dataset.c === code));
+  const panel = F.createPanel(F.byCode(code), {
+    text: { run: "Consultar", runMutation: "Ejecutar", loading: "Cargando chunks de datos...", empty: "Nada por acá", fill: "Completá los campos y ejecutá" },
+    onSuccess: (q, req, res, msg) => {
+      if (msg) {
+        chat(`[Servidor] ${msg}`, "#55ff55");
+        F.Sound.tone(880, 0, .1, "square", .03); F.Sound.tone(1320, .1, .2, "square", .03);
+        refreshDebug();
+      }
+    },
+    onError: e => { chat(`[Servidor] Error: ${e.message.split("\n")[0]}`, "#ff5555"); F.Sound.tone(140, 0, .25, "sawtooth", .04); },
+  });
+  $("qbody").replaceChildren(panel.root);
+  if (F.byCode(code).mutation) setTimeout(() => panel.focus(), 200);
+}
+$("qclose").onclick = () => closeQuery();
+function closeQuery() {
+  if (fromTitleQuery && !playing) { mode = "title"; showOverlay(null); return; }
+  resume();
+}
+$("qov").addEventListener("mousedown", e => { if (e.target.id === "qov") closeQuery(); });
+$("invov").addEventListener("mousedown", e => { if (e.target.id === "invov") { if (mode === "titleinv") { mode = "title"; showOverlay(null); } else resume(); } });
+
+$("resume").onclick = resume;
+$("pinv").onclick = () => openInventory();
+$("preset").onclick = () => { generate(); buildAll(); placeQueryBlocks(); respawn(); chat("Mundo regenerado", "#ffff55"); resume(); };
+$("ptitle").onclick = () => { showOverlay(null); toTitle(); };
+const paintSound = () => { const t = `Sonido: ${F.Sound.muted ? "No" : "Sí"}`; $("tsound").textContent = t; $("psound").textContent = t; };
+paintSound();
+$("tsound").onclick = $("psound").onclick = () => { F.Sound.toggle(); paintSound(); F.Sound.tone(800, 0, .05, "square", .02); };
+$("tdocs").href = $("pdocs").href = F.API.base + "/docs";
+[$("tthemes"), $("pthemes")].forEach(h => { const s = F.themeSwitcher("farmacraft", "mcb"); s.style.width = "100%"; h.append(s); });
+$("touchInv").onclick = () => openInventory();
+
+const SPLASHES = ["¡Con saga y compensación!", "¡FEFO incluido!", "¡WATCH/MULTI/EXEC!", "¡Replica set rs0!", "¡15 consultas!", "¡Ahora con Redis!", "¡Sin SQL!", "¡Stock por lote!", "¡Persistencia políglota!", "¡Grupo 10!"];
+$("splash").textContent = SPLASHES[Math.floor(Math.random() * SPLASHES.length)];
+
+let playing = false;
+function toTitle() {
+  mode = "title";
+  playing = false;
+  $("hud").classList.remove("on");
+  $("title").style.display = "flex";
+  requestAnimationFrame(() => $("title").classList.remove("out"));
+  if (document.pointerLockElement) { suppressPause = true; document.exitPointerLock(); }
+}
+$("play").onclick = () => {
+  $("title").classList.add("out");
+  setTimeout(() => ($("title").style.display = "none"), 800);
+  mode = "play";
+  playing = true;
+  respawn();
+  $("hud").classList.add("on");
+  lock();
+  F.Sound.tone(392, 0, .5, "triangle", .05); F.Sound.tone(523, .12, .5, "triangle", .05); F.Sound.tone(659, .24, .8, "triangle", .05);
+  chat("Bienvenido a FarmaCraft. Entrá a la farmacia y hacé clic en un bloque de consulta.", "#ffff55");
+  chat("E abre las consultas · T abre el chat (/ayuda) · clic izquierdo rompe · clic derecho pone", "#aaaaaa");
+  if (lockFailed || matchMedia("(pointer:coarse)").matches) chat("Sin mouse capturado: arrastrá para mirar y tocá un bloque para abrirlo", "#aaaaaa");
+};
+$("tinv").onclick = () => openInventory(true);
+
+let snapInfo = { online: null };
+async function refreshDebug() {
+  const s = await F.snapshot();
+  snapInfo = { online: s.online, lotes: s.lotes.length, prods: s.productos.length, pend: s.pendientes.length };
+  $("tapi").textContent = s.online ? "API: en línea" : "API: sin conexión";
+}
+
+function buildAll() { for (let cx = 0; cx < SX / CH; cx++) for (let cz = 0; cz < SZ / CH; cz++) buildChunk(cx, cz); }
+
+const clock = new THREE.Clock();
+let fps = 0, fpsAcc = 0, fpsN = 0, lastTarget = null;
+function loop() {
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  fpsAcc += dt; fpsN++;
+  if (fpsAcc > .5) { fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
+  if (playing) {
+    if (mode === "play") physics(dt);
+    camera.position.set(player.p.x, player.p.y + 1.62, player.p.z);
+    camera.rotation.set(player.pitch, player.yaw, 0);
+    const bob = Math.hypot(player.v.x, player.v.z) > .5 && player.ground ? Math.sin(t * 10) : 0;
+    swing = Math.max(0, swing - dt * 5);
+    held.visible = playing;
+    held.position.set(.55 + bob * .015, -.5 + Math.abs(bob) * .02 - Math.sin(swing * Math.PI) * .08, -.85 - Math.sin(swing * Math.PI) * .1);
+    held.rotation.set(.1 - Math.sin(swing * Math.PI) * .5, -.7, 0);
+    const hit = mode === "play" ? raycast() : null;
+    outline.visible = !!hit;
+    if (hit) outline.position.set(hit.x + .5, hit.y + .5, hit.z + .5);
+    const q = hit && hit.id === QBLOCK ? QPOS.get([hit.x, hit.y, hit.z].join(",")) : null;
+    const key = q ? q.code : null;
+    if (key !== lastTarget) {
+      lastTarget = key;
+      const tg = $("target");
+      if (q) {
+        const qq = F.byCode(q.code);
+        tg.replaceChildren(el("b", { text: `${qq.code} · ${qq.short}` }), el("small", { text: "Clic para abrir la consulta" }));
+        tg.classList.add("on");
+      } else tg.classList.remove("on");
+    }
+    const p = player.p;
+    const dirs = ["norte", "oeste", "sur", "este"];
+    const facing = dirs[((Math.round(player.yaw / (Math.PI / 2)) % 4) + 4) % 4];
+    $("debug").replaceChildren(
+      el("span", { text: `FarmaCraft 1.0 (${fps} fps)` }), el("br"),
+      el("span", { text: `XYZ: ${p.x.toFixed(1)} / ${p.y.toFixed(1)} / ${p.z.toFixed(1)}  Mirando: ${facing}` }), el("br"),
+      el("span", { text: snapInfo.online == null ? "API: ..." : snapInfo.online ? `API: en línea · ${snapInfo.prods} productos · ${snapInfo.lotes} lotes < 50 · ${snapInfo.pend} ventas pendientes` : "API: sin conexión" }));
+  } else {
+    const a = t * .06;
+    camera.position.set(Math.sin(a) * 15, H + 8.5, Math.cos(a) * 15 + 4);
+    camera.lookAt(0, H + 3, 0);
+    held.visible = false;
+    outline.visible = false;
+  }
+  for (const m of qMeshes) m.material.color.setScalar(.85 + .15 * Math.sin(t * 3 + m.position.x));
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const m = parts[i], u = m.userData;
+    u.life -= dt;
+    u.v.y -= 18 * dt;
+    m.position.addScaledVector(u.v, dt);
+    if (u.life <= 0) { scene.remove(m); m.material.dispose(); parts.splice(i, 1); }
+  }
+  clouds.position.x = (t * 1.2) % 140;
+  sun.position.set(camera.position.x + 60, camera.position.y + 70, camera.position.z - 80);
+  sun.lookAt(camera.position);
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+
+async function boot() {
+  const step = (txt, p) => { $("lstep").textContent = txt; $("lbar").style.width = p + "%"; return new Promise(r => setTimeout(r, 160)); };
+  await step("Generando terreno...", 10);
+  generate();
+  await step("Construyendo la farmacia...", 35);
+  buildAll();
+  await step("Colocando bloques de consulta...", 60);
+  placeQueryBlocks();
+  try { await document.fonts.load("48px VT323"); } catch {}
+  placeTags();
+  await step("Conectando con MongoDB y Redis...", 80);
+  await refreshDebug();
+  await step(snapInfo.online ? "Datos cargados" : "La API no responde, el mundo funciona igual", 100);
+  await new Promise(r => setTimeout(r, 350));
+  $("loading").style.display = "none";
+  $("title").style.display = "flex";
+  mode = "title";
+  loop();
+}
+setInterval(() => { if (playing) refreshDebug(); }, 30000);
+boot();
+})();
+</script>
+</body>
+</html>

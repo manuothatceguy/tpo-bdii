@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FarmaRed Backoffice</title>
+<style>
+:root{
+  --bg:#02040c;
+  --fog:#0b1d4a;
+  --glow:#7fd4ff;
+  --glow2:#3a8dff;
+  --text:#dbeeff;
+  --muted:#7f9cc4;
+  --glass:rgba(10,24,60,.55);
+  --line:rgba(127,212,255,.22);
+  --danger:#ff6b8a;
+  --ok:#6dffb0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font:14px/1.4 "Segoe UI","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+#bg{position:fixed;inset:0;width:100%;height:100%;display:block}
+.scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);mix-blend-mode:overlay;z-index:50}
+.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.75) 100%);z-index:49}
+
+#boot{position:fixed;inset:0;display:grid;place-items:center;z-index:40;cursor:pointer}
+.logo{text-align:center;opacity:0;transform:scale(1.15);filter:blur(12px);transition:opacity 1.6s ease,transform 2.4s cubic-bezier(.2,.7,.1,1),filter 1.8s ease}
+.logo.on{opacity:1;transform:none;filter:none}
+.logo h1{margin:0;font-weight:200;font-size:clamp(40px,9vw,96px);letter-spacing:.42em;padding-left:.42em;color:#fff;text-shadow:0 0 18px var(--glow),0 0 48px var(--glow2),0 0 90px rgba(58,141,255,.6)}
+.logo p{margin:.6em 0 0;font-size:clamp(11px,1.6vw,14px);letter-spacing:.5em;padding-left:.5em;text-transform:uppercase;color:var(--muted)}
+.press{margin-top:9vh;font-size:13px;letter-spacing:.45em;padding-left:.45em;text-transform:uppercase;color:var(--glow);opacity:0;transition:opacity .8s}
+.press.on{opacity:1;animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+#boot.leave .logo{opacity:0;transform:translateY(-14vh) scale(.7);filter:blur(6px);transition:all 1.1s cubic-bezier(.6,0,.3,1)}
+#boot.leave .press{opacity:0;animation:none}
+.flash{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(190,230,255,.9),rgba(60,140,255,.25) 35%,transparent 70%);opacity:0;pointer-events:none;z-index:45}
+.flash.go{animation:flash 1.2s ease-out}
+@keyframes flash{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+
+#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:18px 28px;z-index:30;opacity:0;transition:opacity 1s .4s;pointer-events:none}
+#hud.on{opacity:1;pointer-events:auto}
+.brand{font-weight:300;letter-spacing:.35em;font-size:13px;color:#fff;text-shadow:0 0 10px var(--glow2)}
+.hud-r{display:flex;gap:18px;align-items:center;font-size:12px;letter-spacing:.12em;color:var(--muted)}
+.hud-r a,.hud-r button{background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:none;letter-spacing:.12em;padding:4px 0}
+.hud-r a:hover,.hud-r button:hover{color:#fff}
+.hud-r select{background:transparent;border:1px solid var(--line);border-radius:12px;color:var(--muted);font:12px "Segoe UI",Arial,sans-serif;letter-spacing:.12em;padding:4px 8px;cursor:pointer;outline:none}
+.hud-r select option{background:#0b1d4a;color:#fff}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#666;vertical-align:middle}
+.dot.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.dot.bad{background:var(--danger);box-shadow:0 0 8px var(--danger)}
+#clock{color:#fff;font-variant-numeric:tabular-nums}
+
+#menu{position:fixed;inset:0;z-index:20;opacity:0;transform:scale(1.08);transition:opacity 1.2s ease .3s,transform 1.6s cubic-bezier(.2,.7,.1,1) .3s;pointer-events:none}
+#menu.on{opacity:1;transform:none;pointer-events:auto}
+#menu.dim{opacity:.18;filter:blur(3px);transform:scale(.96);transition:all .6s ease;pointer-events:none}
+.stage{position:absolute;left:50%;top:40%;width:0;height:0;perspective:1300px}
+.ring{position:absolute;left:0;top:0;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.25,.8,.25,1)}
+.item{position:absolute;left:-80px;top:-95px;width:160px;height:190px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;cursor:pointer;backface-visibility:hidden;transition:opacity .6s,filter .6s;text-align:center;user-select:none}
+.gem{width:74px;height:74px;position:relative;margin-top:8px;transform-style:preserve-3d;animation:bob 4s ease-in-out infinite}
+.gem i{position:absolute;inset:0;transform:rotate(45deg) scale(.72);border-radius:6px;background:linear-gradient(135deg,rgba(255,255,255,.95),var(--c) 38%,rgba(0,20,60,.9) 100%);box-shadow:0 0 18px var(--c),inset 0 0 14px rgba(255,255,255,.45);opacity:.85}
+.gem b{position:absolute;inset:14px;transform:rotate(45deg);border:1px solid rgba(255,255,255,.55);border-radius:4px}
+.item.sel .gem{animation:bob 4s ease-in-out infinite,spin 6s linear infinite}
+.item.sel .gem i{box-shadow:0 0 30px var(--c),0 0 70px var(--c),inset 0 0 18px #fff;opacity:1}
+@keyframes bob{50%{translate:0 -8px}}
+@keyframes spin{to{transform:rotateY(360deg)}}
+.item .code{font-size:22px;font-weight:200;letter-spacing:.2em;color:#fff;text-shadow:0 0 12px var(--c)}
+.item .t{font-size:12px;color:var(--muted);line-height:1.25;padding:0 6px}
+.item.sel .t{color:#fff}
+.info{position:absolute;left:0;right:0;bottom:15vh;text-align:center;padding:0 20px}
+.info .cat{font-size:11px;letter-spacing:.5em;padding-left:.5em;text-transform:uppercase;color:var(--c,var(--glow))}
+.info h2{margin:.35em 0 .3em;font-weight:200;font-size:clamp(22px,3.4vw,38px);letter-spacing:.06em;color:#fff;text-shadow:0 0 20px var(--glow2)}
+.info p{margin:0 auto;max-width:640px;color:var(--muted)}
+.info .ep{margin-top:10px;font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--glow);opacity:.85}
+.hints{position:absolute;left:0;right:0;bottom:4vh;display:flex;justify-content:center;gap:28px;font-size:12px;letter-spacing:.15em;color:var(--muted);flex-wrap:wrap;padding:0 16px}
+.hints span{display:inline-flex;align-items:center;gap:8px}
+kbd{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:13px;border:1px solid var(--line);background:rgba(127,212,255,.08);color:#fff;font:11px "Segoe UI",Arial,sans-serif;letter-spacing:0}
+.arrow{position:absolute;top:40%;translate:0 -50%;background:none;border:0;font-size:38px;color:var(--muted);cursor:pointer;padding:20px;font-weight:200}
+.arrow:hover{color:#fff;text-shadow:0 0 12px var(--glow)}
+.arrow.l{left:2vw}.arrow.r{right:2vw}
+
+#panel{position:fixed;inset:0;z-index:35;display:grid;place-items:center;padding:70px 4vw 4vh;pointer-events:none}
+.glass{position:relative;width:min(1180px,100%);max-height:100%;display:flex;flex-direction:column;background:var(--glass);border:1px solid var(--line);border-radius:18px;box-shadow:0 0 60px rgba(58,141,255,.25),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);overflow:hidden;opacity:0;transform:translateY(30px) scale(.94);filter:blur(8px);transition:all .55s cubic-bezier(.2,.8,.2,1)}
+#panel.on{pointer-events:auto}
+#panel.on .glass{opacity:1;transform:none;filter:none}
+.glass::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(160,220,255,.18) 50%,transparent 70%);transform:translateX(-100%);pointer-events:none}
+#panel.on .glass::before{animation:sweep 1.1s ease-out .15s}
+@keyframes sweep{to{transform:translateX(100%)}}
+.ph{display:flex;gap:18px;align-items:center;padding:20px 24px 14px;border-bottom:1px solid var(--line)}
+.ph .pc{font-size:34px;font-weight:200;letter-spacing:.12em;color:#fff;text-shadow:0 0 16px var(--c)}
+.ph h3{margin:0;font-weight:300;font-size:20px;color:#fff}
+.ph .pe{font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--glow);margin-top:3px;word-break:break-all}
+.ph .grow{flex:1;min-width:0}
+.btn{border:1px solid var(--line);background:rgba(127,212,255,.08);border-radius:999px;padding:8px 18px;cursor:pointer;letter-spacing:.08em;transition:all .2s;white-space:nowrap}
+.btn:hover{background:rgba(127,212,255,.2);box-shadow:0 0 14px rgba(127,212,255,.35);color:#fff}
+.btn.main{background:linear-gradient(180deg,rgba(80,170,255,.55),rgba(30,90,200,.55));border-color:rgba(160,220,255,.6);color:#fff}
+.btn.sm{padding:4px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:wait}
+form.pf{display:flex;flex-wrap:wrap;gap:12px 16px;padding:16px 24px 4px;align-items:flex-end}
+form.pf:empty{display:none}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.fld[hidden]{display:none}
+.fld input,.fld select{background:rgba(0,10,30,.55);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:150px;font-size:14px;letter-spacing:0;text-transform:none;color:#fff;outline:none}
+.fld input:focus,.fld select:focus{border-color:var(--glow);box-shadow:0 0 10px rgba(127,212,255,.35)}
+.fld select option{background:#0b1d4a}
+.modes{display:flex;gap:6px;width:100%}
+.modes button{border:1px solid var(--line);background:none;border-radius:999px;padding:6px 16px;cursor:pointer;color:var(--muted);letter-spacing:.1em}
+.hint{width:100%;font-size:13px;line-height:1.45;letter-spacing:.02em;text-transform:none;color:var(--muted);border-left:2px solid var(--glow);padding:6px 12px}
+.btn.main.danger{background:linear-gradient(180deg,rgba(255,90,110,.6),rgba(180,30,60,.6));border-color:rgba(255,150,170,.7)}
+.modes button.on{background:rgba(127,212,255,.18);color:#fff;box-shadow:0 0 12px rgba(127,212,255,.3)}
+.items{display:flex;flex-direction:column;gap:6px}
+.items .row{display:flex;gap:6px;align-items:center}
+.items .row input{min-width:0}
+.items .row .ip{width:150px}.items .row .ic{width:76px}
+.pbar{display:flex;gap:12px;align-items:center;padding:14px 24px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{background:none;border:0;padding:6px 14px;cursor:pointer;color:var(--muted);font-size:12px;letter-spacing:.1em}
+.seg button.on{background:rgba(127,212,255,.18);color:#fff}
+.stat{margin-left:auto;font-size:12px;color:var(--muted);letter-spacing:.06em}
+.stat b{color:#fff;font-weight:500}
+.out{flex:1;min-height:120px;overflow:auto;padding:0 24px 24px}
+.sec{margin:6px 0 20px}
+.sec h4{margin:0 0 8px;font-weight:400;font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--glow)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+th{position:sticky;top:0;background:rgba(8,22,56,.92);text-align:left;font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--glow);padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none}
+th:hover{color:#fff}
+th[data-s]::after{content:attr(data-s);margin-left:6px;font-size:9px}
+td{padding:8px 12px;border-bottom:1px solid rgba(127,212,255,.08);white-space:nowrap}
+tbody tr{animation:rowin .45s ease both}
+tbody tr:hover td{background:rgba(127,212,255,.08);color:#fff}
+@keyframes rowin{from{opacity:0;transform:translateX(-12px)}}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;padding:1px 10px;border-radius:999px;font-size:11px;letter-spacing:.06em;border:1px solid currentColor}
+.chip.g{color:var(--ok)}.chip.y{color:#ffd36b}.chip.p{color:var(--danger)}.chip.b{color:var(--glow)}
+.bar{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.bar i{display:block;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--glow2),var(--glow));box-shadow:0 0 8px var(--glow2);min-width:3px}
+.bar .track{width:120px;display:flex;justify-content:flex-start}
+.empty{padding:28px;text-align:center;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;font-size:12px}
+pre.json{margin:0;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#bfe3ff;white-space:pre-wrap;word-break:break-word}
+.err{margin:8px 0;padding:16px 18px;border:1px solid rgba(255,107,138,.5);border-radius:12px;background:rgba(255,60,100,.08);color:#ffd0da;white-space:pre-wrap}
+.err b{display:block;color:var(--danger);letter-spacing:.2em;font-size:11px;margin-bottom:6px}
+.note{color:var(--muted);font-size:12px;letter-spacing:.06em}
+.loader{display:flex;justify-content:center;align-items:center;gap:10px;padding:40px;color:var(--muted);letter-spacing:.3em;font-size:11px;text-transform:uppercase}
+.loader i{width:9px;height:9px;transform:rotate(45deg);background:var(--glow);box-shadow:0 0 10px var(--glow);animation:ld 1s ease-in-out infinite}
+.loader i:nth-child(2){animation-delay:.15s}.loader i:nth-child(3){animation-delay:.3s}
+@keyframes ld{50%{opacity:.15;transform:rotate(45deg) scale(.5)}}
+
+#toast{position:fixed;top:70px;left:50%;translate:-50% 0;z-index:60;padding:12px 22px;border-radius:999px;background:rgba(10,40,30,.75);border:1px solid rgba(109,255,176,.5);color:#d8ffe9;box-shadow:0 0 24px rgba(109,255,176,.3);opacity:0;transform:translateY(-12px);transition:all .4s;pointer-events:none;letter-spacing:.06em}
+#toast.on{opacity:1;transform:none}
+
+@media (max-width:700px){
+  .stage{top:36%}
+  .arrow{display:none}
+  .hints{gap:14px;font-size:10px}
+  #hud{padding:12px 14px}
+  .hud-r{gap:10px}
+  .hud-r .opt{display:none}
+  #panel{padding:56px 8px 8px}
+  .ph{padding:14px 16px 10px}
+  form.pf,.pbar{padding-left:16px;padding-right:16px}
+  .out{padding:0 12px 16px}
+  .stat{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01s!important;transition-duration:.2s!important}
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="vignette"></div>
+<div class="scan"></div>
+<div class="flash" id="flash"></div>
+
+<div id="boot">
+  <div>
+    <div class="logo" id="logo">
+      <h1>FARMARED</h1>
+      <p>Backoffice · Bases de Datos II</p>
+    </div>
+    <div class="press" id="press">Presioná Enter o tocá la pantalla</div>
+  </div>
+</div>
+
+<header id="hud">
+  <div class="brand">FARMARED</div>
+  <div class="hud-r">
+    <button id="api" title="Cambiar la URL de la API"><span class="dot" id="apidot"></span><span id="apitxt">API</span></button>
+    <a class="opt" id="docs" target="_blank" rel="noopener">SWAGGER</a>
+    <button id="mute" title="Sonido">♪ ON</button>
+    <select id="temas" class="opt" aria-label="Tema">
+      <option value="../">FARMAXP</option>
+      <option value="" selected>PS2</option>
+      <option value="farmatwin.html">FARMATWIN 3D</option>
+      <option value="farmacraft.html">FARMACRAFT</option>
+      <option value="farmaoflegends.html">FARMA OF LEGENDS</option>
+      <option value="farmanite.html">FARMANITE</option>
+      <option value="grandthefarma.html">GRAND THEFT FARMA</option>
+      <option value="farmatown.html">FARMATOWN</option>
+      <option value="farmahitrun.html">FARMA HIT &amp; RUN</option>
+      <option value="farmacampus.html">FARMACAMPUS</option>
+    </select>
+    <span id="clock"></span>
+  </div>
+</header>
+
+<main id="menu">
+  <button class="arrow l" id="prev" aria-label="Anterior">‹</button>
+  <button class="arrow r" id="next" aria-label="Siguiente">›</button>
+  <div class="stage"><div class="ring" id="ring"></div></div>
+  <div class="info" id="info">
+    <div class="cat" id="icat"></div>
+    <h2 id="ititle"></h2>
+    <p id="idesc"></p>
+    <div class="ep" id="iep"></div>
+  </div>
+  <div class="hints">
+    <span><kbd>←</kbd><kbd>→</kbd> Elegir</span>
+    <span><kbd>Enter</kbd> Abrir</span>
+    <span><kbd>Esc</kbd> Volver</span>
+  </div>
+</main>
+
+<section id="panel" aria-hidden="true">
+  <div class="glass" id="glass">
+    <div class="ph">
+      <div class="pc" id="pcode"></div>
+      <div class="grow"><h3 id="ptitle"></h3><div class="pe" id="pep"></div></div>
+      <button class="btn" id="close">Esc · Volver</button>
+    </div>
+    <form class="pf" id="pform" autocomplete="off"></form>
+    <div class="pbar">
+      <button class="btn main" id="run" type="button">▶ Ejecutar</button>
+      <div class="seg" id="view"><button type="button" class="on" data-v="tabla">Tabla</button><button type="button" data-v="json">JSON</button></div>
+      <span class="stat" id="stat"></span>
+    </div>
+    <div class="out" id="out"></div>
+  </div>
+</section>
+
+<div id="toast"></div>
+<datalist id="dl-productos"></datalist>
+
+<script>
+(() => {
+"use strict";
+
+const $ = id => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k === "style") n.style.cssText = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  return n;
+};
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const pick = (o, p) => p.split(".").reduce((a, k) => (a == null ? undefined : a[k]), o);
+const nombre = r => `${r.nombre} ${r.apellido}`;
+const enc = encodeURIComponent;
+
+const FMT = {
+  pesos: v => "$ " + Math.round(+v).toLocaleString("es-AR"),
+  fecha: v => { const s = String(v).slice(0, 10).split("-"); return s.length === 3 ? `${s[2]}/${s[1]}/${s[0]}` : String(v); },
+  sino: v => (v ? "Sí" : "No"),
+  num: v => (+v).toLocaleString("es-AR"),
+};
+const CHIP = { Completada: "g", Vigente: "b", Pendiente: "y", Anulada: "p", Vencida: "p" };
+
+const CATS = {
+  productos: { label: "Productos", c: "#5fd3ff" },
+  ventas: { label: "Ventas", c: "#6dffb0" },
+  clientes: { label: "Clientes", c: "#b48cff" },
+  recetas: { label: "Recetas", c: "#ff7ac8" },
+  farmaceuticos: { label: "Farmacéuticos", c: "#ffcf5c" },
+  sucursales: { label: "Sucursales", c: "#ff9b54" },
+  stock: { label: "Stock", c: "#4fe0d0" },
+};
+
+const OBRAS = ["OSDE", "Swiss Medical", "PAMI", "IOMA", "Galeno", "Sin cobertura"];
+const MEDIOS = ["Efectivo", "Débito", "Crédito", "Transferencia", "Obra social"];
+const MODIFICABLES = ["email", "telefono", "ciudad", "provincia", "obra_social", "nro_afiliado"];
+const ALTA = ["id_cliente", "nombre", "apellido", "dni", "email", "telefono", "ciudad", "provincia", "obra_social", "nro_afiliado"];
+const ALTA_REQ = ["nombre", "apellido", "dni", "email", "telefono", "ciudad", "provincia", "obra_social"];
+
+const COLS_CLIENTE = [["Cliente", "id_cliente"], ["Nombre", nombre], ["DNI", "dni"], ["Email", "email"], ["Teléfono", "telefono"], ["Ciudad", "ciudad"], ["Provincia", "provincia"], ["Obra social", "obra_social"], ["Nro. afiliado", "nro_afiliado"], ["Activo", "activo", "sino"]];
+const COLS_LOTES = [["Lote", "id_lote"], ["Nro. lote", "nro_lote"], ["Producto", "id_producto"], ["Vencimiento", "vencimiento", "fecha"], ["Descontado", "cantidad", "num"], ["Restante", "unidades_restantes", "num"]];
+
+const detalle03 = e => {
+  const d = e.datos;
+  if (e.tipo === "venta") return `${d.tipo} - ${d.medio_pago} - ${FMT.pesos(d.total)} - ${d.estado}`;
+  return `${d.medico} - ${d.tipo} - ${d.dispensas_realizadas}/${d.dispensas_autorizadas} dispensas - ${d.estado}`;
+};
+
+const Q = [
+  { code: "Q01", cat: "productos", title: "Productos activos con su proveedor", short: "Productos activos", engine: "MongoDB", path: "/productos/activos",
+    desc: "Catálogo de productos activos junto con los datos del proveedor que los abastece.",
+    cols: [["ID", "_id"], ["Producto", "nombre"], ["Principio activo", "principio_activo"], ["Categoría", "categoria"], ["Condición de venta", "condicion_venta"], ["Precio", "precio_unit", "pesos"], ["Proveedor", "proveedor.razon_social"], ["CUIT", "proveedor.cuit"], ["Tipo", "proveedor.tipo"], ["Ciudad", "proveedor.ciudad"], ["Teléfono", "proveedor.telefono"]] },
+  { code: "Q02", cat: "ventas", title: "Ventas pendientes con su farmacéutico", short: "Ventas pendientes", engine: "MongoDB", path: "/ventas/pendientes",
+    desc: "Ventas en estado Pendiente con el total y el farmacéutico que las atendió.",
+    cols: [["Venta", "id_venta"], ["Total", "total", "pesos"], ["Farmacéutico", r => nombre(r.farmaceutico)], ["Matrícula", "farmaceutico.matricula"], ["Sucursal", "farmaceutico.sucursal"]] },
+  { code: "Q03", cat: "clientes", title: "Historial de ventas y recetas de un cliente", short: "Historial de cliente", engine: "MongoDB", path: "/clientes/{id_cliente}/historial",
+    desc: "Línea de tiempo de las ventas y recetas de un cliente, ordenada por fecha.",
+    fields: [{ name: "id_cliente", label: "Cliente", def: "C001", req: true }],
+    sections: r => [{ title: `Historial del cliente ${r.id_cliente}`, rows: r.historial, cols: [["Fecha", "fecha", "fecha"], ["Tipo", e => e.tipo[0].toUpperCase() + e.tipo.slice(1)], ["ID", "datos._id"], ["Detalle", detalle03]] }] },
+  { code: "Q04", cat: "recetas", title: "Clientes con más de una receta", short: "Clientes con +1 receta", engine: "MongoDB", path: "/clientes/varias-recetas",
+    desc: "Clientes que tienen más de una receta registrada.",
+    cols: [["Cliente", "id_cliente"], ["Nombre", nombre], ["Recetas", "cantidad_recetas", "bar"]] },
+  { code: "Q05", cat: "farmaceuticos", title: "Ventas por farmacéutico en los últimos 60 días", short: "Ventas últimos 60 días", engine: "MongoDB", path: "/farmaceuticos/ventas-recientes",
+    desc: "Cantidad de ventas no anuladas de cada farmacéutico activo en los últimos 60 días.",
+    cols: [["Farmacéutico", "id_farmaceutico"], ["Nombre", nombre], ["Matrícula", "matricula"], ["Sucursal", "id_sucursal"], ["Ventas", "cantidad_ventas", "bar"]] },
+  { code: "Q06", cat: "recetas", title: "Tratamientos prolongados con dispensa vencida", short: "Dispensas vencidas", engine: "MongoDB", path: "/recetas/dispensas-vencidas",
+    desc: "Recetas de tratamiento prolongado cuya próxima dispensa ya pasó.",
+    cols: [["Receta", "id_receta"], ["Próxima dispensa", "proxima_dispensa", "fecha"], ["Dispensas", r => `${r.dispensas_realizadas}/${r.dispensas_autorizadas}`], ["Médico", "medico"], ["Emisión", "fecha_emision", "fecha"], ["Cliente", "cliente.id_cliente"], ["Nombre", r => nombre(r.cliente)], ["DNI", "cliente.dni"], ["Teléfono", "cliente.telefono"], ["Obra social", "cliente.obra_social"]] },
+  { code: "Q07", cat: "productos", title: "Top 5 productos más vendidos", short: "Top 5 más vendidos", engine: "MongoDB", path: "/productos/mas-vendidos",
+    desc: "Los cinco productos con más unidades vendidas en ventas completadas.",
+    cols: [["Producto", "id_producto"], ["Unidades vendidas", "unidades_vendidas", "bar"]] },
+  { code: "Q08", cat: "stock", title: "Lotes con menos de 50 unidades", short: "Lotes con stock bajo", engine: "Redis + MongoDB", path: "/stock/lotes-bajos",
+    desc: "Lotes con menos de 50 unidades en Redis, con producto, sucursal y proveedor desde MongoDB.",
+    cols: [["Lote", "id_lote"], ["Nro. lote", "nro_lote"], ["Unidades", "unidades", "bar"], ["Vencimiento", "vencimiento", "fecha"], ["Producto", "producto.nombre"], ["Sucursal", "sucursal.nombre"], ["Ciudad", "sucursal.ciudad"], ["Proveedor", "proveedor.razon_social"], ["Teléfono proveedor", "proveedor.telefono"]] },
+  { code: "Q09", cat: "ventas", title: "Ventas libres menores a $ 5.000", short: "Ventas libres < $5.000", engine: "MongoDB", path: "/ventas/venta-libre",
+    desc: "Ventas sin receta cuyo total es menor a $ 5.000.",
+    cols: [["Venta", "id_venta"], ["Fecha", "fecha", "fecha"], ["Cliente", "id_cliente"], ["Farmacéutico", "id_farmaceutico"], ["Sucursal", "id_sucursal"], ["Medio de pago", "medio_pago"], ["Estado", "estado", "chip"], ["Ítems", v => v.items.map(i => `${i.id_producto} x${i.cantidad}`).join(", ")], ["Total", "total", "pesos"]] },
+  { code: "Q10", cat: "sucursales", title: "Clientes atendidos en una sucursal", short: "Clientes por sucursal", engine: "MongoDB", path: "/sucursales/{id_sucursal}/clientes",
+    desc: "Clientes que compraron en una sucursal y cuántas veces lo hicieron.",
+    fields: [{ name: "id_sucursal", label: "Sucursal", def: "S001", req: true }],
+    cols: [["Cliente", "id_cliente"], ["Nombre", nombre], ["DNI", "dni"], ["Email", "email"], ["Teléfono", "telefono"], ["Obra social", "obra_social"], ["Activo", "activo", "sino"], ["Ventas", "cantidad_ventas", "bar"]] },
+  { code: "Q11", cat: "farmaceuticos", title: "Ingresos por farmacéutico en el mes actual", short: "Ingresos del mes", engine: "MongoDB", path: "/farmaceuticos/ingresos-mes",
+    desc: "Ventas e ingresos totales de cada farmacéutico en el mes calendario actual.",
+    cols: [["Farmacéutico", "id_farmaceutico"], ["Nombre", nombre], ["Matrícula", "matricula"], ["Sucursal", "id_sucursal"], ["Ventas", "cantidad_ventas", "num"], ["Ingresos", "ingresos_totales", "bar", "pesos"]] },
+  { code: "Q12", cat: "clientes", title: "Clientes sin ventas en el último año", short: "Clientes sin ventas", engine: "MongoDB", path: "/clientes/sin-ventas",
+    desc: "Clientes que no registran ventas en los últimos doce meses.",
+    cols: [["Cliente", "_id"], ["Nombre", nombre], ["DNI", "dni"], ["Email", "email"], ["Teléfono", "telefono"], ["Ciudad", "ciudad"], ["Obra social", "obra_social"], ["Activo", "activo", "sino"]] },
+  { code: "Q13", cat: "clientes", title: "Alta, modificación y baja de clientes", short: "ABM de clientes", engine: "MongoDB", method: "POST · PATCH · DELETE", path: "/clientes",
+    desc: "Alta de clientes nuevos, cambio de contacto y cobertura, y baja lógica.", mutation: true,
+    modes: ["Alta", "Modificar", "Baja"],
+    modeInfo: {
+      Alta: "Crea un cliente nuevo con activo = true. Si dejás vacío el ID, la API asigna el siguiente libre.",
+      Modificar: "Cambia solo contacto y cobertura del cliente. Los campos que dejes vacíos no se modifican.",
+      Baja: "Baja lógica: el cliente no se borra de MongoDB. Se marca activo = false y conserva todo su historial de ventas y recetas. Desde ese momento no puede registrar compras nuevas (Q14 lo rechaza). Si ya estaba dado de baja, la API responde 400.",
+    },
+    modeRun: { Alta: "Dar de alta", Modificar: "Guardar cambios", Baja: "Dar de baja" },
+    confirmMode: "Baja",
+    fields: [
+      { name: "id_cliente", label: "ID cliente", ph: "C900", modes: ["Alta", "Modificar", "Baja"] },
+      { name: "nombre", label: "Nombre", modes: ["Alta"] },
+      { name: "apellido", label: "Apellido", modes: ["Alta"] },
+      { name: "dni", label: "DNI", modes: ["Alta"] },
+      { name: "email", label: "Email", modes: ["Alta", "Modificar"] },
+      { name: "telefono", label: "Teléfono", modes: ["Alta", "Modificar"] },
+      { name: "ciudad", label: "Ciudad", modes: ["Alta", "Modificar"] },
+      { name: "provincia", label: "Provincia", modes: ["Alta", "Modificar"] },
+      { name: "obra_social", label: "Obra social", type: "select", options: ["", ...OBRAS], modes: ["Alta", "Modificar"] },
+      { name: "nro_afiliado", label: "Nro. afiliado", modes: ["Alta", "Modificar"] },
+    ],
+    request(v, strict) {
+      const need = (ok, msg) => { if (!ok && strict) throw new Error(msg); };
+      const take = keys => Object.fromEntries(keys.filter(k => v[k]).map(k => [k, v[k]]));
+      if (v.modo === "Alta") {
+        for (const k of ALTA_REQ) need(v[k], `Para el alta completá "${this.fields.find(f => f.name === k).label}".`);
+        return { method: "POST", path: "/clientes", body: take(ALTA) };
+      }
+      need(v.id_cliente, "Indicá el ID del cliente.");
+      const path = `/clientes/${enc(v.id_cliente || "{id_cliente}")}`;
+      if (v.modo === "Modificar") {
+        const body = take(MODIFICABLES);
+        need(Object.keys(body).length, "Indicá al menos un campo a modificar.");
+        return { method: "PATCH", path, body };
+      }
+      return { method: "DELETE", path };
+    },
+    sections(r, req) {
+      const t = { POST: "Cliente dado de alta", PATCH: "Cliente modificado", DELETE: "Cliente dado de baja" }[req.method];
+      return [{ title: t, rows: [r], cols: COLS_CLIENTE }];
+    },
+    toast: (r, req) => `${r.id_cliente} · ${{ POST: "alta registrada", PATCH: "datos actualizados", DELETE: "baja lógica aplicada" }[req.method]}` },
+  { code: "Q14", cat: "ventas", title: "Registrar una venta", short: "Registrar venta", engine: "MongoDB + Redis · saga", method: "POST", path: "/ventas",
+    desc: "Registra la venta, descuenta stock por FEFO en Redis y lo coordina con una saga con compensación.", mutation: true,
+    fields: [
+      { name: "id_cliente", label: "Cliente", def: "C001" },
+      { name: "id_farmaceutico", label: "Farmacéutico", def: "F001" },
+      { name: "medio_pago", label: "Medio de pago", type: "select", options: MEDIOS },
+      { name: "id_receta", label: "Receta (opcional)", ph: "RC006" },
+      { name: "items", label: "Ítems", type: "items" },
+    ],
+    request(v, strict) {
+      const need = (ok, msg) => { if (!ok && strict) throw new Error(msg); };
+      need(v.id_cliente, "Indicá el cliente.");
+      need(v.id_farmaceutico, "Indicá el farmacéutico.");
+      need(v.items.length, "Agregá al menos un ítem.");
+      need(v.items.every(i => i.cantidad > 0), "Las cantidades tienen que ser mayores a cero.");
+      const body = { id_cliente: v.id_cliente, id_farmaceutico: v.id_farmaceutico, medio_pago: v.medio_pago, items: v.items };
+      if (v.id_receta) body.id_receta = v.id_receta;
+      return { method: "POST", path: "/ventas", body };
+    },
+    sections: r => [
+      { title: "Venta registrada", rows: [r.venta], cols: [["Venta", "id_venta"], ["Fecha", "fecha", "fecha"], ["Cliente", "id_cliente"], ["Farmacéutico", "id_farmaceutico"], ["Sucursal", "id_sucursal"], ["Tipo", "tipo"], ["Receta", "id_receta"], ["Medio de pago", "medio_pago"], ["Total", "total", "pesos"], ["Estado", "estado", "chip"]] },
+      { title: `Ítems de la venta ${r.venta.id_venta}`, rows: r.venta.items, cols: [["Detalle", "id_detalle"], ["Producto", "id_producto"], ["Cantidad", "cantidad", "num"], ["Precio unit.", "precio_unit", "pesos"], ["Subtotal", f => f.cantidad * f.precio_unit, "pesos"]] },
+      { title: "Lotes descontados (FEFO)", rows: r.lotes_descontados, cols: COLS_LOTES },
+    ],
+    note: r => `Saga ${r.id_saga}`,
+    toast: r => `Venta ${r.venta.id_venta} registrada · ${FMT.pesos(r.venta.total)}` },
+  { code: "Q15", cat: "stock", title: "Descuento de stock por venta (FEFO)", short: "Descontar stock", engine: "Redis · WATCH/MULTI", method: "POST", path: "/stock/ventas/{id_venta}/descuento",
+    desc: "Descuenta de forma atómica el stock de una venta, consumiendo primero los lotes que vencen antes.", mutation: true,
+    fields: [{ name: "id_venta", label: "Venta", ph: "V016", req: true }],
+    sections: r => [{ title: `Lotes descontados para ${r.id_venta} en ${r.id_sucursal}`, rows: r.lotes_descontados, cols: COLS_LOTES }],
+    toast: r => `Stock descontado para ${r.id_venta}` },
+];
+Q.forEach(q => { q.color = CATS[q.cat].c; q.method = q.method || "GET"; });
+
+const API = {
+  base: store.get("farmared.api") || (location.protocol.startsWith("http") ? location.origin : "http://localhost:8000"),
+};
+
+async function call(method, path, body) {
+  const t0 = performance.now();
+  let res;
+  try {
+    res = await fetch(API.base + path, { method, headers: body ? { "Content-Type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined });
+  } catch {
+    const e = new Error(`No se pudo conectar con la API en ${API.base}.\nRevisá que esté levantada o cambiá la URL tocando "API" arriba a la derecha.`);
+    e.status = 0;
+    throw e;
+  }
+  const ms = Math.round(performance.now() - t0);
+  const txt = await res.text();
+  let data;
+  try { data = txt ? JSON.parse(txt) : null; } catch { data = txt; }
+  if (!res.ok) {
+    let d = data && typeof data === "object" && "detail" in data ? data.detail : txt;
+    if (Array.isArray(d)) d = d.map(x => `${(x.loc || []).slice(1).join(".")}: ${x.msg}`).join("\n");
+    const e = new Error(typeof d === "string" ? d : JSON.stringify(d));
+    e.status = res.status;
+    e.ms = ms;
+    throw e;
+  }
+  return { data, status: res.status, ms };
+}
+
+const Sound = {
+  ctx: null,
+  muted: store.get("farmared.mute") === "1",
+  get() {
+    if (this.muted) return null;
+    if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; } }
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    return this.ctx;
+  },
+  tone(f, start, dur, type = "sine", vol = .08, dest) {
+    const a = this.ctx, o = a.createOscillator(), g = a.createGain();
+    o.type = type;
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(vol, start + Math.min(.06, dur / 4));
+    g.gain.exponentialRampToValueAtTime(.0001, start + dur);
+    o.connect(g).connect(dest || a.destination);
+    o.start(start);
+    o.stop(start + dur + .05);
+  },
+  startup() {
+    const a = this.get(); if (!a) return;
+    const t = a.currentTime;
+    const master = a.createGain();
+    master.gain.setValueAtTime(0, t);
+    master.gain.linearRampToValueAtTime(.55, t + 1.4);
+    master.gain.exponentialRampToValueAtTime(.0001, t + 6.5);
+    const lp = a.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.setValueAtTime(140, t);
+    lp.frequency.exponentialRampToValueAtTime(2200, t + 2.8);
+    lp.connect(master).connect(a.destination);
+    [[55, "sawtooth", .1], [55.6, "sawtooth", .1], [110, "sine", .2], [164.8, "sine", .12], [82.4, "triangle", .12]].forEach(([f, ty, v]) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = ty; o.frequency.value = f; g.gain.value = v;
+      o.connect(g).connect(lp); o.start(t); o.stop(t + 6.6);
+    });
+    [880, 1318.5, 1760, 2217.5, 2637].forEach((f, i) => this.tone(f, t + 1.5 + i * .16, 2.6, "sine", .045));
+  },
+  move() { const a = this.get(); if (a) { const t = a.currentTime; this.tone(1320, t, .09, "sine", .05); this.tone(1980, t + .03, .08, "sine", .025); } },
+  open() { const a = this.get(); if (a) { const t = a.currentTime; [660, 990, 1320].forEach((f, i) => this.tone(f, t + i * .05, .35, "triangle", .05)); } },
+  back() { const a = this.get(); if (a) { const t = a.currentTime; [990, 660].forEach((f, i) => this.tone(f, t + i * .06, .25, "triangle", .045)); } },
+  ok() { const a = this.get(); if (a) { const t = a.currentTime; [784, 1046.5, 1568].forEach((f, i) => this.tone(f, t + i * .07, .5, "sine", .05)); } },
+  err() { const a = this.get(); if (a) { const t = a.currentTime; this.tone(196, t, .35, "square", .04); this.tone(185, t + .12, .4, "square", .04); } },
+};
+
+const cv = $("bg"), cx = cv.getContext("2d");
+let W = 0, H = 0;
+function resize() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+addEventListener("resize", resize);
+
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const towers = [];
+for (let i = 0; i < 22; i++) {
+  const ang = rnd() * Math.PI * 2, rad = 3.2 + rnd() * 10;
+  towers.push({ x: Math.cos(ang) * rad, z: Math.sin(ang) * rad, h: 1 + Math.floor(rnd() * 8), s: .55 + rnd() * .35, ph: rnd() * 6.28, delay: rnd() * .5 });
+}
+const dust = Array.from({ length: 140 }, () => ({ x: rnd() * 2 - 1, y: rnd(), z: rnd(), sp: .02 + rnd() * .05, tw: rnd() * 6.28 }));
+const stars = Array.from({ length: 220 }, () => ({ a: rnd() * 6.28, r: rnd(), sp: .4 + rnd() * 1.6 }));
+
+const scene = { t0: performance.now(), rise: 0, warp: 1, dim: 1, target: 1, angle: 0 };
+const ease = x => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.pow(1 - x, 3));
+
+function frame(now) {
+  const t = (now - scene.t0) / 1000;
+  scene.rise = ease((t - .7) / 2.6);
+  scene.warp = Math.max(0, 1 - t / 1.6);
+  scene.dim += (scene.target - scene.dim) * .04;
+  scene.angle = t * .05;
+  draw(t);
+  requestAnimationFrame(frame);
+}
+
+function draw(t) {
+  const g = cx.createRadialGradient(W / 2, H * .55, 0, W / 2, H * .55, Math.max(W, H) * .8);
+  g.addColorStop(0, `rgba(18,48,120,${.9 * scene.dim})`);
+  g.addColorStop(.45, `rgba(6,18,52,${scene.dim})`);
+  g.addColorStop(1, "#010208");
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, W, H);
+
+  if (scene.warp > 0) {
+    cx.save();
+    cx.globalCompositeOperation = "lighter";
+    const cxm = W / 2, cym = H / 2, R = Math.hypot(W, H) / 2;
+    for (const s of stars) {
+      const p = (s.r + t * s.sp) % 1, r1 = p * p * R, r2 = r1 * (1 - .25 * scene.warp);
+      cx.strokeStyle = `rgba(150,210,255,${scene.warp * p})`;
+      cx.lineWidth = 1 + p * 1.5;
+      cx.beginPath();
+      cx.moveTo(cxm + Math.cos(s.a) * r2, cym + Math.sin(s.a) * r2);
+      cx.lineTo(cxm + Math.cos(s.a) * r1, cym + Math.sin(s.a) * r1);
+      cx.stroke();
+    }
+    const fr = 30 + (1 - scene.warp) * 400;
+    const fg = cx.createRadialGradient(cxm, cym, 0, cxm, cym, fr);
+    fg.addColorStop(0, `rgba(220,240,255,${scene.warp})`);
+    fg.addColorStop(1, "rgba(60,140,255,0)");
+    cx.fillStyle = fg;
+    cx.fillRect(0, 0, W, H);
+    cx.restore();
+  }
+
+  const a = scene.angle, ca = Math.cos(a), sa = Math.sin(a);
+  const camY = 3.4 - scene.rise * .9, D = 15, fov = Math.min(W, H) * 1.05, horizon = H * .6;
+  const proj = (x, y, z) => {
+    const X = x * ca - z * sa, Z = x * sa + z * ca + D;
+    if (Z < .5) return null;
+    const f = fov / Z;
+    return [W / 2 + X * f, horizon - (y - camY) * f, Z];
+  };
+
+  cx.save();
+  cx.lineWidth = 1;
+  for (let i = -16; i <= 16; i += 2) {
+    for (const [x1, z1, x2, z2] of [[i, -16, i, 16], [-16, i, 16, i]]) {
+      const p1 = proj(x1, 0, z1), p2 = proj(x2, 0, z2);
+      if (!p1 || !p2) continue;
+      const fog = Math.max(0, 1 - ((p1[2] + p2[2]) / 2 - 6) / 26);
+      cx.strokeStyle = `rgba(80,150,255,${.12 * fog * scene.rise * scene.dim})`;
+      cx.beginPath(); cx.moveTo(p1[0], p1[1]); cx.lineTo(p2[0], p2[1]); cx.stroke();
+    }
+  }
+  cx.restore();
+
+  const faces = [];
+  const F = [[0, 1, 2, 3], [4, 5, 6, 7], [0, 1, 5, 4], [2, 3, 7, 6], [1, 2, 6, 5], [0, 3, 7, 4]];
+  for (const tw of towers) {
+    const r = ease((scene.rise - tw.delay * .5) / .6);
+    const n = tw.h * r;
+    const bob = Math.sin(t * .6 + tw.ph) * .08;
+    for (let j = 0; j < Math.ceil(n); j++) {
+      const part = Math.min(1, n - j), s = tw.s, h = s * part;
+      const y0 = j * s * 1.08 + bob, y1 = y0 + h, x0 = tw.x - s / 2, x1 = tw.x + s / 2, z0 = tw.z - s / 2, z1 = tw.z + s / 2;
+      const V = [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], [x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]].map(v => proj(...v));
+      if (V.some(v => !v)) continue;
+      const top = j === Math.ceil(n) - 1;
+      for (let k = 0; k < 6; k++) {
+        const q = F[k].map(i => V[i]);
+        const cross = (q[1][0] - q[0][0]) * (q[2][1] - q[0][1]) - (q[1][1] - q[0][1]) * (q[2][0] - q[0][0]);
+        faces.push({ q, z: q.reduce((m, p) => m + p[2], 0) / 4, top: top && k === 1, front: cross < 0, pulse: top ? .5 + .5 * Math.sin(t * 1.6 + tw.ph) : 0 });
+      }
+    }
+  }
+  faces.sort((p, q) => q.z - p.z);
+  cx.save();
+  cx.globalCompositeOperation = "lighter";
+  for (const f of faces) {
+    const fog = Math.max(0, Math.min(1, 1 - (f.z - 7) / 20)) * scene.dim;
+    if (fog <= 0) continue;
+    cx.beginPath();
+    cx.moveTo(f.q[0][0], f.q[0][1]);
+    for (let i = 1; i < 4; i++) cx.lineTo(f.q[i][0], f.q[i][1]);
+    cx.closePath();
+    const fill = f.top ? .1 + .14 * f.pulse : .035;
+    cx.fillStyle = `rgba(70,140,255,${fill * fog})`;
+    cx.fill();
+    cx.strokeStyle = `rgba(140,205,255,${(f.top ? .55 : .22) * fog})`;
+    cx.stroke();
+  }
+  cx.restore();
+
+  cx.save();
+  cx.globalCompositeOperation = "lighter";
+  for (const d of dust) {
+    d.y = (d.y + d.sp * .006) % 1;
+    const p = proj(d.x * 14, d.y * 9, (d.z * 2 - 1) * 14);
+    if (!p) continue;
+    const fog = Math.max(0, 1 - (p[2] - 4) / 24);
+    const tw = .5 + .5 * Math.sin(t * 2 + d.tw);
+    cx.fillStyle = `rgba(170,220,255,${.5 * fog * tw * scene.dim * scene.rise})`;
+    cx.fillRect(p[0], p[1], 1.6, 1.6);
+  }
+  cx.restore();
+
+  const fogG = cx.createLinearGradient(0, horizon - 40, 0, H);
+  fogG.addColorStop(0, "rgba(40,90,200,0)");
+  fogG.addColorStop(.35, `rgba(30,70,170,${.18 * scene.dim})`);
+  fogG.addColorStop(1, "rgba(2,6,20,.85)");
+  cx.fillStyle = fogG;
+  cx.fillRect(0, horizon - 40, W, H - horizon + 40);
+}
+requestAnimationFrame(frame);
+
+const ring = $("ring");
+const STEP = 360 / Q.length;
+let sel = Math.max(0, Math.min(Q.length - 1, +(store.get("farmared.sel") || 0)));
+let R = 480;
+const items = Q.map((q, i) => {
+  const n = el("div", { class: "item", style: `--c:${q.color}`, onclick: () => (i === sel ? openPanel(q) : select(i)) },
+    el("div", { class: "gem" }, el("i"), el("b")),
+    el("div", { class: "code", text: q.code }),
+    el("div", { class: "t", text: q.short }));
+  ring.append(n);
+  return n;
+});
+function layout() {
+  R = innerWidth < 700 ? 300 : 480;
+  items.forEach((n, i) => { n.style.transform = `rotateY(${i * STEP}deg) translateZ(${R}px)`; });
+  paintRing();
+}
+let rot = sel * STEP;
+function paintRing() {
+  ring.style.transform = `translateZ(${-R}px) rotateY(${-rot}deg)`;
+  items.forEach((n, i) => {
+    let d = Math.abs(((i - sel) % Q.length + Q.length) % Q.length);
+    d = Math.min(d, Q.length - d);
+    n.classList.toggle("sel", i === sel);
+    n.style.opacity = d === 0 ? 1 : Math.max(.12, .75 - d * .14);
+    n.style.filter = d === 0 ? "none" : `blur(${Math.min(3, d * .6)}px)`;
+  });
+  const q = Q[sel];
+  $("info").style.setProperty("--c", q.color);
+  $("icat").textContent = `${CATS[q.cat].label} · ${q.engine}`;
+  $("ititle").textContent = q.title;
+  $("idesc").textContent = q.desc;
+  $("iep").textContent = `${q.method}  ${q.path}`;
+}
+function select(i, sound = true) {
+  const n = Q.length;
+  const target = ((i % n) + n) % n;
+  let delta = target - sel;
+  if (delta > n / 2) delta -= n;
+  if (delta < -n / 2) delta += n;
+  sel = target;
+  rot += delta * STEP;
+  store.set("farmared.sel", String(sel));
+  if (sound && delta) Sound.move();
+  paintRing();
+}
+layout();
+addEventListener("resize", layout);
+$("prev").onclick = () => select(sel - 1);
+$("next").onclick = () => select(sel + 1);
+
+let wheelLock = 0;
+$("menu").addEventListener("wheel", e => {
+  e.preventDefault();
+  const now = Date.now();
+  if (now - wheelLock < 160) return;
+  wheelLock = now;
+  select(sel + (e.deltaY + e.deltaX > 0 ? 1 : -1));
+}, { passive: false });
+let touchX = null;
+$("menu").addEventListener("touchstart", e => { touchX = e.touches[0].clientX; }, { passive: true });
+$("menu").addEventListener("touchend", e => {
+  if (touchX == null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 40) select(sel + (dx < 0 ? 1 : -1));
+  touchX = null;
+});
+
+let state = "boot";
+const logo = $("logo"), press = $("press");
+setTimeout(() => logo.classList.add("on"), 1500);
+setTimeout(() => press.classList.add("on"), 3300);
+function start() {
+  if (state !== "boot") return;
+  state = "menu";
+  Sound.startup();
+  $("flash").classList.add("go");
+  $("boot").classList.add("leave");
+  logo.classList.add("on");
+  scene.t0 = Math.min(scene.t0, performance.now() - 3600);
+  scene.target = .7;
+  setTimeout(() => { $("boot").style.display = "none"; }, 1100);
+  $("menu").classList.add("on");
+  $("hud").classList.add("on");
+  ping();
+  loadProductos();
+}
+$("boot").addEventListener("click", start);
+
+const panel = $("panel");
+let current = null, view = "tabla", lastData = null, running = false;
+
+function fieldNode(f) {
+  let input;
+  if (f.type === "select") input = el("select", { name: f.name }, f.options.map(o => el("option", { value: o, text: o || "(sin cambio)" })));
+  else if (f.type === "items") input = itemsEditor();
+  else input = el("input", { name: f.name, value: f.def || "", placeholder: f.ph || f.def || "", list: f.list });
+  const wrap = el("label", { class: "fld" }, el("span", { text: f.label + (f.req ? " *" : "") }), input);
+  return { f, wrap, input };
+}
+
+function itemsEditor() {
+  const list = el("div", { class: "items" });
+  const add = (p = "", c = 1) => {
+    const row = el("div", { class: "row" },
+      el("input", { class: "ip", placeholder: "PRD001", value: p, list: "dl-productos" }),
+      el("span", { text: "×" }),
+      el("input", { class: "ic", type: "number", min: "1", value: String(c) }),
+      el("button", { class: "btn sm", type: "button", text: "Quitar", onclick: () => { if (list.children.length > 1) row.remove(); } }));
+    list.append(row);
+  };
+  add("PRD001", 2);
+  const box = el("div", { class: "items" }, list, el("button", { class: "btn sm", type: "button", text: "+ Agregar ítem", onclick: () => add() }));
+  box.getValue = () => [...list.children]
+    .map(r => ({ id_producto: r.querySelector(".ip").value.trim(), cantidad: parseInt(r.querySelector(".ic").value, 10) || 0 }))
+    .filter(i => i.id_producto);
+  return box;
+}
+
+function values() {
+  const v = { modo: current.mode };
+  for (const { f, input } of current.nodes) v[f.name] = f.type === "items" ? input.getValue() : input.value.trim();
+  return v;
+}
+
+function buildRequest(strict) {
+  const q = current.q, v = values();
+  if (q.request) return q.request(v, strict);
+  if (strict) for (const f of q.fields || []) if (f.req && !v[f.name]) throw new Error(`Completá el campo "${f.label}".`);
+  return { method: q.method, path: q.path.replace(/\{(\w+)\}/g, (m, k) => (v[k] ? enc(v[k]) : m)) };
+}
+
+function refreshEndpoint() {
+  let r;
+  try { r = buildRequest(false); } catch { r = { method: current.q.method, path: current.q.path }; }
+  $("pep").textContent = `${r.method}  ${API.base}${r.path}`;
+}
+
+function applyMode() {
+  for (const { f, wrap } of current.nodes) wrap.hidden = !!(f.modes && !f.modes.includes(current.mode));
+  current.modeBtns?.forEach(b => b.classList.toggle("on", b.textContent === current.mode));
+  if (current.hint) current.hint.textContent = current.q.modeInfo[current.mode];
+  disarm();
+  refreshEndpoint();
+}
+function disarm() {
+  if (!current) return;
+  const q = current.q;
+  current.armed = false;
+  clearTimeout(current.armT);
+  $("run").textContent = q.modeRun?.[current.mode] ? `▶ ${q.modeRun[current.mode]}` : (q.mutation ? "▶ Ejecutar" : "▶ Consultar");
+  $("run").classList.toggle("danger", !!q.confirmMode && current.mode === q.confirmMode);
+}
+
+function openPanel(q) {
+  if (state !== "menu") return;
+  state = "panel";
+  Sound.open();
+  current = { q, nodes: [], mode: q.modes ? q.modes[0] : null };
+  lastData = null;
+  $("glass").style.setProperty("--c", q.color);
+  $("pcode").textContent = q.code;
+  $("ptitle").textContent = q.title;
+  const form = $("pform");
+  form.replaceChildren();
+  if (q.modes) {
+    current.modeBtns = q.modes.map(m => el("button", { type: "button", text: m, onclick: () => { current.mode = m; Sound.move(); applyMode(); } }));
+    form.append(el("div", { class: "modes" }, current.modeBtns));
+    if (q.modeInfo) { current.hint = el("div", { class: "hint" }); form.append(current.hint); }
+  }
+  for (const f of q.fields || []) {
+    const node = fieldNode(f);
+    current.nodes.push(node);
+    form.append(node.wrap);
+  }
+  $("run").textContent = q.mutation ? "▶ Ejecutar" : "▶ Consultar";
+  $("stat").textContent = "";
+  $("out").replaceChildren(el("div", { class: "empty", text: q.mutation ? "Completá los datos y ejecutá" : "" }));
+  applyMode();
+  $("menu").classList.add("dim");
+  scene.target = .35;
+  panel.classList.add("on");
+  panel.setAttribute("aria-hidden", "false");
+  if (!q.mutation) run();
+  else setTimeout(() => form.querySelector("input,select")?.focus(), 350);
+}
+
+function closePanel() {
+  if (state !== "panel") return;
+  state = "menu";
+  Sound.back();
+  panel.classList.remove("on");
+  panel.setAttribute("aria-hidden", "true");
+  $("menu").classList.remove("dim");
+  scene.target = .7;
+  document.activeElement?.blur();
+}
+
+$("close").onclick = closePanel;
+$("pform").addEventListener("input", refreshEndpoint);
+$("pform").addEventListener("submit", e => { e.preventDefault(); run(); });
+$("pform").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); run(); } });
+$("run").onclick = run;
+$("view").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  view = b.dataset.v;
+  [...$("view").children].forEach(x => x.classList.toggle("on", x === b));
+  if (lastData) render(lastData);
+});
+panel.addEventListener("click", e => { if (e.target === panel) closePanel(); });
+
+async function run() {
+  if (running || !current) return;
+  const q = current.q;
+  let req;
+  try { req = buildRequest(true); }
+  catch (e) { showError(e.message, "Faltan datos"); Sound.err(); return; }
+  if (q.confirmMode && current.mode === q.confirmMode && !current.armed) {
+    current.armed = true;
+    $("run").textContent = `▶ Confirmar baja de ${values().id_cliente}`;
+    current.armT = setTimeout(disarm, 4000);
+    return;
+  }
+  disarm();
+  running = true;
+  $("run").disabled = true;
+  $("stat").textContent = "";
+  $("out").replaceChildren(el("div", { class: "loader" }, el("i"), el("i"), el("i"), " Consultando"));
+  try {
+    const res = await call(req.method, req.path, req.body);
+    if (current?.q !== q) return;
+    lastData = { q, req, res };
+    render(lastData);
+    if (q.mutation) { Sound.ok(); toast(q.toast(res.data, req)); }
+  } catch (e) {
+    if (current?.q !== q) return;
+    lastData = null;
+    showError(e.message, e.status ? `Error ${e.status}` : "Sin conexión", e.ms);
+    Sound.err();
+  } finally {
+    running = false;
+    $("run").disabled = false;
+  }
+}
+
+function showError(msg, title, ms) {
+  $("out").replaceChildren(el("div", { class: "err" }, el("b", { text: title.toUpperCase() }), msg));
+  $("stat").textContent = ms != null ? `${ms} ms` : "";
+}
+
+function render({ q, req, res }) {
+  const out = $("out");
+  const secs = q.sections ? q.sections(res.data, req) : [{ rows: res.data, cols: q.cols }];
+  const total = secs.reduce((n, s) => n + s.rows.length, 0);
+  $("stat").replaceChildren(el("b", { text: String(total) }), ` resultado${total === 1 ? "" : "s"} · HTTP ${res.status} · ${res.ms} ms`);
+  if (view === "json") {
+    out.replaceChildren(el("pre", { class: "json", text: JSON.stringify(res.data, null, 2) }));
+    return;
+  }
+  out.replaceChildren(...secs.map(s => el("div", { class: "sec" },
+    s.title ? el("h4", { text: s.title }) : null,
+    s.rows.length ? table(s.rows, s.cols) : el("div", { class: "empty", text: "Sin resultados" }))));
+  if (q.note) out.append(el("div", { class: "note", text: q.note(res.data) }));
+}
+
+function table(rows, cols) {
+  const spec = cols.map(([h, f, fmt, sub]) => ({ h, f, fmt, sub, right: ["pesos", "num", "bar"].includes(fmt) }));
+  const val = (r, c) => (typeof c.f === "function" ? c.f(r) : pick(r, c.f));
+  const max = spec.map(c => (c.fmt === "bar" ? Math.max(1, ...rows.map(r => +val(r, c) || 0)) : 0));
+  let data = rows.slice(), sortI = -1, dir = 1;
+  const tbody = el("tbody");
+  const ths = spec.map((c, i) => el("th", { class: c.right ? "r" : null, text: c.h, onclick: () => {
+    dir = sortI === i ? -dir : 1;
+    sortI = i;
+    data.sort((a, b) => cmp(val(a, c), val(b, c)) * dir);
+    ths.forEach((t, j) => (j === i ? t.setAttribute("data-s", dir > 0 ? "▲" : "▼") : t.removeAttribute("data-s")));
+    paint(false);
+  } }));
+  const paint = animate => {
+    tbody.replaceChildren(...data.map((r, k) => {
+      const tr = el("tr", {}, spec.map((c, i) => cell(val(r, c), c, max[i])));
+      tr.style.animationDelay = animate ? `${Math.min(k, 25) * 30}ms` : "0s";
+      if (!animate) tr.style.animation = "none";
+      return tr;
+    }));
+  };
+  paint(true);
+  return el("table", {}, el("thead", {}, el("tr", {}, ths)), tbody);
+}
+
+function cmp(a, b) {
+  if (a == null) return 1;
+  if (b == null) return -1;
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a).localeCompare(String(b), "es", { numeric: true });
+}
+
+function cell(v, c, max) {
+  const td = el("td", { class: c.right ? "r" : null });
+  if (v == null || v === "") { td.textContent = "-"; return td; }
+  if (c.fmt === "bar") {
+    td.append(el("div", { class: "bar" },
+      el("span", { text: c.sub ? FMT[c.sub](v) : FMT.num(v) }),
+      el("div", { class: "track" }, el("i", { style: `width:${Math.max(2, (+v / max) * 100)}%` }))));
+    return td;
+  }
+  if (c.fmt === "chip") { td.append(el("span", { class: `chip ${CHIP[v] || "b"}`, text: v })); return td; }
+  td.textContent = FMT[c.fmt] ? FMT[c.fmt](v) : String(v);
+  return td;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("on"), 3800);
+}
+
+addEventListener("keydown", e => {
+  if (state === "boot") { if (!e.ctrlKey && !e.metaKey && !e.altKey) start(); return; }
+  if (state === "menu") {
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); select(sel + 1); }
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); select(sel - 1); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(Q[sel]); }
+    else if (/^[0-9]$/.test(e.key)) {
+      const buf = (keyBuf + e.key).slice(-2);
+      keyBuf = buf;
+      clearTimeout(keyTimer);
+      keyTimer = setTimeout(() => { keyBuf = ""; }, 700);
+      const i = Q.findIndex(q => +q.code.slice(1) === +buf);
+      if (i >= 0) select(i);
+    }
+  } else if (state === "panel" && e.key === "Escape") { e.preventDefault(); closePanel(); }
+});
+let keyBuf = "", keyTimer;
+
+async function ping() {
+  const dot = $("apidot"), txt = $("apitxt");
+  $("docs").href = API.base + "/docs";
+  try {
+    const r = await fetch(API.base + "/openapi.json", { cache: "no-store" });
+    dot.className = "dot " + (r.ok ? "ok" : "bad");
+    txt.textContent = r.ok ? "API EN LÍNEA" : `API ${r.status}`;
+  } catch {
+    dot.className = "dot bad";
+    txt.textContent = "API SIN CONEXIÓN";
+  }
+}
+setInterval(() => { if (state !== "boot") ping(); }, 15000);
+
+async function loadProductos() {
+  try {
+    const { data } = await call("GET", "/productos/activos");
+    $("dl-productos").replaceChildren(...data.map(p => el("option", { value: p._id, label: p.nombre })));
+  } catch {}
+}
+
+$("api").onclick = () => {
+  const v = prompt("URL base de la API", API.base);
+  if (!v) return;
+  API.base = v.trim().replace(/\/+$/, "");
+  store.set("farmared.api", API.base);
+  ping();
+  loadProductos();
+  if (current) refreshEndpoint();
+};
+
+$("temas").addEventListener("change", e => { if (e.target.value) location.href = e.target.value; });
+const muteBtn = $("mute");
+const paintMute = () => { muteBtn.textContent = Sound.muted ? "♪ OFF" : "♪ ON"; };
+paintMute();
+muteBtn.onclick = () => {
+  Sound.muted = !Sound.muted;
+  store.set("farmared.mute", Sound.muted ? "1" : "0");
+  paintMute();
+  if (!Sound.muted) Sound.move();
+};
+
+const DIAS = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+function clock() {
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  $("clock").textContent = `${DIAS[d.getDay()]} ${p(d.getDate())}/${p(d.getMonth() + 1)}  ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+clock();
+setInterval(clock, 10000);
+})();
+</script>
+</body>
+</html>

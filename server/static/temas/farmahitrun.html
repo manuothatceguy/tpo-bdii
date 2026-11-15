@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Farma Hit &amp; Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script src="core.js"></script>
+<style>
+:root{--ink:#1a1a22;--cream:#fff8e8;--orange:#ff8a1f;--green:#2fbf5a;--blue:#2b7bff;--red:#ff4757;--sky:#7fd0ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#7fd0ff;color:var(--ink);font:700 15px/1.35 Nunito,system-ui,sans-serif;user-select:none}
+button,input,select{font:inherit;color:inherit}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+.toon{background:var(--cream);border:4px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink)}
+.lg{font-family:"Luckiest Guy",Nunito,sans-serif;letter-spacing:.02em}
+.stroke{color:#fff;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--ink)}
+
+#title{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .6s}
+#title.out{opacity:0;pointer-events:none}
+.logo{text-align:center;transform:rotate(-4deg);animation:logo 1s cubic-bezier(.2,1.8,.4,1) both}
+@keyframes logo{from{transform:rotate(-20deg) scale(.2);opacity:0}}
+.logo .a{display:block;font:400 clamp(44px,8vw,104px)/.9 "Luckiest Guy";color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;text-shadow:7px 7px 0 var(--ink)}
+.logo .b{display:inline-block;margin-top:6px;padding:4px 20px;background:var(--orange);border:5px solid var(--ink);border-radius:16px;font:400 clamp(40px,7vw,88px)/1 "Luckiest Guy";color:#fff;-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;box-shadow:7px 7px 0 var(--ink);transform:rotate(3deg)}
+.tag{font:900 18px Nunito;background:#fff;border:3px solid var(--ink);border-radius:999px;padding:6px 16px;box-shadow:4px 4px 0 var(--ink);animation:logo .8s .4s cubic-bezier(.2,1.8,.4,1) both}
+.go{font:400 30px "Luckiest Guy";padding:14px 34px;background:var(--green);color:#fff;border:4px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink);cursor:pointer;-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;animation:pulse 1.2s ease-in-out infinite}
+.go:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+@keyframes pulse{50%{transform:scale(1.06)}}
+.ctrl{font:800 13px Nunito;background:rgba(255,255,255,.85);border:3px solid var(--ink);border-radius:14px;padding:8px 14px;text-align:center}
+.ctrl kbd{display:inline-block;min-width:24px;padding:1px 6px;margin:0 2px;border:2px solid var(--ink);border-radius:6px;background:#fff;font:900 12px Nunito}
+.topbtns{position:fixed;top:14px;right:14px;z-index:55;display:flex;gap:8px}
+.tbtn{height:38px;padding:0 12px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:3px 3px 0 var(--ink);font:900 13px Nunito;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+select.tbtn{appearance:none;-webkit-appearance:none}
+
+#hud{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;transition:opacity .5s}
+#hud.on{opacity:1}
+.coins{position:absolute;left:18px;top:16px;display:flex;align-items:center;gap:10px;padding:6px 16px 6px 8px}
+.coins svg{width:40px;height:40px}
+.coins b{font:400 34px/1 "Luckiest Guy";color:#fff;-webkit-text-stroke:2.5px var(--ink);paint-order:stroke fill}
+.coins b.bump{animation:bump .4s cubic-bezier(.2,1.8,.4,1)}
+@keyframes bump{40%{transform:scale(1.4)}}
+.api{position:absolute;left:18px;top:80px;display:flex;align-items:center;gap:8px;padding:4px 12px;font:900 12px Nunito}
+.api i{width:10px;height:10px;border-radius:50%;background:#aaa;border:2px solid var(--ink)}
+.api i.ok{background:var(--green)}.api i.bad{background:var(--red)}
+.timer{position:absolute;left:50%;top:14px;translate:-50% 0;padding:4px 22px;font:400 44px/1.1 "Luckiest Guy";color:#fff;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--ink);display:none}
+.timer.on{display:block}
+.timer.low{color:var(--red);animation:pulse .5s ease-in-out infinite}
+.obj{position:absolute;left:50%;top:84px;translate:-50% 0;padding:8px 18px;font:900 16px Nunito;display:none;white-space:nowrap}
+.obj.on{display:block}
+.obj b{color:var(--orange)}
+#mini{position:absolute;right:18px;top:70px;width:200px;height:200px;border-radius:50%;border:5px solid var(--ink);box-shadow:5px 5px 0 var(--ink);background:#8fd47a}
+.speed{position:absolute;right:22px;bottom:20px;text-align:right}
+.speed b{display:block;font:400 64px/1 "Luckiest Guy";color:#fff;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--ink)}
+.speed small{font:900 14px Nunito;background:#fff;border:3px solid var(--ink);border-radius:999px;padding:2px 10px}
+.dlg{position:absolute;left:18px;bottom:18px;display:flex;align-items:flex-end;gap:10px;max-width:min(620px,calc(100vw - 220px));opacity:0;transform:translateY(20px);transition:all .35s cubic-bezier(.2,1.5,.4,1)}
+.dlg.on{opacity:1;transform:none}
+.dlg svg{width:110px;height:110px;flex:none;filter:drop-shadow(4px 4px 0 var(--ink))}
+.dlg .bub{position:relative;padding:12px 16px;font:800 16px/1.35 Nunito}
+.dlg .bub b{display:block;font:400 20px "Luckiest Guy";color:var(--orange);-webkit-text-stroke:1px var(--ink)}
+.toast{position:absolute;left:50%;top:38%;translate:-50% -50%;font:400 clamp(48px,8vw,96px)/1 "Luckiest Guy";color:#fff;-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;text-shadow:6px 6px 0 var(--ink);opacity:0;white-space:nowrap;pointer-events:none}
+.toast.on{animation:toast 1.6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes toast{0%{opacity:0;transform:scale(.3) rotate(-10deg)}20%{opacity:1;transform:scale(1.1) rotate(-3deg)}35%{transform:scale(1) rotate(-3deg)}80%{opacity:1}100%{opacity:0;transform:scale(1) translateY(-30px) rotate(-3deg)}}
+
+.ov{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(26,26,34,.35)}
+.ov.on{display:flex}
+.card{width:min(560px,100%);padding:20px 22px;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.6) rotate(-4deg);opacity:0}}
+.card h2{margin:0 0 2px;font:400 36px/1 "Luckiest Guy";color:#fff;-webkit-text-stroke:2.5px var(--ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--ink)}
+.card .sub{margin-bottom:12px;font:800 14px Nunito;color:#5a5a66}
+.mis{display:flex;align-items:center;gap:12px;width:100%;margin:8px 0;padding:10px 12px;text-align:left;background:#fff;border:3px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);cursor:pointer;transition:transform .1s}
+.mis:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);background:#fffbe0}
+.mis .c{flex:none;width:52px;height:52px;border-radius:12px;border:3px solid var(--ink);display:grid;place-items:center;font:400 18px "Luckiest Guy";color:#fff;-webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill;background:var(--mc)}
+.mis .n{flex:1;font:900 16px/1.2 Nunito}
+.mis .n small{display:block;font:700 12.5px Nunito;color:#666}
+.legs{display:flex;gap:4px}
+.legs i{font-style:normal;font:900 11px Nunito;padding:2px 7px;border:2px solid var(--ink);border-radius:999px;color:#fff}
+.legs .m{background:var(--green)}.legs .r{background:var(--red)}
+.btnrow{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+.btn{height:44px;padding:0 18px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:4px 4px 0 var(--ink);font:900 15px Nunito;cursor:pointer}
+.btn.pri{background:var(--green);color:#fff;-webkit-text-stroke:.5px var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+
+.res{width:min(1100px,100%);height:min(88vh,860px);display:flex;flex-direction:column;padding:0;overflow:hidden;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.rhead{position:relative;padding:16px 22px;background:var(--rc,#2fbf5a);border-bottom:4px solid var(--ink);display:flex;align-items:center;gap:16px}
+.rhead h2{margin:0;flex:1;font:400 clamp(28px,4vw,46px)/1 "Luckiest Guy";color:#fff;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--ink)}
+.rhead .bonus{font:400 26px "Luckiest Guy";color:#fff;-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;background:var(--orange);border:3px solid var(--ink);border-radius:12px;padding:2px 12px;transform:rotate(3deg)}
+.rbody{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--cream)}
+
+.fp{display:flex;flex-direction:column;flex:1;min-height:0}
+.fp-head{display:flex;align-items:center;gap:12px;padding:14px 20px 6px}
+.fp-code{padding:4px 10px;border:3px solid var(--ink);border-radius:10px;background:var(--qc);font:400 20px "Luckiest Guy";color:#fff;-webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill}
+.fp-titles{flex:1;min-width:0}
+.fp-cat{font:900 11px Nunito;letter-spacing:.1em;text-transform:uppercase;color:#777}
+.fp-title{margin:0;font:900 20px Nunito}
+.fp-ep{font:700 12.5px ui-monospace,Menlo,monospace;color:var(--blue);word-break:break-all}
+.fp-actions:empty{display:none}
+.fp-form{display:flex;flex-wrap:wrap;gap:10px 12px;padding:6px 20px 2px;align-items:flex-end}
+.fp-modes{display:flex;gap:6px;width:100%}
+.fp-modes button{flex:1;height:40px;border:3px solid var(--ink);border-radius:12px;background:#fff;font:900 14px Nunito;cursor:pointer}
+.fp-modes button.on{background:var(--blue);color:#fff}
+.fp-field{display:flex;flex-direction:column;gap:3px;font:900 12px Nunito;text-transform:uppercase;color:#555}
+.fp-field[hidden]{display:none}
+.fp-field.fp-wide{width:100%}
+.fp-field input,.fp-field select{height:40px;min-width:140px;border:3px solid var(--ink);border-radius:10px;background:#fff;padding:0 10px;font:700 15px Nunito;text-transform:none;outline:none}
+.fp-field input:focus,.fp-field select:focus{background:#fffbe0}
+.fp-items{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.fp-item{display:flex;gap:6px;align-items:center}
+.fp-item .fp-ip{width:140px;min-width:0}.fp-item .fp-ic{width:70px;min-width:0}
+.fp-btn{height:40px;padding:0 14px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:3px 3px 0 var(--ink);font:900 14px Nunito;cursor:pointer}
+.fp-btn.fp-sm{height:32px;font-size:12.5px}
+.fp-run{background:var(--green);color:#fff;min-width:150px}
+.fp-run:disabled{opacity:.6;cursor:wait}
+.fp-bar{display:flex;gap:10px;align-items:center;padding:12px 20px;flex-wrap:wrap}
+.fp-seg{display:inline-flex;border:3px solid var(--ink);border-radius:12px;overflow:hidden}
+.fp-seg button{border:0;background:#fff;padding:6px 12px;font:900 13px Nunito;cursor:pointer}
+.fp-seg button.on{background:var(--ink);color:#fff}
+.fp-stat{margin-left:auto;font:800 13px Nunito;color:#555}
+.fp-stat b{color:var(--green)}
+.fp-out{flex:1;min-height:0;overflow:auto;padding:0 20px 20px}
+.fp-sec{margin-bottom:14px}
+.fp-sec h4{margin:0 0 6px;font:400 20px "Luckiest Guy";color:var(--orange);-webkit-text-stroke:1px var(--ink)}
+.fp-tablewrap{border:3px solid var(--ink);border-radius:14px;overflow:auto;background:#fff}
+.fp-table{border-collapse:collapse;width:100%;font:700 14px Nunito}
+.fp-table th{position:sticky;top:0;background:#ffe9b8;text-align:left;font:900 12px Nunito;text-transform:uppercase;padding:9px 12px;border-bottom:3px solid var(--ink);cursor:pointer;white-space:nowrap}
+.fp-table th[data-s]::after{content:attr(data-s);margin-left:4px;font-size:9px}
+.fp-table td{padding:8px 12px;border-top:2px dashed #e6dcc6;white-space:nowrap}
+.fp-table tbody tr{animation:rin .35s cubic-bezier(.2,1.5,.4,1) both}
+.fp-table tbody tr:hover td{background:#fffbe0}
+@keyframes rin{from{opacity:0;transform:translateX(-14px)}}
+.fp-r{text-align:right!important;font-variant-numeric:tabular-nums}
+.fp-chip{display:inline-block;padding:1px 10px;border:2px solid var(--ink);border-radius:999px;font:900 11.5px Nunito;color:#fff}
+.fp-ok{background:var(--green)}.fp-warn{background:var(--orange)}.fp-bad{background:var(--red)}.fp-info{background:var(--blue)}
+.fp-barcell{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.fp-track{width:110px;height:12px;border:2px solid var(--ink);border-radius:6px;background:#fff;overflow:hidden}
+.fp-track i{display:block;height:100%;background:var(--orange)}
+.fp-empty{padding:30px;text-align:center;font:900 16px Nunito;color:#777}
+.fp-json{margin:0;font:12.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:14px}
+.fp-error{padding:14px;border:3px solid var(--ink);border-radius:14px;background:#ffd6da;white-space:pre-wrap}
+.fp-error b{display:block;font:400 20px "Luckiest Guy";color:var(--red);-webkit-text-stroke:1px var(--ink)}
+.fp-note{font:700 12.5px ui-monospace,Menlo,monospace;color:#777}
+.fp-loading{display:flex;justify-content:center;align-items:center;gap:8px;padding:40px;font:400 22px "Luckiest Guy"}
+.fp-loading i{width:16px;height:16px;border-radius:50%;border:3px solid var(--ink);background:var(--orange);animation:bounce .7s ease-in-out infinite}
+.fp-loading i:nth-child(2){animation-delay:.1s;background:var(--green)}.fp-loading i:nth-child(3){animation-delay:.2s;background:var(--blue)}
+.fp-loading span{margin-left:8px}
+@keyframes bounce{50%{transform:translateY(-12px)}}
+
+.touch{position:fixed;bottom:16px;z-index:30;display:none;gap:10px}
+.touch button{width:64px;height:64px;border:4px solid var(--ink);border-radius:18px;background:rgba(255,255,255,.85);box-shadow:4px 4px 0 var(--ink);font:400 26px "Luckiest Guy";touch-action:none}
+@media (pointer:coarse){.touch{display:flex}}
+@media (max-width:760px){
+  #mini{width:130px;height:130px;top:66px;right:12px}
+  .speed b{font-size:44px}
+  .dlg{bottom:96px;max-width:calc(100vw - 30px)}.dlg svg{width:70px;height:70px}
+  .timer{font-size:34px}
+  .obj{font-size:13px;top:70px}
+}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="title">
+  <div class="logo"><span class="a">FARMA</span><span class="b">HIT &amp; RUN</span></div>
+  <div class="tag">Un barrio. Quince consultas. Una camioneta.</div>
+  <button class="go" id="go">¡A manejar!</button>
+  <div class="ctrl"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> o flechas: manejar · <kbd>Espacio</kbd> freno de mano · <kbd>R</kbd> enderezar · entrá a un círculo de color para ver sus misiones</div>
+</div>
+<div class="topbtns"><span class="tbtn" id="mute"></span><a class="tbtn" id="docs" target="_blank" rel="noopener">API</a><span id="themes"></span></div>
+
+<div id="hud">
+  <div class="coins toon"><svg viewBox="0 0 40 40"><g transform="rotate(-35 20 20)"><rect x="4" y="13" width="32" height="14" rx="7" fill="#fff" stroke="#1a1a22" stroke-width="3"/><path d="M4 20a7 7 0 0 1 7-7h9v14h-9a7 7 0 0 1-7-7z" fill="#ff4757" stroke="#1a1a22" stroke-width="3"/></g></svg><b id="coins">0</b></div>
+  <div class="api toon"><i id="apidot"></i><span id="apitxt">API</span></div>
+  <div class="timer" id="timer">0:30</div>
+  <div class="obj toon" id="obj"></div>
+  <canvas id="mini" width="400" height="400"></canvas>
+  <div class="speed"><b id="spd">0</b><small>KM/H</small></div>
+  <div class="dlg" id="dlg">
+    <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="#ffe9b8" stroke="#1a1a22" stroke-width="5"/><path d="M28 112c4-22 16-30 32-30s28 8 32 30" fill="#fff" stroke="#1a1a22" stroke-width="5"/><path d="M52 84l8 10 8-10" fill="#2fbf5a" stroke="#1a1a22" stroke-width="3"/><ellipse cx="60" cy="56" rx="24" ry="27" fill="#f1b892" stroke="#1a1a22" stroke-width="5"/><path d="M36 48c0-18 10-26 24-26s25 8 25 24c-8-6-14-9-25-9-9 0-16 4-24 11z" fill="#6b3d22" stroke="#1a1a22" stroke-width="4"/><circle cx="50" cy="58" r="8" fill="#fff" stroke="#1a1a22" stroke-width="4"/><circle cx="71" cy="58" r="8" fill="#fff" stroke="#1a1a22" stroke-width="4"/><path d="M58 58h5" stroke="#1a1a22" stroke-width="4"/><circle cx="51" cy="59" r="3" fill="#1a1a22"/><circle cx="72" cy="59" r="3" fill="#1a1a22"/><path d="M52 72q8 7 16 0" fill="none" stroke="#1a1a22" stroke-width="4" stroke-linecap="round"/><rect x="72" y="88" width="14" height="14" rx="3" fill="#2fbf5a" stroke="#1a1a22" stroke-width="3"/><path d="M79 91v8M75 95h8" stroke="#fff" stroke-width="3"/></svg>
+    <div class="bub toon"><b>Fermín</b><span id="dlgt"></span></div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<div class="ov" id="sel"><div class="card toon" id="selc"></div></div>
+<div class="ov" id="resov"><div class="res toon" id="res"></div></div>
+<div class="touch" style="left:16px"><button data-k="left">◀</button><button data-k="right">▶</button></div>
+<div class="touch" style="right:16px"><button data-k="back">▼</button><button data-k="gas">▲</button></div>
+
+<script>
+(() => {
+"use strict";
+const F = window.Farma, { el, FMT } = F;
+const $ = id => document.getElementById(id);
+if (!window.THREE) { document.body.innerHTML = '<div style="padding:40px;font:700 18px Nunito">No se pudo cargar Three.js desde el CDN. Farma Hit &amp; Run necesita internet para la librería 3D.</div>'; return; }
+
+const BRIEF = {
+  Q01: "Necesito el catálogo completo con cada proveedor. ¡Andá al Archivo y traelo!",
+  Q02: "Hay ventas colgadas. Averiguá en el Archivo quién las dejó pendientes.",
+  Q03: "Un cliente pidió su historial. Buscá ventas y recetas en el Archivo.",
+  Q04: "¿Quiénes juntan más de una receta? El Archivo sabe.",
+  Q05: "¿Quién vendió en los últimos 60 días? Traeme el ranking.",
+  Q06: "Hay tratamientos con la dispensa vencida. ¡Rápido, al Archivo!",
+  Q07: "¿Qué es lo que más se vende? Traeme el top 5.",
+  Q08: "El Depósito está flojo. Contá los lotes en Redis y después cruzalos en el Archivo.",
+  Q09: "Las ventas chicas sin receta, de menos de cinco lucas.",
+  Q10: "¿Quiénes compran en esta sucursal? Buscalo en el Archivo.",
+  Q11: "Hay que hacer la caja del mes de cada farmacéutico.",
+  Q12: "Hay clientes que no aparecen hace un año. Encontralos.",
+  Q13: "Hay que dar de alta, cambiar o dar de baja a un cliente en el Archivo.",
+  Q14: "¡Venta nueva! Primero descontá el stock en el Depósito y después registrala en el Archivo.",
+  Q15: "Buscá la venta en el Archivo y después descontá el stock en el Depósito, primero lo que vence antes.",
+};
+const LEGS = { Q08: ["redis", "mongo"], Q14: ["redis", "mongo"], Q15: ["mongo", "redis"] };
+const legsOf = q => LEGS[q.code] || ["mongo"];
+
+const canvas = $("gl");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+const sky = document.createElement("canvas"); sky.width = 2; sky.height = 256;
+{ const g = sky.getContext("2d"), gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, "#3fa9ff"); gr.addColorStop(.6, "#9fdcff"); gr.addColorStop(1, "#e6f7ff"); g.fillStyle = gr; g.fillRect(0, 0, 2, 256); }
+scene.background = new THREE.CanvasTexture(sky);
+scene.fog = new THREE.Fog(0xbfe8ff, 150, 330);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, .5, 900);
+addEventListener("resize", () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x88aa66, .75));
+const sun = new THREE.DirectionalLight(0xfff2d6, .85);
+sun.position.set(60, 120, 40);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -140, right: 140, top: 140, bottom: -140, near: 10, far: 300 });
+sun.shadow.bias = -.0008;
+scene.add(sun);
+
+const grad = new THREE.DataTexture(new Uint8Array([110, 110, 110, 190, 190, 190, 255, 255, 255]), 3, 1, THREE.RGBFormat);
+grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.needsUpdate = true;
+const toonCache = {};
+const toon = c => (toonCache[c] ||= new THREE.MeshToonMaterial({ color: c, gradientMap: grad }));
+const OUT = new THREE.MeshBasicMaterial({ color: 0x1a1a22, side: THREE.BackSide });
+function part(geo, color, { outline = true, out = 1.06, cast = true } = {}) {
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(geo, toon(color)); m.castShadow = cast; m.receiveShadow = true; g.add(m);
+  if (outline) { const o = new THREE.Mesh(geo, OUT); o.scale.setScalar(out); g.add(o); }
+  return g;
+}
+const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+const at = (o, x, y, z) => (o.position.set(x, y, z), o);
+const rotX = (o, a) => ((o.rotation.x = a), o);
+function place(o, x, y, z, ry = 0) { o.position.set(x, y, z); o.rotation.y = ry; scene.add(o); return o; }
+let seed = 11;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+
+function signTex(text, bg, fg = "#fff", w = 512, h = 128, font = 74) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  g.lineWidth = 12; g.strokeStyle = "#1a1a22"; g.strokeRect(6, 6, w - 12, h - 12);
+  g.font = `${font}px "Luckiest Guy", Impact, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+  g.lineWidth = 10; g.strokeStyle = "#1a1a22"; g.strokeText(text, w / 2, h / 2 + 6);
+  g.fillStyle = fg; g.fillText(text, w / 2, h / 2 + 6);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
+  return t;
+}
+
+const ROADS = [-100, -50, 0, 50, 100], RW = 12, EXT = 112, BL = [-75, -25, 25, 75];
+const colliders = [];
+const addCol = (x, z, w, d) => colliders.push({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2 });
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), toon(0x8fd47a));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const asphalt = toon(0x5c6170), sidewalk = toon(0xe9dfc9), lawn = toon(0x7cc965);
+for (const r of ROADS) {
+  const a = new THREE.Mesh(box(RW, .2, EXT * 2 + RW), asphalt); a.position.set(r, .1, 0); a.receiveShadow = true; scene.add(a);
+  const b = new THREE.Mesh(box(EXT * 2 + RW, .2, RW), asphalt); b.position.set(0, .11, r); b.receiveShadow = true; scene.add(b);
+}
+const dashGeo = box(.45, .05, 3), dashMat = new THREE.MeshBasicMaterial({ color: 0xffd23f });
+const dashes = [];
+for (const r of ROADS) for (let s = -EXT; s <= EXT; s += 7) {
+  if (ROADS.some(q => Math.abs(q - s) < RW / 2 + 1.5)) continue;
+  dashes.push([r, s, 0], [s, r, Math.PI / 2]);
+}
+const dashIM = new THREE.InstancedMesh(dashGeo, dashMat, dashes.length);
+const dm = new THREE.Object3D();
+dashes.forEach(([x, z, ry], i) => { dm.position.set(x, .25, z); dm.rotation.set(0, ry, 0); dm.updateMatrix(); dashIM.setMatrixAt(i, dm.matrix); });
+scene.add(dashIM);
+for (const bx of BL) for (const bz of BL) {
+  const s = new THREE.Mesh(box(50 - RW, .4, 50 - RW), sidewalk); s.position.set(bx, .2, bz); s.receiveShadow = true; scene.add(s);
+  const l = new THREE.Mesh(box(50 - RW - 4, .5, 50 - RW - 4), lawn); l.position.set(bx, .25, bz); l.receiveShadow = true; scene.add(l);
+}
+
+const HOUSE = [0xff8fa3, 0x8fd3ff, 0xffd166, 0xb8f28c, 0xc9a7ff, 0xffb37a, 0x9ef0e1, 0xfff1a8];
+const ROOF = [0xd1495b, 0x2b59c3, 0x8f5bd6, 0x2a9d8f, 0xe76f51, 0x6d597a];
+function house(x, z, w, d, ry) {
+  const g = new THREE.Group();
+  const h = 6 + rnd() * 3, col = HOUSE[Math.floor(rnd() * HOUSE.length)];
+  g.add(at(part(box(w, h, d), col), 0, h / 2, 0));
+  const roof = part(new THREE.ConeGeometry(Math.max(w, d) * .78, 4.5, 4), ROOF[Math.floor(rnd() * ROOF.length)]);
+  roof.position.y = h + 2.25; roof.rotation.y = Math.PI / 4; g.add(roof);
+  const door = part(box(2.2, 3.6, .4), 0x8a5a3c); door.position.set(0, 1.8, d / 2 + .1); g.add(door);
+  for (const sx of [-1, 1]) { const wdw = part(box(2.2, 2, .3), 0x3d6fb6, { out: 1.12 }); wdw.position.set(sx * (w / 2 - 2.3), h * .62, d / 2 + .1); g.add(wdw); }
+  place(g, x, .5, z, ry);
+  addCol(x, z, (Math.abs(Math.sin(ry)) > .5 ? d : w) + 1, (Math.abs(Math.sin(ry)) > .5 ? w : d) + 1);
+}
+function tree(x, z) {
+  const g = new THREE.Group();
+  const t = part(new THREE.CylinderGeometry(.5, .7, 3.5, 8), 0x8a5a3c); t.position.y = 1.75; g.add(t);
+  const c = part(new THREE.IcosahedronGeometry(2.6, 0), rnd() < .5 ? 0x3fae49 : 0x55c45a); c.position.y = 5; g.add(c);
+  const c2 = part(new THREE.IcosahedronGeometry(1.8, 0), 0x6bd46b); c2.position.set(1.1, 6.4, .4); g.add(c2);
+  place(g, x, .5, z);
+  addCol(x, z, 1.6, 1.6);
+}
+function palm(x, z) {
+  const g = new THREE.Group();
+  for (let i = 0; i < 6; i++) { const s = part(new THREE.CylinderGeometry(.42, .5, 1.6, 7), 0xb07a4a); s.position.set(i * .12, .8 + i * 1.5, 0); s.rotation.z = -.05; g.add(s); }
+  for (let k = 0; k < 6; k++) { const l = part(box(5, .25, 1.4), 0x3fae49); l.position.set(.6 + Math.cos(k) * 2, 9.6, Math.sin(k) * 2); l.rotation.set(0, -k, -.4); g.add(l); }
+  place(g, x, .5, z);
+  addCol(x, z, 1.4, 1.4);
+}
+
+const STATION_DEF = {
+  caja: { b: [-25, -25], name: "FARMARED", color: 0x2fbf5a, sign: "#2fbf5a", icon: "$" },
+  estanteria: { b: [75, -75], name: "DEPÓSITO REDIS", color: 0xff4757, sign: "#ff4757", icon: "D" },
+  recetas: { b: [-75, 25], name: "CLÍNICA", color: 0xff7eb6, sign: "#ff7eb6", icon: "R" },
+  clientes: { b: [25, 75], name: "PLAZA VECINAL", color: 0x9b6bff, sign: "#9b6bff", icon: "P" },
+  gerencia: { b: [75, 25], name: "GERENCIA", color: 0xffb020, sign: "#ffb020", icon: "G" },
+};
+const ARCHIVE = { b: [-75, -75], name: "ARCHIVO MONGODB", color: 0x2fbf5a };
+const markerPos = ([bx, bz]) => new THREE.Vector3(bx + (bx < 0 ? 25 : -25), 0, bz);
+function bigBuilding([bx, bz], w, h, d, color, sign, signColor, extra) {
+  const g = new THREE.Group();
+  const body = part(box(w, h, d), color); body.position.y = h / 2; g.add(body);
+  const trim = part(box(w + 1, 1.2, d + 1), 0xffffff); trim.position.y = h + .6; g.add(trim);
+  const face = bx < 0 ? 1 : -1;
+  for (let i = 0; i < Math.floor(h / 5); i++) for (let k = -1; k <= 1; k++) {
+    const wd = part(box(.3, 2.4, 3), 0x3d6fb6, { out: 1.1 }); wd.position.set(face * (w / 2 + .1), 3.5 + i * 5, k * (d / 3.4)); g.add(wd);
+  }
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(w * .95, w * .24), new THREE.MeshBasicMaterial({ map: signTex(sign, signColor, "#fff", 768, 192, 96) }));
+  s.position.set(face * (w / 2 + .35), h - 2.5, 0); s.rotation.y = face * Math.PI / 2; g.add(s);
+  const door = part(box(.5, 5, 6), 0x2b2b38); door.position.set(face * (w / 2 + .1), 2.5, 0); g.add(door);
+  if (extra) extra(g, face, w, h, d);
+  place(g, bx, .5, bz);
+  addCol(bx, bz, w + 1, d + 1);
+  return g;
+}
+const signs = {};
+signs.caja = bigBuilding(STATION_DEF.caja.b, 26, 13, 24, 0xf4f7f2, "FARMARED", "#2fbf5a", (g, face, w, h) => {
+  const cross = new THREE.Group();
+  const a = part(box(1.4, 6, 6), 0x2fbf5a), b = part(box(1.4, 2, 6), 0x2fbf5a); b.scale.set(1, 1, 1); b.rotation.x = Math.PI / 2;
+  cross.add(a, b); cross.position.set(0, h + 5, 0); g.add(cross); g.userData.cross = cross;
+});
+bigBuilding(ARCHIVE.b, 28, 22, 26, 0x9be7b0, "ARCHIVO MONGODB", "#1f8f45", (g, face, w, h) => {
+  for (let i = 0; i < 3; i++) { const c = part(new THREE.CylinderGeometry(1.2, 1.2, h, 10), 0xffffff); c.position.set(face * (w / 2 + 1.5), h / 2, -8 + i * 8); g.add(c); }
+  const dome = part(new THREE.SphereGeometry(7, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), 0x2fbf5a); dome.position.y = h + 1.2; g.add(dome);
+});
+bigBuilding(STATION_DEF.estanteria.b, 30, 11, 28, 0xffd0c9, "DEPÓSITO REDIS", "#ff4757", (g, face, w, h, d) => {
+  for (let i = 0; i < 4; i++) { const r = part(new THREE.CylinderGeometry(4, 4, w * .95, 12, 1, false, 0, Math.PI), 0xff4757); r.rotation.z = Math.PI / 2; r.rotation.y = Math.PI / 2; r.position.set(0, h + .6, -d / 2 + 4 + i * 6.7); g.add(r); }
+  for (let i = 0; i < 5; i++) { const c = part(box(3, 3, 3), [0xffb37a, 0x8fd3ff, 0xffd166][i % 3]); c.position.set(face * (w / 2 + 3), 1.5 + (i > 2 ? 3 : 0), -6 + (i % 3) * 3.4); g.add(c); }
+});
+bigBuilding(STATION_DEF.recetas.b, 24, 15, 24, 0xffe3ef, "CLÍNICA", "#ff7eb6", (g, face, w, h) => {
+  const c1 = part(box(1, 5, 1.6), 0xff4757), c2 = part(box(1, 1.6, 5), 0xff4757); c1.position.set(face * (w / 2 + .6), h - 6, 8); c2.position.copy(c1.position); g.add(c1, c2);
+});
+bigBuilding(STATION_DEF.gerencia.b, 18, 34, 18, 0xffe6a8, "GERENCIA", "#ffb020", (g, face, w, h) => {
+  const ant = part(new THREE.CylinderGeometry(.3, .3, 10, 6), 0xdddddd); ant.position.y = h + 6; g.add(ant);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(.8, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff4757 })); tip.position.y = h + 11; g.add(tip); g.userData.tip = tip;
+});
+(() => {
+  const [bx, bz] = STATION_DEF.clientes.b;
+  const fountain = new THREE.Group();
+  fountain.add(at(part(new THREE.CylinderGeometry(7, 7.5, 1.6, 20), 0xd8d2c0), 0, .8, 0));
+  const water = new THREE.Mesh(new THREE.CylinderGeometry(6.2, 6.2, .3, 20), new THREE.MeshToonMaterial({ color: 0x4fc3ff, gradientMap: grad })); water.position.y = 1.5; fountain.add(water);
+  fountain.add(at(part(new THREE.CylinderGeometry(1, 1.4, 5, 10), 0xd8d2c0), 0, 3, 0));
+  place(fountain, bx, .5, bz); addCol(bx, bz, 15, 15);
+  for (const [dx, dz] of [[-12, -12], [12, -12], [-12, 12], [12, 12]]) tree(bx + dx, bz + dz);
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(14, 3.5), new THREE.MeshBasicMaterial({ map: signTex("PLAZA VECINAL", "#9b6bff") }));
+  s.position.set(bx - 14, 4, bz); s.rotation.y = -Math.PI / 2; scene.add(s);
+  const post = part(box(.6, 4, .6), 0x8a5a3c); place(post, bx - 14, 2.5, bz);
+})();
+const special = new Set([...Object.values(STATION_DEF).map(s => s.b.join()), ARCHIVE.b.join()]);
+for (const bx of BL) for (const bz of BL) {
+  if (special.has([bx, bz].join())) continue;
+  const spots = [[-8, -8], [8, -8], [-8, 8], [8, 8]];
+  spots.forEach(([dx, dz], i) => {
+    if (rnd() < .2) { tree(bx + dx, bz + dz); return; }
+    const ry = [0, Math.PI / 2, Math.PI, -Math.PI / 2][Math.floor(rnd() * 4)];
+    house(bx + dx, bz + dz, 9 + rnd() * 2, 9 + rnd() * 2, ry);
+  });
+}
+for (let i = 0; i < 30; i++) {
+  const r = ROADS[Math.floor(rnd() * ROADS.length)], s = -EXT + rnd() * EXT * 2, side = rnd() < .5 ? -1 : 1;
+  if (ROADS.some(q => Math.abs(q - s) < 10)) continue;
+  if (rnd() < .5) palm(r + side * (RW / 2 + 2), s); else palm(s, r + side * (RW / 2 + 2));
+}
+for (let i = 0; i < 40; i++) { const a = rnd() * 6.28, d = 150 + rnd() * 80; const h = part(new THREE.SphereGeometry(20 + rnd() * 25, 10, 8), rnd() < .5 ? 0x7cc965 : 0x6bbd58, { outline: false, cast: false }); h.scale.y = .45; place(h, Math.cos(a) * d, -4, Math.sin(a) * d); }
+const clouds = [];
+for (let i = 0; i < 14; i++) {
+  const g = new THREE.Group();
+  for (let k = 0; k < 4; k++) { const p = part(new THREE.SphereGeometry(4 + rnd() * 3, 10, 8), 0xffffff, { out: 1.05, cast: false }); p.position.set(k * 5 - 7, rnd() * 2, rnd() * 3); g.add(p); }
+  place(g, -220 + rnd() * 440, 105 + rnd() * 30, -220 + rnd() * 440); clouds.push(g);
+}
+
+const markers = {};
+const glowMat = c => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .35, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.FrontSide });
+function marker(id, pos, color, label) {
+  const g = new THREE.Group();
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 26, 24, 1, true), glowMat(color)); beam.position.y = 13; g.add(beam);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(4.2, 5.4, 32), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .35; g.add(ring);
+  const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+  const gg = c.getContext("2d"); gg.fillStyle = "#" + new THREE.Color(color).getHexString(); gg.beginPath(); gg.arc(128, 128, 110, 0, 7); gg.fill(); gg.lineWidth = 16; gg.strokeStyle = "#1a1a22"; gg.stroke();
+  gg.font = '120px "Luckiest Guy", Impact'; gg.textAlign = "center"; gg.textBaseline = "middle"; gg.lineWidth = 12; gg.strokeText(label, 128, 140); gg.fillStyle = "#fff"; gg.fillText(label, 128, 140);
+  const icon = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c) })); icon.scale.setScalar(5); icon.position.y = 9; g.add(icon);
+  g.position.copy(pos); scene.add(g);
+  markers[id] = { g, beam, ring, icon, pos, color };
+  return markers[id];
+}
+F.STATIONS.forEach(s => { const d = STATION_DEF[s.id]; marker(s.id, markerPos(d.b), d.color, d.icon); });
+const target = marker("target", new THREE.Vector3(0, -100, 0), 0xffd23f, "!");
+target.g.visible = false;
+const ENGINE_POS = { mongo: markerPos(ARCHIVE.b), redis: markerPos(STATION_DEF.estanteria.b) };
+const ENGINE_NAME = { mongo: "ARCHIVO MONGODB", redis: "DEPÓSITO REDIS" };
+
+const coinGeo = new THREE.CylinderGeometry(1.1, 1.1, .35, 20);
+const coinMat = toon(0xffd23f), coinOut = new THREE.MeshBasicMaterial({ color: 0x1a1a22, side: THREE.BackSide });
+const coins = [];
+for (const r of ROADS) for (let s = -EXT + 8; s < EXT; s += 9) {
+  if (ROADS.some(q => Math.abs(q - s) < 9)) continue;
+  if (rnd() < .45) continue;
+  for (const [x, z] of [[r + 2.6, s], [s, r - 2.6]]) {
+    if (rnd() < .5) continue;
+    const g = new THREE.Group();
+    const m = new THREE.Mesh(coinGeo, coinMat); m.rotation.z = Math.PI / 2; g.add(m);
+    const o = new THREE.Mesh(coinGeo, coinOut); o.rotation.z = Math.PI / 2; o.scale.setScalar(1.15); g.add(o);
+    const cr = new THREE.Mesh(box(.5, 1.2, .38), new THREE.MeshBasicMaterial({ color: 0x2fbf5a })); g.add(cr);
+    const cr2 = new THREE.Mesh(box(.5, .38, 1.2), new THREE.MeshBasicMaterial({ color: 0x2fbf5a })); g.add(cr2);
+    place(g, x, 2, z); coins.push({ g, taken: false, t: 0 });
+  }
+}
+
+function van() {
+  const g = new THREE.Group(), body = new THREE.Group();
+  body.add(at(part(box(3.4, 2.4, 6.4), 0xffffff), 0, 2.1, -.2));
+  body.add(at(part(box(3.45, .7, 6.45), 0x2fbf5a, { outline: false }), 0, 1.3, -.2));
+  body.add(at(part(box(3.2, 1.4, 2.2), 0xffffff), 0, 3.9, 1.6));
+  body.add(at(part(box(3, 1, .2), 0x5fb7ff, { outline: false }), 0, 3.9, 2.75));
+  for (const sx of [-1, 1]) {
+    const cv = part(box(.1, 1.4, .45), 0x2fbf5a, { outline: false }), ch = part(box(.1, .45, 1.4), 0x2fbf5a, { outline: false });
+    cv.position.set(sx * 1.74, 2.4, -.9); ch.position.copy(cv.position); body.add(cv, ch);
+  }
+  const beacon = new THREE.Mesh(box(1.6, .45, .5), new THREE.MeshBasicMaterial({ color: 0xff8a1f })); beacon.position.set(0, 4.85, 1.4); body.add(beacon);
+  for (const sx of [-1, 1]) { const hl = new THREE.Mesh(box(.7, .45, .1), new THREE.MeshBasicMaterial({ color: 0xfff7c2 })); hl.position.set(sx * 1.15, 2, 2.95); body.add(hl); const tl = new THREE.Mesh(box(.6, .4, .1), new THREE.MeshBasicMaterial({ color: 0xff4757 })); tl.position.set(sx * 1.2, 2, -3.45); body.add(tl); }
+  g.add(body);
+  const wheels = [];
+  for (const [x, z] of [[-1.7, 2], [1.7, 2], [-1.7, -2.2], [1.7, -2.2]]) {
+    const w = new THREE.Group();
+    const t = part(new THREE.CylinderGeometry(.85, .85, .7, 14), 0x1a1a22, { outline: false }); t.rotation.z = Math.PI / 2; w.add(t);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(.4, .4, .75, 10), toon(0xcfcfcf)); hub.rotation.z = Math.PI / 2; w.add(hub);
+    w.position.set(x, .85, z); g.add(w); wheels.push(w);
+  }
+  scene.add(g);
+  return { g, body, wheels, beacon };
+}
+const car = van();
+const P = { x: 2, z: -6, h: Math.PI, v: 0, steer: 0, yv: 0, y: 0 };
+car.g.position.set(P.x, 0, P.z);
+
+const NPC_COL = [0xff4757, 0x2b7bff, 0xffb020, 0x9b6bff, 0x2a9d8f, 0xff7eb6];
+const npcs = [];
+function npcCar(color) {
+  const g = new THREE.Group();
+  g.add(at(part(box(2.8, 1.4, 5), color), 0, 1.5, 0));
+  g.add(at(part(box(2.4, 1.1, 2.4), 0xe6f3ff), 0, 2.7, -.3));
+  for (const [x, z] of [[-1.4, 1.6], [1.4, 1.6], [-1.4, -1.6], [1.4, -1.6]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(.65, .65, .5, 12), toon(0x1a1a22)); w.rotation.z = Math.PI / 2; w.position.set(x, .7, z); g.add(w); }
+  scene.add(g); return g;
+}
+const LOOPS = [[-50, -50, 50, 50], [-100, -100, 100, 100], [0, -100, 100, 0], [-100, 0, 0, 100], [-50, -100, 50, 0], [0, 0, 100, 100]];
+LOOPS.forEach((l, i) => npcs.push({ g: npcCar(NPC_COL[i]), loop: l, s: rnd() * 400, sp: 12 + rnd() * 6 }));
+function loopPos(l, s) {
+  const [x0, z0, x1, z1] = l, w = x1 - x0, h = z1 - z0, per = 2 * (w + h), d = ((s % per) + per) % per;
+  if (d < w) return [x0 + d, z0 + 3, Math.PI / 2];
+  if (d < w + h) return [x1 - 3, z0 + (d - w), 0];
+  if (d < 2 * w + h) return [x1 - (d - w - h), z1 - 3, -Math.PI / 2];
+  return [x0 + 3, z1 - (d - 2 * w - h), Math.PI];
+}
+
+const arrow = new THREE.Group();
+arrow.add(rotX(part(new THREE.ConeGeometry(1.1, 2.6, 4), 0xffd23f), Math.PI / 2));
+arrow.visible = false; scene.add(arrow);
+
+const keys = {};
+addEventListener("keydown", e => {
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) { if (e.key === "Escape") closeOverlays(); return; }
+  keys[e.code] = true;
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) e.preventDefault();
+  if (state === "title" && (e.code === "Enter" || e.code === "Space")) start();
+  if (e.code === "Escape") closeOverlays();
+  if (e.code === "KeyR" && state === "drive") { P.v = 0; P.y = 0; P.yv = 0; }
+});
+addEventListener("keyup", e => { keys[e.code] = false; });
+addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
+document.querySelectorAll(".touch button").forEach(b => {
+  const k = { left: "ArrowLeft", right: "ArrowRight", gas: "ArrowUp", back: "ArrowDown" }[b.dataset.k];
+  b.addEventListener("pointerdown", e => { e.preventDefault(); keys[k] = true; });
+  for (const ev of ["pointerup", "pointerleave", "pointercancel"]) b.addEventListener(ev, () => { keys[k] = false; });
+});
+
+const engine = { osc: null, gain: null, f: null };
+function engineOn() {
+  const a = F.Sound.get(); if (!a || engine.osc) return;
+  engine.osc = a.createOscillator(); engine.osc.type = "sawtooth";
+  engine.f = a.createBiquadFilter(); engine.f.type = "lowpass"; engine.f.frequency.value = 500;
+  engine.gain = a.createGain(); engine.gain.gain.value = 0;
+  engine.osc.connect(engine.f).connect(engine.gain).connect(a.destination); engine.osc.start();
+}
+function engineSet(v) {
+  if (!engine.osc) return;
+  const a = F.Sound.ctx, sp = Math.abs(v);
+  engine.osc.frequency.setTargetAtTime(48 + sp * 3.2, a.currentTime, .05);
+  engine.gain.gain.setTargetAtTime(F.Sound.muted || state !== "drive" ? 0 : .025 + Math.min(sp, 40) * .0009, a.currentTime, .1);
+}
+
+let state = "title", coinsN = 0, mission = null, cooldown = 0, dlgT, toastT;
+function say(text, ms = 5200) { $("dlgt").textContent = text; $("dlg").classList.add("on"); clearTimeout(dlgT); dlgT = setTimeout(() => $("dlg").classList.remove("on"), ms); }
+function toast(text, color = "#fff") { const t = $("toast"); t.textContent = text; t.style.color = color; t.classList.remove("on"); void t.offsetWidth; t.classList.add("on"); }
+function paintCoins(b) { const c = $("coins"); c.textContent = coinsN; if (b) { c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); } }
+
+function openSelect(stationId) {
+  state = "select";
+  const st = F.STATIONS.find(s => s.id === stationId), d = STATION_DEF[stationId];
+  const hex = "#" + new THREE.Color(d.color).getHexString();
+  $("selc").replaceChildren(
+    el("h2", { text: st.title, style: `color:${hex}` }), el("div", { class: "sub", text: `${st.sub} · elegí una misión` }),
+    ...st.queries.map(code => {
+      const q = F.byCode(code), legs = legsOf(q);
+      return el("button", { class: "mis", style: `--mc:${q.color}`, onclick: () => startMission(q) },
+        el("div", { class: "c", text: code.slice(1) }),
+        el("div", { class: "n" }, q.short, el("small", { text: q.mutation ? "Golpe: modifica datos" : "Reconocimiento: solo lee" })),
+        el("div", { class: "legs" }, legs.map(l => el("i", { class: l === "mongo" ? "m" : "r", text: l === "mongo" ? "MONGO" : "REDIS" }))));
+    }),
+    el("div", { class: "btnrow" }, el("button", { class: "btn", text: "Seguir manejando (Esc)", onclick: closeOverlays })));
+  $("sel").classList.add("on");
+  F.Sound.tone(660, 0, .08, "square", .03); F.Sound.tone(990, .06, .1, "square", .03);
+}
+function startMission(q) {
+  $("sel").classList.remove("on");
+  const legs = legsOf(q);
+  mission = { q, legs, leg: 0, time: 30 + legs.length * 12 };
+  setTarget();
+  state = "drive";
+  $("timer").classList.add("on");
+  say(BRIEF[q.code], 6500);
+  toast("¡MISIÓN!", "#ffd23f");
+  F.Sound.tone(523, 0, .15, "square", .04); F.Sound.tone(784, .12, .25, "square", .04);
+}
+function setTarget() {
+  const eng = mission.legs[mission.leg];
+  target.pos.copy(ENGINE_POS[eng]); target.g.position.copy(ENGINE_POS[eng]); target.g.visible = true;
+  target.beam.material.color.setHex(eng === "mongo" ? 0x2fbf5a : 0xff4757);
+  target.ring.material.color.setHex(eng === "mongo" ? 0x2fbf5a : 0xff4757);
+  arrow.visible = true;
+  $("obj").replaceChildren(`Llevá el pedido ${mission.q.code} al `, el("b", { text: ENGINE_NAME[eng] }), mission.legs.length > 1 ? ` · tramo ${mission.leg + 1}/${mission.legs.length}` : "");
+  $("obj").classList.add("on");
+}
+function arrive() {
+  if (mission.leg < mission.legs.length - 1) {
+    mission.leg++; mission.time += 8;
+    setTarget();
+    toast("¡BIEN!", "#2fbf5a");
+    say(mission.legs[mission.leg] === "mongo" ? "¡Listo el stock! Ahora registralo en el Archivo MongoDB." : "¡Encontré la venta! Ahora al Depósito Redis a descontar.", 4500);
+    F.Sound.tone(880, 0, .1, "square", .04); F.Sound.tone(1320, .08, .15, "square", .04);
+    return;
+  }
+  const q = mission.q, bonus = Math.max(1, Math.ceil(mission.time));
+  endMission();
+  coinsN += bonus; paintCoins(true);
+  showResult(q, bonus);
+}
+function endMission() { mission = null; target.g.visible = false; arrow.visible = false; $("timer").classList.remove("on", "low"); $("obj").classList.remove("on"); }
+function failMission() {
+  const q = mission.q;
+  endMission();
+  toast("¡SE TE PASÓ!", "#ff4757");
+  say(`Llegaste tarde con ${q.code}. Volvé a la estación para reintentar.`, 4500);
+  F.Sound.tone(300, 0, .3, "sawtooth", .05, 120);
+}
+function showResult(q, bonus) {
+  state = "result";
+  const panel = F.createPanel(q, {
+    text: { run: "Volver a consultar", runMutation: "¡Ejecutar golpe!", loading: "Entregando", empty: "No había nada", fill: "Completá el pedido y ejecutá el golpe", invalid: "Faltan datos" },
+    autorunDelay: 400,
+    onSuccess: (q, req, res, msg) => { if (msg) { toast("¡GOLPE PERFECTO!", "#2fbf5a"); say(msg, 5000); F.Sound.tone(523, 0, .2, "square", .04); F.Sound.tone(659, .1, .2, "square", .04); F.Sound.tone(784, .2, .35, "square", .04); refresh(); } },
+    onError: e => { toast("¡UPS!", "#ff4757"); say(`El servidor dijo: ${e.message.split("\n")[0]}`, 6000); F.Sound.tone(220, 0, .3, "sawtooth", .05); },
+  });
+  $("res").style.setProperty("--rc", q.color);
+  $("res").replaceChildren(
+    el("div", { class: "rhead" }, el("h2", { text: "¡Misión cumplida!" }), el("span", { class: "bonus", text: `+${bonus}` }), el("button", { class: "btn", text: "Seguir (Esc)", onclick: closeOverlays })),
+    el("div", { class: "rbody" }, panel.root));
+  $("resov").classList.add("on");
+  toast("¡MISIÓN CUMPLIDA!", "#ffd23f");
+  [523, 659, 784, 1047].forEach((f, i) => F.Sound.tone(f, i * .1, .3, "square", .035));
+  if (q.mutation) setTimeout(() => panel.focus(), 400);
+}
+function closeOverlays() {
+  if (state === "select" || state === "result") {
+    $("sel").classList.remove("on"); $("resov").classList.remove("on");
+    state = "drive"; cooldown = 1.8;
+    document.activeElement?.blur();
+  }
+}
+
+const mini = $("mini"), mx = mini.getContext("2d");
+function drawMini() {
+  const W = mini.width, S = 1.5;
+  mx.save(); mx.clearRect(0, 0, W, W);
+  mx.beginPath(); mx.arc(W / 2, W / 2, W / 2, 0, 7); mx.clip();
+  mx.fillStyle = "#8fd47a"; mx.fillRect(0, 0, W, W);
+  mx.translate(W / 2, W / 2); mx.rotate(P.h - Math.PI); mx.scale(S, S); mx.translate(-P.x, -P.z);
+  mx.fillStyle = "#5c6170";
+  for (const r of ROADS) { mx.fillRect(r - RW / 2, -EXT - 6, RW, EXT * 2 + 12); mx.fillRect(-EXT - 6, r - RW / 2, EXT * 2 + 12, RW); }
+  mx.fillStyle = "#e9dfc9";
+  for (const c of colliders) if (c.x1 - c.x0 > 5) mx.fillRect(c.x0, c.z0, c.x1 - c.x0, c.z1 - c.z0);
+  for (const id in markers) {
+    const m = markers[id]; if (!m.g.visible) continue;
+    mx.fillStyle = "#" + (id === "target" ? m.beam.material.color.getHexString() : new THREE.Color(m.color).getHexString());
+    mx.strokeStyle = "#1a1a22"; mx.lineWidth = 2;
+    mx.beginPath(); mx.arc(m.pos.x, m.pos.z, id === "target" ? 7 + Math.sin(performance.now() / 150) * 2 : 5, 0, 7); mx.fill(); mx.stroke();
+  }
+  mx.fillStyle = "#ffd23f";
+  for (const c of coins) if (!c.taken) { mx.beginPath(); mx.arc(c.g.position.x, c.g.position.z, 1.4, 0, 7); mx.fill(); }
+  mx.restore();
+  mx.save(); mx.translate(W / 2, W / 2);
+  mx.fillStyle = "#fff"; mx.strokeStyle = "#1a1a22"; mx.lineWidth = 4;
+  mx.beginPath(); mx.moveTo(0, -16); mx.lineTo(12, 12); mx.lineTo(0, 6); mx.lineTo(-12, 12); mx.closePath(); mx.fill(); mx.stroke();
+  mx.restore();
+}
+
+function collide(x, z) {
+  const r = 2.2;
+  if (Math.abs(x) > EXT + 4 || Math.abs(z) > EXT + 4) return true;
+  for (const c of colliders) if (x + r > c.x0 && x - r < c.x1 && z + r > c.z0 && z - r < c.z1) return true;
+  return false;
+}
+let bumpT = 0;
+function physics(dt) {
+  const gas = keys.KeyW || keys.ArrowUp, brk = keys.KeyS || keys.ArrowDown, left = keys.KeyA || keys.ArrowLeft, right = keys.KeyD || keys.ArrowRight, hb = keys.Space;
+  const MAX = 40;
+  if (gas) P.v += (P.v < 0 ? 60 : 26) * dt;
+  else if (brk) P.v -= (P.v > 0 ? 50 : 18) * dt;
+  else P.v -= Math.sign(P.v) * Math.min(Math.abs(P.v), 9 * dt);
+  if (hb) P.v -= Math.sign(P.v) * Math.min(Math.abs(P.v), 22 * dt);
+  P.v = Math.max(-14, Math.min(MAX, P.v));
+  const steerTarget = (left ? 1 : 0) - (right ? 1 : 0);
+  P.steer += (steerTarget - P.steer) * Math.min(1, dt * 8);
+  const turn = P.steer * Math.min(1, Math.abs(P.v) / 8) * (hb ? 3.4 : 2.2) * Math.sign(P.v || 1);
+  P.h += turn * dt;
+  const nx = P.x + Math.sin(P.h) * P.v * dt, nz = P.z + Math.cos(P.h) * P.v * dt;
+  if (!collide(nx, nz)) { P.x = nx; P.z = nz; }
+  else if (!collide(nx, P.z)) { P.x = nx; P.v *= .9; }
+  else if (!collide(P.x, nz)) { P.z = nz; P.v *= .9; }
+  else { if (Math.abs(P.v) > 12 && bumpT <= 0) { F.Sound.noise(0, .2, .1, 400); bumpT = .4; } P.v *= -.3; }
+  bumpT -= dt;
+  P.yv -= 40 * dt; P.y = Math.max(0, P.y + P.yv * dt); if (P.y === 0) P.yv = 0;
+  car.g.position.set(P.x, P.y, P.z);
+  car.g.rotation.y = P.h;
+  car.body.rotation.z = -P.steer * Math.min(1, Math.abs(P.v) / 30) * .12;
+  car.body.rotation.x = (gas ? -.03 : brk ? .04 : 0) * Math.min(1, Math.abs(P.v) / 10);
+  car.wheels.forEach((w, i) => { w.children[0].rotation.x += P.v * dt / .85; if (i < 2) w.rotation.y = P.steer * .45; });
+}
+
+const clock = new THREE.Clock();
+let camPos = new THREE.Vector3(60, 60, 60), camLook = new THREE.Vector3();
+function loop() {
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  if (state === "drive") physics(dt);
+  engineSet(state === "drive" ? P.v : 0);
+  for (const n of npcs) { n.s += n.sp * dt; const [x, z, ry] = loopPos(n.loop, n.s); n.g.position.set(x, 0, z); n.g.rotation.y = ry; }
+  for (const c of clouds) c.position.x = ((c.position.x + dt * 2 + 260) % 520) - 260;
+  for (const id in markers) { const m = markers[id]; m.icon.position.y = 9 + Math.sin(t * 3 + m.pos.x) * .6; m.beam.material.opacity = .25 + Math.sin(t * 4) * .08; m.ring.rotation.z = t; }
+  car.beacon.material.color.setHex(Math.sin(t * 10) > 0 ? 0xff8a1f : 0xffd23f);
+  if (signs.caja.userData.cross) signs.caja.userData.cross.rotation.y = t * 1.5;
+  for (const c of coins) {
+    if (c.taken) { if (c.t < 1) { c.t += dt * 3; c.g.position.y = 2 + c.t * 4; c.g.scale.setScalar(Math.max(.01, 1 - c.t)); if (c.t >= 1) c.g.visible = false; } continue; }
+    c.g.rotation.y = t * 3; c.g.position.y = 2 + Math.sin(t * 2 + c.g.position.x) * .3;
+    if (state === "drive" && (c.g.position.x - P.x) ** 2 + (c.g.position.z - P.z) ** 2 < 9) { c.taken = true; coinsN++; paintCoins(true); F.Sound.tone(1320, 0, .06, "square", .03); F.Sound.tone(1760, .05, .08, "square", .03); }
+  }
+  if (state === "drive") {
+    cooldown -= dt;
+    if (mission) {
+      mission.time -= dt;
+      const s = Math.max(0, mission.time);
+      $("timer").textContent = `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+      $("timer").classList.toggle("low", s < 10);
+      const d = Math.hypot(target.pos.x - P.x, target.pos.z - P.z);
+      arrow.position.set(P.x, 7.5 + Math.sin(t * 4) * .3, P.z);
+      arrow.rotation.y = Math.atan2(target.pos.x - P.x, target.pos.z - P.z);
+      if (d < 6.5) arrive();
+      else if (mission.time <= 0) failMission();
+    } else if (cooldown <= 0) {
+      for (const s of F.STATIONS) { const m = markers[s.id]; if (Math.hypot(m.pos.x - P.x, m.pos.z - P.z) < 6) { P.v = 0; openSelect(s.id); break; } }
+    }
+    $("spd").textContent = Math.round(Math.abs(P.v) * 3.6);
+  }
+  if (state === "title") {
+    const a = t * .12;
+    camPos.set(Math.sin(a) * 150, 72, Math.cos(a) * 150);
+    camLook.set(0, 0, 0);
+    camera.fov = 50;
+  } else {
+    const fx = Math.sin(P.h), fz = Math.cos(P.h);
+    const want = new THREE.Vector3(P.x - fx * 15, P.y + 7.5, P.z - fz * 15);
+    camPos.lerp(want, Math.min(1, dt * (state === "drive" ? 4 : 1.5)));
+    camLook.lerp(new THREE.Vector3(P.x + fx * 5, P.y + 2, P.z + fz * 5), Math.min(1, dt * 6));
+    camera.fov += ((62 + Math.abs(P.v) * .45) - camera.fov) * Math.min(1, dt * 3);
+  }
+  camera.updateProjectionMatrix();
+  camera.position.copy(camPos); camera.lookAt(camLook);
+  renderer.render(scene, camera);
+  if (state !== "title") drawMini();
+  requestAnimationFrame(loop);
+}
+
+function start() {
+  if (state !== "title") return;
+  state = "drive";
+  $("title").classList.add("out");
+  $("hud").classList.add("on");
+  engineOn();
+  F.Sound.tone(392, 0, .15, "square", .04); F.Sound.tone(523, .12, .15, "square", .04); F.Sound.tone(784, .24, .3, "square", .04);
+  say("¡Buen día! Soy Fermín, el farmacéutico. Entrá a un círculo de color para ver las misiones de cada lugar. ¡Y juntá las pastillas doradas!", 7000);
+  toast("¡A MANEJAR!", "#ffd23f");
+}
+$("go").onclick = start;
+
+async function refresh() {
+  const ok = await F.ping();
+  $("apidot").className = ok ? "ok" : "bad";
+  $("apitxt").textContent = ok ? "API en línea" : "API sin conexión";
+}
+const paintMute = () => ($("mute").textContent = F.Sound.muted ? "Sonido: no" : "Sonido: sí");
+paintMute();
+$("mute").onclick = () => { F.Sound.toggle(); paintMute(); if (!F.Sound.muted) engineOn(); };
+$("docs").href = F.API.base + "/docs";
+$("themes").append(F.themeSwitcher("farmahitrun", "tbtn"));
+refresh(); setInterval(refresh, 20000);
+paintCoins();
+loop();
+})();
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pymongo.errors import PyMongoError
 from redis.exceptions import RedisError
 
@@ -42,3 +43,5 @@ async def interfaz_web() -> FileResponse:
 
 for modulo in (productos, ventas, clientes, recetas, farmaceuticos, sucursales, stock):
     app.include_router(modulo.router)
+
+app.mount("/temas", StaticFiles(directory=STATIC_DIR / "temas"), name="temas")
