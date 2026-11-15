@@ -1,6 +1,6 @@
 # FarmaRed
 
-Trabajo práctico obligatorio de Bases de Datos II (ITBA), grupo 8.
+Trabajo práctico obligatorio de Bases de Datos II (ITBA), grupo 10.
 
 Backoffice de la red de farmacias FarmaRed sobre una arquitectura de persistencia políglota con MongoDB y Redis. Expone las consultas del enunciado como una API REST con FastAPI y trae un script de consola por consulta.
 
