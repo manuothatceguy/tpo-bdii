@@ -69,7 +69,7 @@ const QUERIES = [
     cols: [["Venta", "id_venta"], ["Total", "total", "pesos"], ["Farmacéutico", r => nombre(r.farmaceutico)], ["Matrícula", "farmaceutico.matricula"], ["Sucursal", "farmaceutico.sucursal"]] },
   { code: "Q03", cat: "clientes", title: "Historial de ventas y recetas de un cliente", short: "Historial de cliente", engine: "MongoDB", path: "/clientes/{id_cliente}/historial",
     desc: "Línea de tiempo de las ventas y recetas de un cliente, ordenada por fecha.",
-    fields: [{ name: "id_cliente", label: "Cliente", def: "C001", req: true }],
+    fields: [{ name: "id_cliente", label: "Cliente", def: "C001", req: true, list: "dl-clientes" }],
     sections: r => [{ title: `Historial del cliente ${r.id_cliente}`, rows: r.historial, cols: [["Fecha", "fecha", "fecha"], ["Tipo", e => e.tipo[0].toUpperCase() + e.tipo.slice(1)], ["ID", "datos._id"], ["Detalle", detalle03]] }] },
   { code: "Q04", cat: "recetas", title: "Clientes con más de una receta", short: "Clientes con +1 receta", engine: "MongoDB", path: "/clientes/varias-recetas",
     desc: "Clientes que tienen más de una receta registrada.",
@@ -91,7 +91,7 @@ const QUERIES = [
     cols: [["Venta", "id_venta"], ["Fecha", "fecha", "fecha"], ["Cliente", "id_cliente"], ["Farmacéutico", "id_farmaceutico"], ["Sucursal", "id_sucursal"], ["Medio de pago", "medio_pago"], ["Estado", "estado", "chip"], ["Ítems", v => v.items.map(i => `${i.id_producto} x${i.cantidad}`).join(", ")], ["Total", "total", "pesos"]] },
   { code: "Q10", cat: "sucursales", title: "Clientes atendidos en una sucursal", short: "Clientes por sucursal", engine: "MongoDB", path: "/sucursales/{id_sucursal}/clientes",
     desc: "Clientes que compraron en una sucursal y cuántas veces lo hicieron.",
-    fields: [{ name: "id_sucursal", label: "Sucursal", def: "S001", req: true }],
+    fields: [{ name: "id_sucursal", label: "Sucursal", def: "S001", req: true, list: "dl-sucursales" }],
     cols: [["Cliente", "id_cliente"], ["Nombre", nombre], ["DNI", "dni"], ["Email", "email"], ["Teléfono", "telefono"], ["Obra social", "obra_social"], ["Activo", "activo", "sino"], ["Ventas", "cantidad_ventas", "bar"]] },
   { code: "Q11", cat: "farmaceuticos", title: "Ingresos por farmacéutico en el mes actual", short: "Ingresos del mes", engine: "MongoDB", path: "/farmaceuticos/ingresos-mes",
     desc: "Ventas e ingresos totales de cada farmacéutico en el mes calendario actual.",
@@ -110,7 +110,7 @@ const QUERIES = [
     modeRun: { Alta: "Dar de alta", Modificar: "Guardar cambios", Baja: "Dar de baja" },
     confirmMode: "Baja",
     fields: [
-      { name: "id_cliente", label: "ID cliente", ph: "C900", modes: ["Alta", "Modificar", "Baja"] },
+      { name: "id_cliente", label: "ID cliente", ph: "C900", modes: ["Alta", "Modificar", "Baja"], list: "dl-clientes" },
       { name: "nombre", label: "Nombre", modes: ["Alta"] },
       { name: "apellido", label: "Apellido", modes: ["Alta"] },
       { name: "dni", label: "DNI", modes: ["Alta"] },
@@ -126,6 +126,7 @@ const QUERIES = [
       const take = keys => Object.fromEntries(keys.filter(k => v[k]).map(k => [k, v[k]]));
       if (v.modo === "Alta") {
         for (const k of ALTA_REQ) need(v[k], `Para el alta completá "${this.fields.find(f => f.name === k).label}".`);
+        need(/^\d{7,8}$/.test(v.dni), "El DNI debe tener 7 u 8 dígitos numéricos.");
         return { method: "POST", path: "/clientes", body: take(ALTA) };
       }
       need(v.id_cliente, "Indicá el ID del cliente.");
@@ -145,10 +146,10 @@ const QUERIES = [
   { code: "Q14", cat: "ventas", title: "Registrar una venta", short: "Registrar venta", engine: "MongoDB + Redis (saga)", method: "POST", path: "/ventas",
     desc: "Registra la venta, descuenta stock por FEFO en Redis y lo coordina con una saga con compensación.", mutation: true,
     fields: [
-      { name: "id_cliente", label: "Cliente", def: "C001" },
-      { name: "id_farmaceutico", label: "Farmacéutico", def: "F001" },
+      { name: "id_cliente", label: "Cliente", def: "C001", list: "dl-clientes" },
+      { name: "id_farmaceutico", label: "Farmacéutico", def: "F001", list: "dl-farmaceuticos" },
       { name: "medio_pago", label: "Medio de pago", type: "select", options: MEDIOS },
-      { name: "id_receta", label: "Receta (opcional)", ph: "RC006" },
+      { name: "id_receta", label: "Receta (opcional)", ph: "RC006", list: "dl-recetas" },
       { name: "items", label: "Ítems", type: "items" },
     ],
     request(v, strict) {
@@ -170,7 +171,7 @@ const QUERIES = [
     toast: r => `Venta ${r.venta.id_venta} registrada por ${FMT.pesos(r.venta.total)}` },
   { code: "Q15", cat: "stock", title: "Descuento de stock por venta (FEFO)", short: "Descontar stock", engine: "Redis (WATCH/MULTI)", method: "POST", path: "/stock/ventas/{id_venta}/descuento",
     desc: "Descuenta de forma atómica el stock de una venta, consumiendo primero los lotes que vencen antes.", mutation: true,
-    fields: [{ name: "id_venta", label: "Venta", ph: "V016", req: true }],
+    fields: [{ name: "id_venta", label: "Venta", def: "V016", ph: "V016", req: true, list: "dl-ventas" }],
     sections: r => [{ title: `Lotes descontados para ${r.id_venta} en ${r.id_sucursal}`, rows: r.lotes_descontados, cols: COLS_LOTES }],
     toast: r => `Stock descontado para ${r.id_venta}` },
 ];
@@ -235,11 +236,24 @@ async function ping() {
 
 async function snapshot() {
   const safe = p => get(p).catch(() => null);
-  const [productos, lotes, pendientes, ingresos, top] = await Promise.all([
+  const [productos, lotes, pendientes, ingresos, top, f60, sinVentas, variasRecetas] = await Promise.all([
     safe("/productos/activos"), safe("/stock/lotes-bajos"), safe("/ventas/pendientes"), safe("/farmaceuticos/ingresos-mes"), safe("/productos/mas-vendidos"),
+    safe("/farmaceuticos/ventas-recientes"), safe("/clientes/sin-ventas"), safe("/clientes/varias-recetas"),
   ]);
-  const dl = document.getElementById("dl-productos") || document.body.appendChild(el("datalist", { id: "dl-productos" }));
-  if (productos) dl.replaceChildren(...productos.map(p => el("option", { value: p._id, label: p.nombre })));
+  const setDl = (id, opts) => {
+    const dl = document.getElementById(id) || document.body.appendChild(el("datalist", { id }));
+    dl.replaceChildren(...opts.map(([v, l]) => el("option", { value: v, label: l })));
+  };
+  if (productos) setDl("dl-productos", productos.map(p => [p._id, `${p.nombre} (${p.condicion_venta})`]));
+  if (f60) setDl("dl-farmaceuticos", f60.map(f => [f.id_farmaceutico, `${nombre(f)} · ${f.id_sucursal}`]));
+  const cliMap = new Map();
+  for (let i = 1; i <= 18; i++) cliMap.set(`C${String(i).padStart(3, "0")}`, `Cliente C${String(i).padStart(3, "0")}`);
+  for (const c of variasRecetas || []) cliMap.set(c.id_cliente, `${nombre(c)} (${c.cantidad_recetas} recetas)`);
+  for (const c of sinVentas || []) cliMap.set(c._id, `${nombre(c)}${c.activo === false ? " · inactivo" : ""}`);
+  setDl("dl-clientes", [...cliMap.entries()]);
+  setDl("dl-sucursales", Array.from({ length: 14 }, (_, i) => { const s = `S${String(i + 1).padStart(3, "0")}`; return [s, `Sucursal ${s}`]; }));
+  setDl("dl-ventas", ["V016", "V003", "V004", "V005", "V008", "V009", "V013", "V019", "V021", "V026", "V027", "V028", "V032"].map(v => [v, `Venta completada ${v}`]));
+  setDl("dl-recetas", Array.from({ length: 18 }, (_, i) => { const r = `RC${String(i + 1).padStart(3, "0")}`; return [r, `Receta ${r}`]; }));
   return {
     online: productos != null,
     productos: productos || [],
@@ -332,7 +346,7 @@ function table(rows, cols) {
   return el("div", { class: "fp-tablewrap" }, el("table", { class: "fp-table" }, el("thead", {}, el("tr", {}, ths)), tbody));
 }
 
-function itemsEditor() {
+function itemsEditor(initial) {
   const list = el("div", { class: "fp-items" });
   const add = (p = "", c = 1) => {
     const row = el("div", { class: "fp-item" },
@@ -342,17 +356,23 @@ function itemsEditor() {
       el("button", { class: "fp-btn fp-sm", type: "button", text: "Quitar", onclick: () => { if (list.children.length > 1) row.remove(); } }));
     list.append(row);
   };
-  add("PRD001", 2);
+  if (initial && initial.length) initial.forEach(i => add(i.id_producto, i.cantidad));
+  else add("PRD001", 2);
   const box = el("div", { class: "fp-items" }, list, el("button", { class: "fp-btn fp-sm", type: "button", text: "+ Agregar ítem", onclick: () => add() }));
   box.getValue = () => [...list.children]
     .map(r => ({ id_producto: r.querySelector(".fp-ip").value.trim(), cantidad: parseInt(r.querySelector(".fp-ic").value, 10) || 0 }))
     .filter(i => i.id_producto);
+  box.setValue = items => {
+    list.replaceChildren();
+    (items && items.length ? items : [{ id_producto: "PRD001", cantidad: 2 }]).forEach(i => add(i.id_producto, i.cantidad));
+  };
   return box;
 }
 
 function createPanel(q, opts = {}) {
   const t = Object.assign({ run: "Consultar", runMutation: "Ejecutar", loading: "Consultando", empty: "Sin resultados", fill: "Completá los datos y ejecutá" }, opts.text || {});
-  const st = { mode: q.modes ? q.modes[0] : null, view: "tabla", last: null, running: false, nodes: [] };
+  const init = opts.initialValues || {};
+  const st = { mode: init.modo && q.modes?.includes(init.modo) ? init.modo : (q.modes ? q.modes[0] : null), view: "tabla", last: null, running: false, nodes: [] };
   const ep = el("div", { class: "fp-ep" });
   const actions = el("div", { class: "fp-actions" });
   const form = el("form", { class: "fp-form", autocomplete: "off" });
@@ -364,13 +384,15 @@ function createPanel(q, opts = {}) {
     segBtns.forEach(b => b.classList.toggle("on", b.textContent.toLowerCase() === v));
     if (st.last) render();
   } }));
+  const segWrap = el("div", { class: "fp-seg", hidden: !!opts.onSubmit }, segBtns);
+  const bar = el("div", { class: "fp-bar" }, runBtn, segWrap, stat);
   const root = el("div", { class: "fp", style: `--qc:${q.color}` },
     el("div", { class: "fp-head" },
       el("div", { class: "fp-code", text: q.code }),
       el("div", { class: "fp-titles" }, el("div", { class: "fp-cat", text: `${CATS[q.cat].label} · ${q.engine}` }), el("h3", { class: "fp-title", text: q.title }), ep),
       actions),
     form,
-    el("div", { class: "fp-bar" }, runBtn, el("div", { class: "fp-seg" }, segBtns), stat),
+    bar,
     out);
 
   let modeBtns = null;
@@ -382,9 +404,10 @@ function createPanel(q, opts = {}) {
   }
   for (const f of q.fields || []) {
     let input;
-    if (f.type === "select") input = el("select", { name: f.name }, f.options.map(o => el("option", { value: o, text: o || "(sin cambio)" })));
-    else if (f.type === "items") input = itemsEditor();
-    else input = el("input", { name: f.name, value: f.def || "", placeholder: f.ph || f.def || "" });
+    const iv = init[f.name] !== undefined ? init[f.name] : (f.def || "");
+    if (f.type === "select") input = el("select", { name: f.name }, f.options.map(o => el("option", { value: o, text: o || "(sin cambio)", selected: o === iv })));
+    else if (f.type === "items") input = itemsEditor(init[f.name]);
+    else input = el("input", { name: f.name, value: iv, placeholder: f.ph || f.def || "", list: f.list || null });
     const wrap = el("label", { class: "fp-field" + (f.type === "items" ? " fp-wide" : "") }, el("span", { text: f.label + (f.req ? " *" : "") }), input);
     st.nodes.push({ f, wrap, input });
     form.append(wrap);
@@ -395,6 +418,15 @@ function createPanel(q, opts = {}) {
     const v = { modo: st.mode };
     for (const { f, input } of st.nodes) v[f.name] = f.type === "items" ? input.getValue() : input.value.trim();
     return v;
+  };
+  const setValues = (v = {}) => {
+    if (v.modo && q.modes?.includes(v.modo)) st.mode = v.modo;
+    for (const { f, input } of st.nodes) {
+      if (!(f.name in v)) continue;
+      if (f.type === "items") input.setValue(v[f.name]);
+      else input.value = v[f.name] ?? "";
+    }
+    applyMode();
   };
   const build = strict => {
     const v = values();
@@ -417,7 +449,8 @@ function createPanel(q, opts = {}) {
   function disarm() {
     st.armed = false;
     clearTimeout(st.armT);
-    runBtn.textContent = q.modeRun?.[st.mode] || (q.mutation ? t.runMutation : t.run);
+    const modeLabel = opts.modeRun?.[st.mode] || (!opts.onSubmit && q.modeRun?.[st.mode]);
+    runBtn.textContent = modeLabel || (q.mutation ? t.runMutation : t.run);
     runBtn.classList.toggle("fp-danger", !!q.confirmMode && st.mode === q.confirmMode);
   }
 
@@ -437,18 +470,22 @@ function createPanel(q, opts = {}) {
     if (q.note) out.append(el("div", { class: "fp-note", text: q.note(res.data) }));
   }
 
-  async function run() {
+  async function run(skipConfirm = false) {
     if (st.running) return;
     let req;
     try { req = build(true); }
     catch (e) { showError(e.message, opts.text?.invalid || "Faltan datos"); opts.onError?.(e, q); return; }
-    if (q.confirmMode && st.mode === q.confirmMode && !st.armed) {
+    if (!skipConfirm && q.confirmMode && st.mode === q.confirmMode && !st.armed) {
       st.armed = true;
       runBtn.textContent = `Confirmar: ${st.mode.toLowerCase()} de ${values().id_cliente}`;
       st.armT = setTimeout(disarm, 4000);
       return;
     }
     disarm();
+    if (opts.onSubmit) {
+      opts.onSubmit(values(), req);
+      return;
+    }
     st.running = true;
     runBtn.disabled = true;
     stat.textContent = "";
@@ -468,14 +505,15 @@ function createPanel(q, opts = {}) {
     }
   }
 
-  runBtn.onclick = run;
+  runBtn.onclick = () => run();
   form.addEventListener("input", refresh);
   form.addEventListener("submit", e => { e.preventDefault(); run(); });
   form.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); run(); } });
   applyMode();
-  if (q.mutation) out.append(el("div", { class: "fp-empty", text: t.fill }));
-  if (!q.mutation && opts.autorun !== false) setTimeout(run, opts.autorunDelay ?? 0);
-  return { root, actions, run, focus: () => form.querySelector("input,select")?.focus() };
+  const shouldAutorun = !opts.onSubmit && (opts.autorun === true || (!q.mutation && opts.autorun !== false));
+  if ((q.mutation || opts.onSubmit) && !shouldAutorun) out.append(el("div", { class: "fp-empty", text: t.fill }));
+  if (shouldAutorun) setTimeout(() => run(true), opts.autorunDelay ?? 0);
+  return { root, actions, bar, run, values, setValues, build, focus: () => form.querySelector("input,select")?.focus() };
 }
 
 function themeSwitcher(current, className = "fthemes") {
