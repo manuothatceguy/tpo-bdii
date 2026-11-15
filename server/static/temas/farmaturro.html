@@ -1,0 +1,2706 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Mundo FarmaTurro — ¡Todo es afanado!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Luckiest+Guy&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="core.js"></script>
+<style>
+:root{
+  --ink:#1b112c;
+  --yellow:#ffde00;
+  --orange:#ff7b00;
+  --red:#ff2a5f;
+  --pink:#ff5ec4;
+  --purple:#9b4dff;
+  --blue:#0095ff;
+  --cyan:#00e1ff;
+  --green:#52df00;
+  --grass:#6ad400;
+  --cream:#fffdf4;
+}
+*{box-sizing:border-box;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#44b8ff;color:var(--ink);font:800 14px/1.35 Nunito,Fredoka,system-ui,sans-serif}
+button,input,select{font:inherit;color:inherit}
+
+/* ======= TEXTO Y BORDES ESTILO MUNDO GATURRO FLASH ======= */
+.lg{font-family:"Luckiest Guy",Fredoka,cursive;letter-spacing:.03em;font-weight:400}
+.stroke{color:#fff;-webkit-text-stroke:3.5px var(--ink);paint-order:stroke fill;text-shadow:0 4px 0 var(--ink)}
+.stroke-sm{color:#fff;-webkit-text-stroke:2.2px var(--ink);paint-order:stroke fill;text-shadow:0 2px 0 var(--ink)}
+.mg-box{
+  background:var(--cream);
+  border:4px solid var(--ink);
+  border-radius:22px;
+  box-shadow:0 6px 0 var(--ink),inset 0 4px 0 rgba(255,255,255,.9);
+}
+.mg-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:7px 14px;border:3.5px solid var(--ink);border-radius:16px;
+  background:linear-gradient(180deg,#fff275 0%,#ffca00 55%,#ff9900 100%);
+  box-shadow:0 4px 0 var(--ink),inset 0 2px 0 rgba(255,255,255,.85);
+  font:900 13px Nunito,sans-serif;color:var(--ink);cursor:pointer;
+  transition:transform .1s,filter .15s;text-decoration:none;white-space:nowrap;
+}
+.mg-btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.mg-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.mg-btn.blue{background:linear-gradient(180deg,#7ce8ff 0%,#00b4ff 55%,#0077ea 100%);color:#fff;-webkit-text-stroke:.6px var(--ink)}
+.mg-btn.green{background:linear-gradient(180deg,#a8ff47 0%,#52df00 55%,#2ea800 100%);color:#fff;-webkit-text-stroke:.6px var(--ink)}
+.mg-btn.pink{background:linear-gradient(180deg,#ff99dc 0%,#ff42b0 55%,#d40078 100%);color:#fff;-webkit-text-stroke:.6px var(--ink)}
+
+/* ======= PANTALLA DE LOGIN / SELECCIÓN DE SERVIDOR ======= */
+#splash{
+  position:fixed;inset:0;z-index:100;
+  background:
+    radial-gradient(circle at 50% 25%,#b5f4ff 0%,#39b6ff 48%,#006be6 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:16px;transition:opacity .5s ease,transform .5s ease;overflow:hidden;
+}
+#splash.out{opacity:0;pointer-events:none;transform:scale(1.08)}
+.sunburst{
+  position:absolute;left:50%;top:45%;width:220vmax;height:220vmax;translate:-50% -50%;
+  background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.14) 0 7deg,transparent 7deg 15deg);
+  animation:spin 75s linear infinite;pointer-events:none;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.splash-hills{
+  position:absolute;left:-5%;right:-5%;bottom:-20px;height:32vh;
+  background:
+    radial-gradient(ellipse 65% 80% at 25% 100%,#7be600 0%,#4cb800 70%,transparent 71%),
+    radial-gradient(ellipse 70% 90% at 78% 100%,#66d600 0%,#3da100 72%,transparent 73%);
+  pointer-events:none;
+}
+.splash-logo{
+  position:relative;text-align:center;z-index:2;
+  animation:bounceIn .8s cubic-bezier(.2,1.6,.4,1) both;
+}
+@keyframes bounceIn{from{opacity:0;transform:scale(.3) rotate(-8deg)}}
+.splash-logo .mundo{
+  display: inline-block;
+  padding: 2px 18px;
+  background: linear-gradient(180deg,#ff5ec4,#d40078);
+  border: 4px solid var(--ink);
+  border-radius: 999px;
+  font: 400 clamp(20px,3vw,30px)/1.1 "Luckiest Guy",cursive;
+  color: #fff;
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  box-shadow: 0 5px 0 var(--ink);
+  transform: rotate(-4deg) translateY(8px);
+}
+.splash-logo h1{
+  margin:0;
+  font:400 clamp(44px,8.5vw,92px)/.92 "Luckiest Guy",cursive;
+  filter:drop-shadow(0 7px 0 var(--ink));
+}
+.splash-logo .subtag{
+  display:inline-block;margin-top:4px;padding:4px 16px;
+  background:#fff;border:3.5px solid var(--ink);border-radius:999px;
+  box-shadow:0 4px 0 var(--ink);font:900 13.5px Nunito;color:var(--ink);
+}
+.login-card{
+  position:relative;z-index:2;width:min(820px,96vw);
+  display:grid;grid-template-columns:250px 1fr;gap:16px;padding:18px 20px;
+}
+.login-cat-box{
+  background:radial-gradient(circle at 50% 35%,#fff,#b9f1ff);
+  border:3.5px solid var(--ink);border-radius:18px;padding:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.8);
+}
+.login-cat-box svg{width:155px;height:155px;filter:drop-shadow(0 5px 0 rgba(0,0,0,.2))}
+.login-cat-box .quote{
+  margin-top:6px;padding:6px 10px;background:#fff;border:2.5px solid var(--ink);
+  border-radius:12px;font-size:11.5px;text-align:center;line-height:1.25;
+}
+.servers-col{display:flex;flex-direction:column;gap:8px}
+.servers-col h3{margin:0;font:400 22px "Luckiest Guy";color:var(--orange);-webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill}
+.nick-row{display:flex;gap:8px;align-items:center}
+.nick-row label{font:900 12px Nunito;text-transform:uppercase;color:#5a4b7c}
+.nick-row input{
+  flex:1;height:38px;padding:0 12px;border:3px solid var(--ink);border-radius:12px;
+  background:#fff;font:900 15px Nunito;outline:none;user-select:text;
+}
+.server-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:4px 0}
+.srv-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px 11px;border:3px solid var(--ink);border-radius:14px;
+  background:#fff;cursor:pointer;box-shadow:0 3px 0 var(--ink);
+  font:900 13px Nunito;transition:transform .1s,background .15s;
+}
+.srv-btn:hover{background:#fff8cc;transform:translateY(-1px)}
+.srv-btn.on{background:linear-gradient(180deg,#b4ff57,#62df00);color:#0f2900}
+.srv-bars{display:inline-flex;gap:2px;align-items:flex-end;height:14px}
+.srv-bars i{width:4px;background:var(--green);border:1px solid var(--ink);border-radius:2px}
+.srv-bars i:nth-child(1){height:5px}.srv-bars i:nth-child(2){height:8px}.srv-bars i:nth-child(3){height:11px}.srv-bars i:nth-child(4){height:14px}
+.srv-bars.full i{background:var(--red)}
+.enter-big{
+  margin-top:auto;height:52px;font:400 28px "Luckiest Guy";
+  background:linear-gradient(180deg,#a8ff47 0%,#52df00 50%,#2ea800 100%);
+  color:#fff;-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;
+  border:4px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);
+  cursor:pointer;animation:pulse 1.3s ease-in-out infinite;
+}
+@keyframes pulse{50%{transform:scale(1.03)}}
+
+/* ======= ESCENARIO PLAZA MUNDO FARMATURRO ======= */
+#world{position:fixed;inset:0;overflow:hidden}
+#canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+
+/* ======= HUD SUPERIOR ======= */
+#topbar{
+  position:fixed;top:10px;left:12px;right:12px;z-index:20;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;pointer-events:none;
+}
+#topbar > *{pointer-events:auto}
+.brand-pill{
+  display:flex;align-items:center;gap:8px;padding:5px 14px 5px 8px;
+  background:linear-gradient(180deg,#ff66c4,#d40078);color:#fff;
+  border:3.5px solid var(--ink);border-radius:999px;box-shadow:0 4px 0 var(--ink);
+}
+.brand-pill b{font:400 20px/1 "Luckiest Guy";-webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill}
+.brand-pill small{background:#fff;color:var(--ink);padding:2px 8px;border-radius:999px;border:2px solid var(--ink);font:900 11px Nunito}
+
+.coin-pill{
+  display:flex;align-items:center;gap:7px;padding:5px 14px 5px 8px;
+  background:linear-gradient(180deg,#2a194d,#14092b);color:#fff;
+  border:3.5px solid var(--ink);border-radius:999px;box-shadow:0 4px 0 var(--ink);
+}
+.coin-icon{
+  width:26px;height:26px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff799,#ffbb00 70%,#c47700);
+  border:2.5px solid var(--ink);display:grid;place-items:center;
+  font:400 14px "Luckiest Guy";color:var(--ink);
+}
+.coin-pill b{font:400 21px/1 "Luckiest Guy";color:var(--yellow);-webkit-text-stroke:1.2px var(--ink)}
+.coin-pill span{font-size:11px;color:#cbd5e1;font-weight:800}
+
+.kpi-strip{display:flex;gap:6px;flex-wrap:wrap}
+.kpi-chip{
+  display:flex;align-items:center;gap:6px;padding:5px 11px;
+  background:#fff;border:3px solid var(--ink);border-radius:999px;
+  box-shadow:0 3px 0 var(--ink);cursor:pointer;font:900 12px Nunito;
+  transition:transform .1s;
+}
+.kpi-chip:hover{transform:translateY(-2px);background:#fff9c4}
+.kpi-chip i{width:10px;height:10px;border-radius:50%;border:2px solid var(--ink);display:inline-block}
+
+.top-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.fthemes{
+  height:36px;padding:0 10px;border:3.5px solid var(--ink);border-radius:14px;
+  background:#fff;box-shadow:0 4px 0 var(--ink);font:900 12.5px Nunito;cursor:pointer;
+}
+
+/* ======= CARTEL DE PLAGIO DEL DÍA (TICKER) ======= */
+#nik-banner{
+  position:fixed;top:62px;left:50%;translate:-50% 0;z-index:18;
+  display:flex;align-items:center;gap:8px;padding:5px 14px;
+  background:rgba(255,253,240,.94);border:3px solid var(--ink);border-radius:999px;
+  box-shadow:0 4px 0 var(--ink);font:800 12.5px Nunito;max-width:92vw;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#nik-banner b{
+  background:var(--red);color:#fff;padding:1px 8px;border-radius:999px;
+  border:2px solid var(--ink);font:900 11px Nunito;text-transform:uppercase;
+}
+
+/* ======= DOCK INFERIOR ESTILO MUNDO GATURRO (CHAT + EMOTES + ACCIONES) ======= */
+#hud-bottom{
+  position:fixed;left:50%;bottom:10px;translate:-50% 0;z-index:25;
+  width:min(1060px,98vw);display:flex;align-items:center;gap:8px;
+  padding:8px 12px;background:linear-gradient(180deg,#00a6ff 0%,#0062d6 100%);
+  border:4px solid var(--ink);border-radius:26px;
+  box-shadow:0 7px 0 var(--ink),inset 0 3px 0 rgba(255,255,255,.55);
+}
+.dock-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:64px;height:54px;padding:4px 8px;border:3px solid var(--ink);border-radius:18px;
+  background:linear-gradient(180deg,#fff78c 0%,#ffbe00 65%,#ff8800 100%);
+  box-shadow:0 4px 0 var(--ink),inset 0 2px 0 rgba(255,255,255,.8);
+  cursor:pointer;font:900 11px/1.05 Nunito;color:var(--ink);transition:transform .1s;
+}
+.dock-btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.dock-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.dock-btn .ico{font-size:21px;line-height:1;margin-bottom:2px;filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+.dock-btn.pink{background:linear-gradient(180deg,#ff9ee2 0%,#ff38ad 65%,#c90076 100%);color:#fff}
+.dock-btn.green{background:linear-gradient(180deg,#b4ff5c 0%,#52df00 65%,#2b9e00 100%);color:#0f2900}
+.dock-btn.purple{background:linear-gradient(180deg,#d2a6ff 0%,#8f3dff 65%,#5b0ec9 100%);color:#fff}
+
+.chat-form{
+  flex:1;display:flex;align-items:center;gap:6px;
+  background:#fff;border:3.5px solid var(--ink);border-radius:999px;
+  padding:3px 6px 3px 14px;box-shadow:inset 0 2px 4px rgba(0,0,0,.12);
+}
+.chat-form input{
+  flex:1;border:0;outline:none;background:transparent;
+  font:800 14px Nunito;color:var(--ink);user-select:text;min-width:80px;
+}
+.chat-send{
+  height:36px;padding:0 14px;border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#a8ff47,#4ad400);font:400 16px "Luckiest Guy";
+  color:#fff;-webkit-text-stroke:1.2px var(--ink);paint-order:stroke fill;
+  cursor:pointer;box-shadow:0 2px 0 var(--ink);
+}
+
+/* POPOVERS DE EMOTES / ROPA */
+.popover{
+  position:fixed;bottom:82px;left:50%;translate:-50% 0;z-index:35;
+  padding:12px 14px;display:none;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;
+  max-width:94vw;animation:popIn .2s cubic-bezier(.2,1.5,.4,1);
+}
+.popover.on{display:flex}
+@keyframes popIn{from{opacity:0;transform:translateY(14px) scale(.9)}}
+.emote-btn{
+  width:46px;height:46px;border:3px solid var(--ink);border-radius:14px;
+  background:#fff;box-shadow:0 3px 0 var(--ink);font-size:24px;cursor:pointer;
+  display:grid;place-items:center;transition:transform .1s;
+}
+.emote-btn:hover{transform:scale(1.14) rotate(-5deg);background:#fff9c4}
+.style-group{display:flex;align-items:center;gap:5px;padding:4px 8px;background:#fff;border:2.5px solid var(--ink);border-radius:12px}
+.style-group span{font:900 11px Nunito;text-transform:uppercase;margin-right:4px}
+.swatch{width:26px;height:26px;border-radius:50%;border:2.5px solid var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--ink)}
+.swatch.on{outline:3px solid var(--yellow);outline-offset:1px}
+.hat-btn{padding:4px 9px;border:2.5px solid var(--ink);border-radius:10px;background:#f8fafc;font:900 12px Nunito;cursor:pointer}
+.hat-btn.on{background:var(--yellow)}
+
+/* ======= MODALES (MAPA, PASAPORTE, TELETRANSPORTE, CONSULTAS Q01-Q15) ======= */
+.modal-ov{
+  position:fixed;inset:0;z-index:50;background:rgba(18,8,38,.55);
+  backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:14px;
+}
+.modal-ov.on{display:flex}
+.modal-card{
+  width:min(1120px,98vw);max-height:90vh;display:flex;flex-direction:column;
+  overflow:hidden;animation:popIn .28s cubic-bezier(.2,1.5,.4,1);
+}
+.modal-head{
+  display:flex;align-items:center;gap:12px;padding:12px 18px;
+  background:linear-gradient(180deg,#ff9900 0%,#ff5500 100%);
+  border-bottom:4px solid var(--ink);color:#fff;
+}
+.modal-head h2{
+  margin:0;flex:1;font:400 clamp(22px,3.2vw,34px)/1 "Luckiest Guy";
+  color:#fff;-webkit-text-stroke:2.5px var(--ink);paint-order:stroke fill;
+  text-shadow:0 3px 0 var(--ink);
+}
+.close-x{
+  width:40px;height:40px;border-radius:14px;border:3.5px solid var(--ink);
+  background:linear-gradient(180deg,#ff6b8b,#e60039);color:#fff;
+  font:400 22px "Luckiest Guy";-webkit-text-stroke:1.5px var(--ink);
+  box-shadow:0 4px 0 var(--ink);cursor:pointer;
+}
+.modal-tabs{
+  display:flex;gap:6px;padding:10px 16px;background:#fff4d2;
+  border-bottom:3.5px solid var(--ink);overflow-x:auto;flex-shrink:0;
+}
+.modal-tabs button{
+  padding:6px 13px;border:3px solid var(--ink);border-radius:14px;
+  background:#fff;box-shadow:0 3px 0 var(--ink);font:900 13px Nunito;
+  cursor:pointer;white-space:nowrap;
+}
+.modal-tabs button b{color:var(--orange);margin-right:4px}
+.modal-tabs button.on{
+  background:linear-gradient(180deg,#a8ff47,#52df00);color:#0c2600;
+  transform:translateY(-1px);
+}
+.modal-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--cream)}
+
+/* ======= MAPA ESTILO MUNDO GATURRO ======= */
+.map-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+  gap:12px;padding:18px;overflow-y:auto;
+}
+.map-card{
+  background:#fff;border:3.5px solid var(--ink);border-radius:18px;padding:14px;
+  box-shadow:0 5px 0 var(--ink);cursor:pointer;display:flex;flex-direction:column;gap:6px;
+  transition:transform .12s;
+}
+.map-card:hover{transform:translateY(-4px) rotate(-1deg);background:#fffbe6}
+.map-card .m-top{display:flex;align-items:center;gap:10px}
+.map-card .m-ico{
+  width:48px;height:48px;border-radius:14px;border:3px solid var(--ink);
+  display:grid;place-items:center;font-size:26px;background:var(--mc,#7ce8ff);
+  box-shadow:0 3px 0 var(--ink);
+}
+.map-card h4{margin:0;font:400 20px/1.05 "Luckiest Guy";color:var(--ink)}
+.map-card p{margin:0;font-size:12.5px;color:#4b5563}
+.map-card .m-qs{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.map-card .m-qs span{
+  padding:2px 8px;border:2px solid var(--ink);border-radius:999px;
+  background:#ffef99;font:900 11px Nunito;
+}
+
+/* ======= PASAPORTE FARMATURRO ======= */
+.pass-wrap{
+  display:grid;grid-template-columns:240px 1fr;gap:16px;padding:18px;overflow-y:auto;
+}
+.pass-id{
+  background:linear-gradient(180deg,#fff9d6,#ffe57f);border:3.5px solid var(--ink);
+  border-radius:18px;padding:14px;text-align:center;box-shadow:0 5px 0 var(--ink);
+}
+.pass-id svg{width:130px;height:130px}
+.pass-stamps{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:8px;
+}
+.stamp{
+  padding:8px 10px;border:2.5px dashed #9ca3af;border-radius:14px;
+  background:#fff;cursor:pointer;text-align:center;transition:transform .1s;
+}
+.stamp:hover{transform:scale(1.04)}
+.stamp.done{
+  border:3px solid var(--ink);background:linear-gradient(180deg,#d8ff9c,#86ef2a);
+  box-shadow:0 3px 0 var(--ink);
+}
+.stamp b{display:block;font:400 18px "Luckiest Guy";color:var(--ink)}
+.stamp small{display:block;font-size:11px;line-height:1.15;color:#374151}
+
+/* ======= PANEL FARMA.CREATEPANEL (.fp) ESTILO CARTOON ======= */
+.fp{display:flex;flex-direction:column;flex:1;min-height:0}
+.fp-head{display:flex;align-items:center;gap:12px;padding:12px 18px 6px}
+.fp-code{
+  padding:5px 12px;border:3px solid var(--ink);border-radius:12px;
+  background:var(--qc,#ff9900);font:400 22px "Luckiest Guy";color:#fff;
+  -webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill;box-shadow:0 3px 0 var(--ink);
+}
+.fp-titles{flex:1;min-width:0}
+.fp-cat{font:900 11px Nunito;text-transform:uppercase;letter-spacing:.08em;color:#6b21a8}
+.fp-title{margin:0;font:900 19px Nunito;color:var(--ink)}
+.fp-ep{font:800 12px ui-monospace,Consolas,monospace;color:#0066cc;word-break:break-all}
+.fp-actions:empty{display:none}
+.fp-form{display:flex;flex-wrap:wrap;gap:10px 12px;padding:6px 18px 2px;align-items:flex-end}
+.fp-modes{display:flex;gap:6px;width:100%}
+.fp-modes button{
+  flex:1;height:38px;border:3px solid var(--ink);border-radius:12px;
+  background:#fff;box-shadow:0 3px 0 var(--ink);font:900 13.5px Nunito;cursor:pointer;
+}
+.fp-modes button.on{background:var(--blue);color:#fff}
+.fp-field{display:flex;flex-direction:column;gap:3px;font:900 11.5px Nunito;text-transform:uppercase;color:#4a3b69}
+.fp-field[hidden]{display:none}
+.fp-field.fp-wide{width:100%}
+.fp-field input,.fp-field select{
+  height:38px;min-width:140px;border:3px solid var(--ink);border-radius:11px;
+  background:#fff;padding:0 10px;font:800 14px Nunito;text-transform:none;outline:none;user-select:text;
+}
+.fp-field input:focus,.fp-field select:focus{background:#fff9db;border-color:var(--purple)}
+.fp-items{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.fp-item{display:flex;gap:6px;align-items:center}
+.fp-item .fp-ip{width:140px;min-width:0}.fp-item .fp-ic{width:70px;min-width:0}
+.fp-btn{
+  height:38px;padding:0 14px;border:3px solid var(--ink);border-radius:12px;
+  background:#fff;box-shadow:0 3px 0 var(--ink);font:900 13.5px Nunito;cursor:pointer;
+}
+.fp-btn.fp-sm{height:30px;font-size:12px}
+.fp-run{
+  background:linear-gradient(180deg,#a8ff47 0%,#52df00 55%,#2ea800 100%);
+  color:#fff;-webkit-text-stroke:.8px var(--ink);min-width:155px;font-size:15px;
+}
+.fp-run:disabled{opacity:.6;cursor:wait}
+.fp-bar{display:flex;gap:10px;align-items:center;padding:10px 18px;flex-wrap:wrap}
+.fp-seg{display:inline-flex;border:3px solid var(--ink);border-radius:12px;overflow:hidden;box-shadow:0 3px 0 var(--ink)}
+.fp-seg button{border:0;background:#fff;padding:5px 12px;font:900 12.5px Nunito;cursor:pointer}
+.fp-seg button.on{background:var(--purple);color:#fff}
+.fp-stat{margin-left:auto;font:900 13px Nunito;color:#4a3b69}
+.fp-stat b{color:#15803d}
+.fp-out{flex:1;min-height:0;overflow:auto;padding:0 18px 18px;user-select:text}
+.fp-sec{margin-bottom:14px}
+.fp-sec h4{margin:0 0 6px;font:400 19px "Luckiest Guy";color:var(--orange);-webkit-text-stroke:1px var(--ink)}
+.fp-tablewrap{border:3.5px solid var(--ink);border-radius:16px;overflow:auto;background:#fff;box-shadow:0 4px 0 var(--ink)}
+.fp-table{border-collapse:collapse;width:100%;font:800 13.5px Nunito}
+.fp-table th{
+  position:sticky;top:0;background:linear-gradient(180deg,#ffe885,#ffca28);
+  text-align:left;font:900 12px Nunito;text-transform:uppercase;padding:9px 12px;
+  border-bottom:3px solid var(--ink);cursor:pointer;white-space:nowrap;
+}
+.fp-table th[data-s]::after{content:attr(data-s);margin-left:4px;font-size:9px}
+.fp-table td{padding:8px 12px;border-top:2px dashed #e5dec9;white-space:nowrap}
+.fp-table tbody tr:hover td{background:#fff8cc}
+.fp-r{text-align:right!important;font-variant-numeric:tabular-nums}
+.fp-chip{display:inline-block;padding:1px 10px;border:2px solid var(--ink);border-radius:999px;font:900 11.5px Nunito;color:#fff}
+.fp-ok{background:#22c55e}.fp-warn{background:var(--orange)}.fp-bad{background:var(--red)}.fp-info{background:var(--blue)}
+.fp-barcell{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.fp-track{width:105px;height:12px;border:2px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden}
+.fp-track i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--pink))}
+.fp-empty{padding:26px;text-align:center;font:900 15px Nunito;color:#6b7280}
+.fp-json{margin:0;font:12.5px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:14px}
+.fp-error{padding:14px;border:3px solid var(--ink);border-radius:14px;background:#ffe0e6;white-space:pre-wrap}
+.fp-error b{display:block;font:400 19px "Luckiest Guy";color:var(--red);-webkit-text-stroke:1px var(--ink)}
+.fp-note{font:800 12px ui-monospace,Consolas,monospace;color:#6b21a8;margin-top:6px}
+.fp-loading{display:flex;justify-content:center;align-items:center;gap:8px;padding:34px;font:400 22px "Luckiest Guy"}
+.fp-loading i{width:15px;height:15px;border-radius:50%;border:3px solid var(--ink);background:var(--yellow);animation:bnc .6s ease-in-out infinite}
+.fp-loading i:nth-child(2){animation-delay:.12s;background:var(--pink)}.fp-loading i:nth-child(3){animation-delay:.24s;background:var(--cyan)}
+@keyframes bnc{50%{transform:translateY(-10px)}}
+
+/* TOAST PREMIO */
+#toast{
+  position:fixed;left:50%;top:115px;translate:-50% 0;z-index:80;
+  padding:10px 22px;background:linear-gradient(180deg,#fff677,#ffbb00);
+  border:4px solid var(--ink);border-radius:999px;box-shadow:0 6px 0 var(--ink);
+  font:400 24px "Luckiest Guy";color:#fff;-webkit-text-stroke:2px var(--ink);
+  paint-order:stroke fill;pointer-events:none;opacity:0;transform:scale(.5);
+  transition:opacity .25s,transform .3s cubic-bezier(.2,1.6,.4,1);
+}
+#toast.on{opacity:1;transform:scale(1) rotate(-2deg)}
+
+/* ======= ONDA EXTRA: NUBES, BRILLOS Y REBOTES ======= */
+.splash-logo h1 span{
+  display:inline-block;
+  background:linear-gradient(180deg,#fff878 0%,#ffca00 45%,#ff6a00 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-stroke:5px var(--ink);paint-order:stroke fill;
+  animation:wave 1.8s ease-in-out infinite;animation-delay:calc(var(--i) * .09s);
+}
+@keyframes wave{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-12px) rotate(-4deg)}60%{transform:translateY(2px) rotate(2deg)}}
+.cloud{
+  position:absolute;z-index:1;width:var(--w,150px);height:calc(var(--w,150px) * .38);
+  background:#fff;border-radius:999px;opacity:.92;pointer-events:none;
+  box-shadow:inset 0 -8px 0 rgba(120,190,255,.35);
+  animation:drift var(--t,60s) linear infinite;animation-delay:var(--d,0s);
+}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud::before{width:48%;height:120%;left:14%;top:-62%}
+.cloud::after{width:36%;height:95%;right:14%;top:-42%}
+@keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(130vw)}}
+.twinkle{position:absolute;z-index:1;font-size:var(--s,22px);pointer-events:none;animation:twk 2.4s ease-in-out infinite;animation-delay:var(--d,0s)}
+@keyframes twk{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(25deg)}}
+#splash-cat-svg{animation:floaty 2.6s ease-in-out infinite}
+@keyframes floaty{50%{transform:translateY(-9px) rotate(-3deg)}}
+.enter-big:hover{filter:brightness(1.1);animation-play-state:paused;transform:scale(1.06) rotate(-1deg)}
+
+.brand-pill > span{display:inline-block;animation:wiggle 2.8s ease-in-out infinite;transform-origin:50% 80%}
+@keyframes wiggle{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-16deg)}90%{transform:rotate(14deg)}95%{transform:rotate(-8deg)}}
+.coin-icon{animation:coinspin 3s ease-in-out infinite}
+@keyframes coinspin{0%,70%,100%{transform:scaleX(1)}80%{transform:scaleX(.1)}90%{transform:scaleX(1)}}
+.coin-pill.bump{animation:bump .45s cubic-bezier(.2,1.8,.4,1)}
+@keyframes bump{30%{transform:scale(1.22) rotate(-3deg)}}
+.dock-btn:hover .ico{animation:hop .5s cubic-bezier(.2,1.8,.4,1)}
+@keyframes hop{40%{transform:translateY(-7px) scale(1.25) rotate(-10deg)}}
+#hud-bottom::before{
+  content:"";position:absolute;left:18px;right:18px;top:5px;height:10px;border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);pointer-events:none;
+}
+.kpi-chip.pop{animation:bump .5s cubic-bezier(.2,1.8,.4,1)}
+#nik-fact.in{animation:factIn .45s cubic-bezier(.2,1.5,.4,1)}
+@keyframes factIn{from{opacity:0;transform:translateY(10px)}}
+/* ======= DIÁLOGO CON NPCS, TIENDA Y MOCHILA ======= */
+#dlg{position:fixed;left:50%;bottom:92px;translate:-50% 0;z-index:30;width:min(740px,94vw);display:none;gap:12px;padding:12px 14px;align-items:flex-start}
+#dlg.on{display:flex;animation:popIn .25s cubic-bezier(.2,1.5,.4,1)}
+.dlg-face{flex:0 0 92px;height:92px;border:3.5px solid var(--ink);border-radius:18px;background:radial-gradient(circle at 50% 35%,#fff,#b9f1ff);display:grid;place-items:center;overflow:hidden}
+.dlg-face svg{width:84px;height:84px;animation:floaty 2.6s ease-in-out infinite}
+.dlg-main{flex:1;min-width:0}
+.dlg-name{display:inline-block;padding:2px 12px;background:var(--orange);color:#fff;border:3px solid var(--ink);border-radius:999px;font:400 17px "Luckiest Guy";-webkit-text-stroke:1px var(--ink);paint-order:stroke fill;box-shadow:0 3px 0 var(--ink)}
+.dlg-txt{margin:8px 0;min-height:40px;font:800 15px/1.35 Nunito;cursor:pointer}
+.dlg-opts{display:flex;flex-wrap:wrap;gap:6px}
+.dlg-opts button{padding:5px 11px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--ink);font:900 12.5px Nunito;cursor:pointer;transition:transform .1s}
+.dlg-opts button:hover{background:#fff4a8;transform:translateY(-2px)}
+#dlg .close-x{width:34px;height:34px;font-size:17px;flex:0 0 auto}
+.shop-bar{display:flex;align-items:center;gap:10px;padding:12px 18px 0;font:900 14px Nunito}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:14px 18px 18px;overflow-y:auto}
+.shop-card{background:#fff;border:3.5px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;transition:transform .12s}
+.shop-card:hover{transform:translateY(-3px) rotate(-1deg)}
+.shop-card .big{font-size:44px;line-height:1.15;animation:floaty 2.6s ease-in-out infinite}
+.shop-card h4{margin:0;font:400 18px/1.1 "Luckiest Guy"}
+.shop-card small{font:900 11px Nunito;text-transform:uppercase;color:#6b21a8}
+.shop-card .price{font:400 19px "Luckiest Guy";color:#b45309;margin:2px 0 4px}
+.shop-card.owned{background:linear-gradient(180deg,#eaffd6,#fff)}
+.shop-card.worn{outline:4px solid var(--yellow);outline-offset:2px}
+
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:90;pointer-events:none}
+@media (prefers-reduced-motion:reduce){
+  .sunburst,.cloud,.twinkle,.splash-logo h1 span,#splash-cat-svg,.enter-big,.brand-pill > span,.coin-icon{animation:none}
+}
+
+@media (max-width:780px){
+  .login-card{grid-template-columns:1fr}
+  .login-cat-box{display:none}
+  .pass-wrap{grid-template-columns:1fr}
+  #nik-banner{display:none}
+  .dock-btn span{display:none}
+  .dock-btn{min-width:46px;height:46px}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== PANTALLA DE INICIO: MUNDO FARMATURRO ==================== -->
+<div id="splash">
+  <div class="sunburst"></div>
+  <div class="cloud" style="top:9%;--w:170px;--t:70s;--d:-20s"></div>
+  <div class="cloud" style="top:22%;--w:110px;--t:52s;--d:-41s"></div>
+  <div class="cloud" style="top:5%;--w:90px;--t:44s;--d:-8s"></div>
+  <div class="cloud" style="top:30%;--w:140px;--t:80s;--d:-60s"></div>
+  <span class="twinkle" style="left:12%;top:18%;--d:.2s">✨</span>
+  <span class="twinkle" style="left:84%;top:14%;--d:1.1s;--s:28px">⭐</span>
+  <span class="twinkle" style="left:76%;top:62%;--d:.7s">✨</span>
+  <span class="twinkle" style="left:9%;top:66%;--d:1.6s;--s:26px">💊</span>
+  <span class="twinkle" style="left:91%;top:40%;--d:2s;--s:18px">✨</span>
+  <div class="splash-hills"></div>
+
+  <div class="splash-logo">
+    <span class="mundo">¡BIENVENIDOS A MUNDO</span>
+    <h1>FARMATURRO!</h1>
+    <div class="subtag">🐾 100% Calcado por Nik · Ladrón que roba a ladrón, mil años de perdón · Grupo 10</div>
+  </div>
+
+  <div class="login-card mg-box">
+    <div class="login-cat-box">
+      <div id="splash-cat-svg"></div>
+      <div class="quote" id="splash-quote">
+        "¡Miau! Si Quino dibujó a Mafalda, Garfield existe y Club Penguin tenía iglús... ¡entonces esta farmacia la inventé YO!" — <b>FarmaTurro</b>
+      </div>
+    </div>
+
+    <div class="servers-col">
+      <div class="nick-row">
+        <label for="nick-in">Tu FarmaTurro:</label>
+        <input id="nick-in" maxlength="16" value="Gaturro_G10" placeholder="Ej: Agatha_BD2">
+      </div>
+      <h3>🌎 Elegí tu Servidor (Todos calcados):</h3>
+      <div class="server-grid" id="srv-grid"></div>
+      <button class="enter-big" id="btn-enter">¡ENTRAR AL MUNDO!</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MUNDO 2D INTERACTIVO (CANVAS) ==================== -->
+<div id="world">
+  <canvas id="canvas"></canvas>
+</div>
+
+<!-- ==================== BARRA SUPERIOR ==================== -->
+<header id="topbar">
+  <div class="brand-pill">
+    <span>🐱</span>
+    <b>MUNDO FARMATURRO</b>
+    <small id="srv-badge">Farmacalco</small>
+  </div>
+
+  <div class="coin-pill" title="TurroPesos ganados ejecutando consultas y copiando chistes">
+    <div class="coin-icon">$</div>
+    <b id="coins-txt">1250</b>
+    <span>TurroPesos</span>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-chip" onclick="openQuery('Q01')" title="Productos activos en MongoDB (Q01)">
+      <i style="background:#52df00"></i><span id="kpi-prod">... prods</span>
+    </div>
+    <div class="kpi-chip" onclick="openQuery('Q08')" title="Lotes con stock bajo en Redis (Q08)">
+      <i style="background:#ff2a5f"></i><span id="kpi-lotes">... lotes bajos</span>
+    </div>
+    <div class="kpi-chip" onclick="openQuery('Q11')" title="Ingresos del mes en MongoDB (Q11)">
+      <i style="background:#ffbe00"></i><span id="kpi-ing">$ ...</span>
+    </div>
+    <div class="kpi-chip" onclick="openQuery('Q02')" title="Ventas pendientes (Q02)">
+      <i style="background:#00b4ff"></i><span id="kpi-pend">... pend.</span>
+    </div>
+  </div>
+
+  <div class="top-right">
+    <button class="mg-btn" id="btn-stat-vandal" title="Vandalizar o restaurar la estatua de FarmaTurro en la plaza">🎨 Estatua</button>
+    <button class="mg-btn blue" id="btn-sound">🔊</button>
+    <a class="mg-btn pink" id="btn-docs" target="_blank" rel="noopener">Swagger</a>
+    <span id="theme-slot"></span>
+  </div>
+</header>
+
+<!-- ==================== BANNER DE ROBO ARTÍSTICO ==================== -->
+<div id="nik-banner">
+  <b>📠 FOTOCOPIADORA OFICIAL</b>
+  <span id="nik-fact">Cargando confesiones de la fotocopiadora de Nik...</span>
+</div>
+
+<!-- ==================== POPOVER EMOTES ==================== -->
+<div class="popover mg-box" id="pop-emotes"></div>
+
+<!-- ==================== POPOVER ROPERO GATURRO ==================== -->
+<div class="popover mg-box" id="pop-style"></div>
+
+<!-- ==================== DOCK INFERIOR ==================== -->
+<nav id="hud-bottom">
+  <button class="dock-btn" id="btn-map" title="Mapa del Mundo FarmaTurro (M)">
+    <span class="ico">🗺️</span><span>Mapa</span>
+  </button>
+  <button class="dock-btn pink" id="btn-queries" title="Las 15 Consultas del TP (Q)">
+    <span class="ico">📠</span><span>15 Consultas</span>
+  </button>
+  <button class="dock-btn purple" id="btn-style" title="Cambiar color y gorrito de tu FarmaTurro">
+    <span class="ico">👕</span><span>Ropero</span>
+  </button>
+  <button class="dock-btn" id="btn-emotes" title="Emotes y reacciones">
+    <span class="ico">😸</span><span>Emotes</span>
+  </button>
+  <button class="dock-btn green" id="btn-dance" title="Tirar los pasos prohibidos (B)">
+    <span class="ico">🕺</span><span>Bailar</span>
+  </button>
+
+  <form class="chat-form" id="chat-form" autocomplete="off">
+    <input id="chat-in" maxlength="90" placeholder="Hablá en la plaza o escribí /q01, /plagio, /vandalizar, /bailar...">
+    <button type="submit" class="chat-send">DECIR</button>
+  </form>
+
+  <button class="dock-btn purple" id="btn-bag" title="Tu mochila con la ropa que compraste">
+    <span class="ico">🎒</span><span>Mochila</span>
+  </button>
+  <button class="dock-btn" id="btn-pass" title="Pasaporte FarmaTurro (Sellos de consultas)">
+    <span class="ico">🪪</span><span>Pasaporte</span>
+  </button>
+</nav>
+
+<!-- ==================== MODAL DE CONSULTAS / MAPA / PASAPORTE ==================== -->
+<div class="modal-ov" id="modal-ov">
+  <div class="modal-card mg-box">
+    <div class="modal-head" id="modal-head">
+      <h2 id="modal-title">MUNDO FARMATURRO</h2>
+      <button class="close-x" id="modal-close" title="Cerrar (Esc)">✕</button>
+    </div>
+    <div class="modal-tabs" id="modal-tabs"></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast">¡+50 TURROPESOS!</div>
+<canvas id="fx"></canvas>
+
+<!-- ==================== CAJA DE DIÁLOGO CON NPCS ==================== -->
+<div id="dlg" class="mg-box">
+  <div class="dlg-face" id="dlg-face"></div>
+  <div class="dlg-main">
+    <span class="dlg-name" id="dlg-name"></span>
+    <p class="dlg-txt" id="dlg-txt" title="Clic para ver todo el texto"></p>
+    <div class="dlg-opts" id="dlg-opts"></div>
+  </div>
+  <button class="close-x" id="dlg-x" title="Cerrar (Esc)">✕</button>
+</div>
+
+<script>
+(() => {
+"use strict";
+const F = window.Farma, { el, FMT } = F;
+const $ = id => document.getElementById(id);
+
+/* ==================== SERVIDORES DE MUNDO FARMATURRO ==================== */
+const SERVERS = [
+  { id: "farmacalco", name: "🌎 FarmaCalco", bars: 4, tag: "Recomendado" },
+  { id: "gatulote", name: "💊 GatuLote FEFO", bars: 3, tag: "Redis 7" },
+  { id: "quino", name: "✏️ QuinoPerdón", bars: 4, tag: "Homenaje" },
+  { id: "pijama", name: "🌙 PijamaSaga", bars: 2, tag: "2 AM ITBA" },
+  { id: "calcolandia", name: "📠 Calcolandia", bars: 4, tag: "Sin firma" },
+  { id: "estatua", name: "🗿 Plaza Vandalizada", bars: 4, tag: "Con reja" },
+];
+let currentServer = SERVERS[0];
+
+/* ==================== FRASES Y CONFESIONES DE LA FOTOCOPIADORA ==================== */
+const NIK_FACTS = [
+  "Sabías que: Nuestro algoritmo FEFO en Redis se llama 'First En Fotocopiar, Primero en Salir'.",
+  "Ladrón que roba a ladrón: le copiamos el mundo virtual a Club Penguin que se lo copió a Habbo.",
+  "Agatha dice: 'No a todo, especialmente a las ventas de productos Bajo Receta sin receta vigente (HTTP 400)'.",
+  "Tip del Comisario: La estatua de FarmaTurro tiene valla antivandálica de transacciones WATCH/MULTI en Redis.",
+  "Dr. Garfield: 'Odio los lunes y odio cuando un lote tiene menos de 50 unidades en Q08'.",
+  "Mafalda pasaba por acá y dijo: '¡Paren el mundo que me quiero bajar a consultar el Replica Set rs0!'",
+  "En Mundo FarmaTurro cada consulta que corrés te regala TurroPesos (100% libres de derechos de autor).",
+  "Podés hacer clic en cualquier edificio de la plaza o caminar con tu Gaturro para abrir las 15 consultas.",
+  "Seguí los carteles de los costados de la plaza para ir al Depósito FEFO o al Parque del Lago.",
+  "En TurroModa, en el Parque del Lago, venden galeras, capas, alas y skates. Todo se paga con TurroPesos.",
+];
+
+/* ==================== EDIFICIOS DEL MUNDO VIRTUAL (5 ESTACIONES + ESTATUA) ==================== */
+const BUILDINGS = [
+  {
+    id: "estanteria",
+    name: "FarmaShop & Gondolón",
+    sub: "Catálogo + Lotes bajos (Q01, Q08)",
+    x: 200, y: 235, w: 185, h: 135,
+    roof: "#00b4ff", wall: "#fff7d6", sign: "FARMASHOP",
+    queries: ["Q01", "Q08"],
+    npc: { name: "Gaturro Repositor", x: 195, y: 295, color: "#ff9900", ear: "#cc3300", hat: "cap", line: "¡Cambié la firma del proveedor con Liquid Paper!" }
+  },
+  {
+    id: "recetas",
+    name: "Clínica Dr. Garfield",
+    sub: "Recetas y Dispensas (Q04, Q06)",
+    x: 495, y: 185, w: 190, h: 135,
+    roof: "#ff42b0", wall: "#fff0f8", sign: "RECETAS RX",
+    queries: ["Q06", "Q04"],
+    npc: { name: "Agatha Recetas", x: 495, y: 248, color: "#ff85c0", ear: "#b8005c", hat: "bow", line: "¿Trajiste receta vigente? Mi respuesta favorita es NO." }
+  },
+  {
+    id: "gerencia",
+    name: "Torre Nik-Corp (Gerencia)",
+    sub: "Rankings e Ingresos (Q05, Q07, Q11)",
+    x: 800, y: 185, w: 195, h: 145,
+    roof: "#9b4dff", wall: "#f4ebff", sign: "NIK-CORP $$$",
+    queries: ["Q07", "Q11", "Q05"],
+    npc: { name: "Nik-Gatu Gerente", x: 800, y: 252, color: "#ffd000", ear: "#d95300", hat: "crown", line: "¡Miré el Top 5 de Q07 y ya lo registré a mi nombre!" }
+  },
+  {
+    id: "caja",
+    name: "Mostrador & Saga FEFO",
+    sub: "Ventas, FEFO y Caja (Q14, Q15, Q02, Q09)",
+    x: 1085, y: 245, w: 195, h: 135,
+    roof: "#4ad400", wall: "#ecffe0", sign: "CAJA SAGA",
+    queries: ["Q14", "Q15", "Q02", "Q09"],
+    npc: { name: "Canturro Cajero", x: 1085, y: 306, color: "#68d391", ear: "#1e7e34", hat: "visor", line: "¡La Saga Q14 compensa más rápido que Nik borrando tuits!" }
+  },
+  {
+    id: "clientes",
+    name: "Kiosco de Pasaportes (ABM)",
+    sub: "Clientes, Historial y ABM (Q13, Q03, Q10, Q12)",
+    x: 245, y: 505, w: 195, h: 130,
+    roof: "#ff7b00", wall: "#fff4e0", sign: "CLUB CLIENTES",
+    queries: ["Q13", "Q03", "Q10", "Q12"],
+    npc: { name: "Mafalda Infiltrada", x: 245, y: 565, color: "#63b3ed", ear: "#1e40af", hat: "bow", line: "¡En Q13 la baja es lógica para no borrar la historieta original!" }
+  },
+  {
+    id: "arcade",
+    name: "Fotocopiadora Mágica",
+    sub: "Las 15 Consultas + Chistes Robados",
+    x: 1055, y: 510, w: 185, h: 130,
+    roof: "#ff2a5f", wall: "#ffeef2", sign: "CTRL+C CTRL+V",
+    queries: ["Q01", "Q08", "Q13", "Q14", "Q15"],
+    npc: { name: "Piturro Hacker", x: 1055, y: 568, color: "#c084fc", ear: "#581c87", hat: "wizard", line: "¡Tocá acá para fotocopiar cualquiera de las 15 consultas!" }
+  }
+];
+
+/* ==================== ESTADO DEL JUGADOR Y MUNDO ==================== */
+const WORLD_W = 1300, WORLD_H = 720;
+let coins = Number(F.store.get("fturro.coins") || 1250);
+let stamps = {};
+try { stamps = JSON.parse(F.store.get("fturro.stamps") || "{}"); } catch {}
+let statueVandalized = false;
+
+/* ==================== TIENDA TURROMODA Y MOCHILA ==================== */
+const SHOP = [
+  { id: "party", slot: "hat", name: "Gorrito de cumple", price: 150, ico: "🥳" },
+  { id: "cowboy", slot: "hat", name: "Sombrero cowboy", price: 250, ico: "🤠" },
+  { id: "top", slot: "hat", name: "Galera de mago", price: 300, ico: "🎩" },
+  { id: "wizard", slot: "hat", name: "Gorro de hechicero", price: 450, ico: "🧙" },
+  { id: "nerd", slot: "eyes", name: "Lentes de DBA", price: 120, ico: "🤓" },
+  { id: "sun", slot: "eyes", name: "Anteojos de sol", price: 200, ico: "🕶️" },
+  { id: "pack", slot: "back", name: "Mochila de remedios", price: 180, ico: "🎒" },
+  { id: "cape", slot: "back", name: "Capa de superfarma", price: 400, ico: "🦸" },
+  { id: "wings", slot: "back", name: "Alas de ángel", price: 650, ico: "🪽" },
+  { id: "skate", slot: "feet", name: "Skate", price: 500, ico: "🛹" },
+];
+const SLOT_NAMES = { hat: "Cabeza", eyes: "Ojos", back: "Espalda", feet: "Pies" };
+let inv = [];
+try { inv = JSON.parse(F.store.get("fturro.inv") || "[]"); } catch {}
+let EQ = {};
+try { EQ = JSON.parse(F.store.get("fturro.eq") || "{}"); } catch {}
+
+const player = {
+  eyes: EQ.eyes || "none",
+  back: EQ.back || "none",
+  feet: EQ.feet || "none",
+  name: F.store.get("fturro.nick") || "Gaturro_G10",
+  x: 650, y: 470,
+  tx: 650, ty: 470,
+  color: F.store.get("fturro.color") || "#ffaa00",
+  ear: "#d93800",
+  hat: F.store.get("fturro.hat") || "none",
+  bubble: "¡Hola Mundo FarmaTurro! Hacé clic para caminar o abrí una casa 🐾",
+  bubbleUntil: performance.now() + 7000,
+  emote: null,
+  emoteUntil: 0,
+  dancingUntil: 0,
+  facing: 1,
+};
+
+const roamers = [
+  { name: "Gatu_Mongo", x: 540, y: 430, tx: 720, ty: 460, color: "#ff9900", ear: "#cc2900", hat: "cap", bubble: "rs0 online!", bubbleUntil: 0 },
+  { name: "Agatha_Redis", x: 760, y: 465, tx: 580, ty: 500, color: "#ff66b2", ear: "#99004d", hat: "bow", bubble: "FEFO < 50u", bubbleUntil: 0 },
+  { name: "Garfield_Copia", x: 640, y: 555, tx: 830, ty: 520, color: "#fbbf24", ear: "#b45309", hat: "crown", bubble: "Me robaron la lasaña", bubbleUntil: 0 },
+];
+
+const floatingCoins = [
+  { x: 410, y: 360, takenUntil: 0 },
+  { x: 890, y: 365, takenUntil: 0 },
+  { x: 520, y: 575, takenUntil: 0 },
+  { x: 790, y: 575, takenUntil: 0 },
+  { x: 650, y: 290, takenUntil: 0 },
+];
+
+let shownCoins = coins;
+function addCoins(n, label) {
+  coins += n;
+  F.store.set("fturro.coins", String(coins));
+  const pill = $("coins-txt").parentElement;
+  pill.classList.remove("bump");
+  void pill.offsetWidth;
+  pill.classList.add("bump");
+  showToast(label || `¡+${n} TURROPESOS!`);
+}
+function rollCoins() {
+  if (shownCoins !== coins) {
+    const diff = coins - shownCoins;
+    shownCoins += Math.sign(diff) * Math.max(1, Math.ceil(Math.abs(diff) * 0.12));
+    $("coins-txt").textContent = shownCoins.toLocaleString("es-AR");
+  }
+}
+$("coins-txt").textContent = coins.toLocaleString("es-AR");
+
+/* ==================== PARTÍCULAS DEL MUNDO Y CONFETI ==================== */
+const particles = [];
+function burst(x, y, n = 14, colors = ["#ffde00", "#ff5ec4", "#00e1ff", "#52df00"]) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, v = 1.5 + Math.random() * 3.5;
+    particles.push({ kind: "spark", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, life: 0, max: 40 + Math.random() * 25, color: colors[i % colors.length], size: 3 + Math.random() * 4 });
+  }
+}
+function floatText(x, y, text, color = "#ffde00") {
+  particles.push({ kind: "text", x, y, vx: 0, vy: -1.1, life: 0, max: 70, text, color });
+}
+function ring(x, y) {
+  particles.push({ kind: "ring", x, y, vx: 0, vy: 0, life: 0, max: 28 });
+}
+function dust(x, y) {
+  particles.push({ kind: "dust", x: x + (Math.random() - .5) * 14, y: y + 2, vx: (Math.random() - .5) * .6, vy: -.4, life: 0, max: 26, size: 5 + Math.random() * 4 });
+}
+function drawParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.life++;
+    if (p.life > p.max) { particles.splice(i, 1); continue; }
+    const t = p.life / p.max;
+    p.x += p.vx; p.y += p.vy;
+    if (p.kind === "spark") p.vy += .15;
+    ctx.save();
+    ctx.globalAlpha = 1 - t;
+    if (p.kind === "spark") {
+      ctx.fillStyle = p.color; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 1.5;
+      ctx.translate(p.x, p.y); ctx.rotate(p.life * .2);
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.strokeRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    } else if (p.kind === "text") {
+      ctx.font = '400 22px "Luckiest Guy", cursive';
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineWidth = 5; ctx.strokeStyle = "#1b112c"; ctx.lineJoin = "round";
+      const sc = t < .15 ? .5 + t / .15 * .6 : 1.1 - (t - .15) * .15;
+      ctx.translate(p.x, p.y); ctx.scale(sc, sc);
+      ctx.strokeText(p.text, 0, 0);
+      ctx.fillStyle = p.color; ctx.fillText(p.text, 0, 0);
+    } else if (p.kind === "ring") {
+      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4 * (1 - t) + 1;
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, 8 + t * 34, 3 + t * 13, 0, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      ctx.fillStyle = "rgba(255,248,220,.9)";
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (0.6 + t), 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+const fx = $("fx"), fctx = fx.getContext("2d");
+const confettiBits = [];
+function confetti(n = 140) {
+  const w = window.innerWidth;
+  const cols = ["#ffde00", "#ff5ec4", "#00e1ff", "#52df00", "#ff7b00", "#9b4dff"];
+  for (let i = 0; i < n; i++) {
+    confettiBits.push({
+      x: w / 2 + (Math.random() - .5) * 120, y: window.innerHeight * .35,
+      vx: (Math.random() - .5) * 18, vy: -6 - Math.random() * 12,
+      r: Math.random() * 6, vr: (Math.random() - .5) * .4,
+      w: 7 + Math.random() * 7, h: 4 + Math.random() * 5,
+      c: cols[i % cols.length], life: 0,
+    });
+  }
+}
+function drawConfetti() {
+  if (!confettiBits.length) { if (fx.dataset.dirty) { fctx.clearRect(0, 0, fx.width, fx.height); delete fx.dataset.dirty; } return; }
+  const dpr = window.devicePixelRatio || 1;
+  if (fx.width !== Math.round(innerWidth * dpr)) { fx.width = Math.round(innerWidth * dpr); fx.height = Math.round(innerHeight * dpr); }
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.clearRect(0, 0, innerWidth, innerHeight);
+  fx.dataset.dirty = "1";
+  for (let i = confettiBits.length - 1; i >= 0; i--) {
+    const c = confettiBits[i];
+    c.life++; c.vy += .35; c.vx *= .985; c.x += c.vx; c.y += c.vy; c.r += c.vr;
+    if (c.y > innerHeight + 30 || c.life > 260) { confettiBits.splice(i, 1); continue; }
+    fctx.save();
+    fctx.translate(c.x, c.y); fctx.rotate(c.r); fctx.scale(1, Math.cos(c.life * .25));
+    fctx.fillStyle = c.c; fctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+    fctx.restore();
+  }
+}
+
+let toastTimer = null;
+function showToast(txt) {
+  const t = $("toast");
+  t.textContent = txt;
+  t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("on"), 2200);
+}
+
+/* ==================== SVG DE FARMATURRO (CARA CACHETONA + BIGOTES) ==================== */
+function gaturroSVG(bodyCol = "#ffaa00", earCol = "#d93800", hat = "none") {
+  const hatSVG = hat === "crown"
+    ? `<polygon points="38,24 46,8 56,20 64,6 72,20 82,8 90,24" fill="#ffde00" stroke="#1b112c" stroke-width="3.5" stroke-linejoin="round"/>`
+    : hat === "cap"
+    ? `<path d="M36,24 C40,8 88,8 92,24 Z" fill="#0095ff" stroke="#1b112c" stroke-width="3.5"/><path d="M75,20 L106,24 L75,27 Z" fill="#005bbb" stroke="#1b112c" stroke-width="3"/>`
+    : hat === "bow"
+    ? `<g transform="translate(64,18)"><polygon points="-18,-8 0,0 -18,8" fill="#ff2a85" stroke="#1b112c" stroke-width="3"/><polygon points="18,-8 0,0 18,8" fill="#ff2a85" stroke="#1b112c" stroke-width="3"/><circle r="5" fill="#ffde00" stroke="#1b112c" stroke-width="3"/></g>`
+    : hat === "doctor"
+    ? `<rect x="44" y="8" width="40" height="16" rx="5" fill="#fff" stroke="#1b112c" stroke-width="3.5"/><circle cx="64" cy="16" r="6" fill="#ff2a5f"/><path d="M64,12v8M60,16h8" stroke="#fff" stroke-width="2.5"/>`
+    : "";
+  return `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <!-- Orejas rojas/naranjas clásicas -->
+    <polygon points="28,44 18,14 46,28" fill="${earCol}" stroke="#1b112c" stroke-width="4" stroke-linejoin="round"/>
+    <polygon points="100,44 110,14 82,28" fill="${earCol}" stroke="#1b112c" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Cuerpo -->
+    <path d="M42,84 L36,118 L92,118 L86,84 Z" fill="${bodyCol}" stroke="#1b112c" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Cruz de farmacia en la remera -->
+    <rect x="48" y="92" width="32" height="22" rx="5" fill="#fff" stroke="#1b112c" stroke-width="3"/>
+    <path d="M64,96 v14 M57,103 h14" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+    <!-- Cabeza cachetona gigante -->
+    <ellipse cx="64" cy="56" rx="44" ry="32" fill="${bodyCol}" stroke="#1b112c" stroke-width="4"/>
+    <!-- Mofletes blancos gigantes estilo Gaturro -->
+    <ellipse cx="46" cy="67" rx="26" ry="16" fill="#fffaf0" stroke="#1b112c" stroke-width="3.8"/>
+    <ellipse cx="82" cy="67" rx="26" ry="16" fill="#fffaf0" stroke="#1b112c" stroke-width="3.8"/>
+    <ellipse cx="64" cy="68" rx="18" ry="13" fill="#fffaf0"/>
+    <!-- Ojos pegados -->
+    <ellipse cx="55" cy="44" rx="9" ry="12" fill="#fff" stroke="#1b112c" stroke-width="3.5"/>
+    <ellipse cx="73" cy="44" rx="9" ry="12" fill="#fff" stroke="#1b112c" stroke-width="3.5"/>
+    <circle cx="57" cy="45" r="4" fill="#1b112c"/>
+    <circle cx="71" cy="45" r="4" fill="#1b112c"/>
+    <circle cx="58.5" cy="43" r="1.5" fill="#fff"/>
+    <circle cx="72.5" cy="43" r="1.5" fill="#fff"/>
+    <!-- Narizota -->
+    <ellipse cx="64" cy="57" rx="8" ry="5.5" fill="#ff4d6d" stroke="#1b112c" stroke-width="3"/>
+    <!-- Sonrisa -->
+    <path d="M54,69 Q64,77 74,69" fill="none" stroke="#1b112c" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- Bigotes -->
+    <path d="M22,62 L4,57 M20,68 L2,68 M22,74 L5,79" stroke="#1b112c" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M106,62 L124,57 M108,68 L126,68 M106,74 L123,79" stroke="#1b112c" stroke-width="3.2" stroke-linecap="round"/>
+    ${hatSVG}
+  </svg>`;
+}
+
+/* ==================== INICIALIZACIÓN DE SPLASH Y CONTROLES ==================== */
+$("splash-cat-svg").innerHTML = gaturroSVG(player.color, player.ear, "doctor");
+{
+  const h1 = document.querySelector(".splash-logo h1");
+  h1.replaceChildren(...[...h1.textContent].map((ch, i) => el("span", { style: `--i:${i}`, text: ch })));
+}
+$("nick-in").value = player.name;
+
+function renderServers() {
+  $("srv-grid").replaceChildren(...SERVERS.map(s => {
+    const b = el("button", {
+      type: "button",
+      class: "srv-btn" + (s.id === currentServer.id ? " on" : ""),
+      onclick: () => { currentServer = s; renderServers(); F.Sound.tone(660, 0, .07, "sine", .05); }
+    },
+      el("span", { text: s.name }),
+      el("span", { class: "srv-bars" }, el("i"), el("i"), el("i"), el("i"))
+    );
+    return b;
+  }));
+}
+renderServers();
+
+$("btn-enter").onclick = () => {
+  const nick = $("nick-in").value.trim() || "Gaturro_G10";
+  player.name = nick;
+  F.store.set("fturro.nick", nick);
+  $("srv-badge").textContent = currentServer.name.replace(/^[^\s]+\s/, "");
+  $("splash").classList.add("out");
+  setTimeout(() => confetti(160), 250);
+  F.Sound.tone(523, 0, .09, "triangle", .06);
+  F.Sound.tone(659, .09, .09, "triangle", .06);
+  F.Sound.tone(784, .18, .12, "triangle", .06);
+  F.Sound.tone(1046, .28, .22, "triangle", .07);
+};
+
+$("theme-slot").append(F.themeSwitcher("farmaturro", "fthemes"));
+$("btn-docs").href = F.API.base + "/docs";
+
+function syncMuteBtn() {
+  $("btn-sound").textContent = F.Sound.muted ? "🔇" : "🔊";
+}
+syncMuteBtn();
+$("btn-sound").onclick = () => { F.Sound.toggle(); syncMuteBtn(); };
+
+/* ==================== POPOVERS: EMOTES Y ROPERO ==================== */
+const EMOTES = ["😸", "💊", "📠", "🎨", "❤️", "🚨", "💸", "🕺", "💉", "🏆"];
+$("pop-emotes").replaceChildren(...EMOTES.map(em =>
+  el("button", {
+    class: "emote-btn",
+    text: em,
+    onclick: () => {
+      player.emote = em;
+      player.emoteUntil = performance.now() + 4000;
+      $("pop-emotes").classList.remove("on");
+      F.Sound.tone(880, 0, .08, "sine", .05);
+      F.Sound.tone(1174, .07, .12, "sine", .05);
+    }
+  })
+));
+
+const COLORS = [
+  ["#ffaa00", "#d93800"],
+  ["#ff66b2", "#b8005c"],
+  ["#52df00", "#1e7e34"],
+  ["#38bdf8", "#0284c7"],
+  ["#c084fc", "#6b21a8"],
+  ["#f87171", "#991b1b"],
+];
+const HATS = [
+  ["none", "Sin gorro"],
+  ["crown", "👑 Corona"],
+  ["cap", "🧢 Gorra"],
+  ["bow", "🎀 Moño Agatha"],
+  ["doctor", "🩺 Médico"],
+];
+
+function renderStylePop() {
+  $("pop-style").replaceChildren(
+    el("div", { class: "style-group" },
+      el("span", { text: "Color:" }),
+      ...COLORS.map(([c, e]) => el("button", {
+        class: "swatch" + (player.color === c ? " on" : ""),
+        style: `background:${c}`,
+        onclick: () => {
+          player.color = c; player.ear = e;
+          F.store.set("fturro.color", c);
+          renderStylePop();
+          F.Sound.tone(740, 0, .08, "triangle", .05);
+        }
+      }))
+    ),
+    el("div", { class: "style-group" },
+      el("span", { text: "Gorro:" }),
+      ...HATS.map(([id, label]) => el("button", {
+        class: "hat-btn" + (player.hat === id ? " on" : ""),
+        text: label,
+        onclick: () => {
+          player.hat = id;
+          F.store.set("fturro.hat", id);
+          renderStylePop();
+          F.Sound.tone(880, 0, .08, "triangle", .05);
+        }
+      }))
+    )
+  );
+}
+renderStylePop();
+
+$("btn-emotes").onclick = () => {
+  $("pop-style").classList.remove("on");
+  $("pop-emotes").classList.toggle("on");
+};
+$("btn-style").onclick = () => {
+  $("pop-emotes").classList.remove("on");
+  $("pop-style").classList.toggle("on");
+};
+$("btn-dance").onclick = triggerDance;
+
+function triggerDance() {
+  player.dancingUntil = performance.now() + 5000;
+  burst(player.x, player.y - 50, 18);
+  player.bubble = "🕺 ¡Tirando los pasos prohibidos en el Replica Set!";
+  player.bubbleUntil = performance.now() + 4500;
+  [523, 659, 784, 659, 880, 1046].forEach((f, i) => F.Sound.tone(f, i * .09, .1, "square", .04));
+}
+
+$("btn-stat-vandal").onclick = toggleStatueVandal;
+function toggleStatueVandal() {
+  statueVandalized = !statueVandalized;
+  player.bubble = statueVandalized
+    ? "🎨 ¡Pintamos la estatua de FarmaTurro! (Pijama Party estuvo aquí)"
+    : "🧹 ¡Restauraron la estatua y pusieron doble valla antivandálica!";
+  player.bubbleUntil = performance.now() + 4500;
+  addCoins(25, statueVandalized ? "🎨 ¡ESTATUA INTERVENIDA! +25" : "🛡️ ¡VALLA REFORZADA! +25");
+  burst(650, 320, 26, statueVandalized ? ["#ff5ec4", "#52df00", "#9b4dff", "#00e1ff"] : ["#ffde00", "#fff7ae", "#ffbb00"]);
+  floatText(650, 280, "+25");
+  F.Sound.tone(statueVandalized ? 440 : 660, 0, .14, "sawtooth", .05);
+}
+
+/* ==================== CHAT EN LA PLAZA + COMANDOS ==================== */
+$("chat-form").onsubmit = e => {
+  e.preventDefault();
+  const raw = $("chat-in").value.trim();
+  if (!raw) return;
+  $("chat-in").value = "";
+  const low = raw.toLowerCase();
+  if (low === "/bailar" || low === "/dance") { triggerDance(); return; }
+  if (low === "/vandalizar" || low === "/estatua") { toggleStatueVandal(); return; }
+  if (low === "/tienda") { openShop("shop"); return; }
+  if (low === "/mochila") { openShop("bag"); return; }
+  if (low === "/plagio" || low === "/nik") {
+    const fact = NIK_FACTS[Math.floor(Math.random() * NIK_FACTS.length)];
+    player.bubble = "📠 " + fact;
+    player.bubbleUntil = performance.now() + 6500;
+    addCoins(15, "📠 ¡CHISTE FOTOCOPIADO! +15");
+    return;
+  }
+  const m = low.match(/^\/?(q0[1-9]|q1[0-5])$/i);
+  if (m) {
+    openQuery(m[1].toUpperCase());
+    return;
+  }
+  player.bubble = raw;
+  player.bubbleUntil = performance.now() + 5500;
+  F.Sound.tone(620, 0, .06, "sine", .04);
+};
+
+/* ==================== DIBUJO DEL MUNDO EN CANVAS 2D ==================== */
+const canvas = $("canvas");
+const ctx = canvas.getContext("2d");
+
+let CW = 0, CH = 0, DPR = 1;
+function resizeCanvas() {
+  DPR = window.devicePixelRatio || 1;
+  CW = window.innerWidth; CH = window.innerHeight;
+  canvas.width = Math.round(CW * DPR);
+  canvas.height = Math.round(CH * DPR);
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// El mundo entra en el hueco libre entre la barra de arriba y el dock de abajo
+function view() {
+  const top = CH > 560 ? 96 : 60, bottom = CH > 560 ? 70 : 60;
+  const avail = Math.max(200, CH - top - bottom);
+  const scale = Math.min(CW / WORLD_W, avail / WORLD_H);
+  return { scale, ox: (CW - WORLD_W * scale) / 2, oy: top + (avail - WORLD_H * scale) / 2 };
+}
+
+function screenToWorld(sx, sy) {
+  const { scale, ox, oy } = view();
+  return {
+    x: (sx - ox) / scale,
+    y: (sy - oy) / scale,
+  };
+}
+
+function drawRoundedRect(x, y, w, h, r, fill, stroke, sw = 3.5) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.lineWidth = sw; ctx.strokeStyle = stroke; ctx.stroke(); }
+}
+
+function drawGaturroAvatar(x, y, opts, now) {
+  const { eyes = "none", back = "none", feet = "none" } = opts;
+  const { name, color, ear = "#d93800", hat = "none", bubble, bubbleUntil = 0, emote, emoteUntil = 0, dancingUntil = 0, isPlayer = false, facing = 1 } = opts;
+  const isDancing = now < dancingUntil;
+  const walkBob = Math.hypot((opts.tx ?? x) - x, (opts.ty ?? y) - y) > 4
+    ? Math.sin(now * 0.018) * 5
+    : Math.sin(now * 0.004 + x) * 1.5;
+  const danceBob = isDancing ? Math.abs(Math.sin(now * 0.02)) * 12 : 0;
+  const danceRot = isDancing ? Math.sin(now * 0.015) * 0.22 : 0;
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Sombra en el piso
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.beginPath();
+  ctx.ellipse(0, 4, isPlayer ? 26 : 22, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Anillo indicador del jugador
+  if (isPlayer) {
+    ctx.strokeStyle = "#ffde00";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 30 + Math.sin(now * 0.008) * 2, 11, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.translate(0, -26 - walkBob - danceBob);
+  ctx.rotate(danceRot);
+  ctx.scale(facing, 1);
+
+  // Accesorios de la espalda y los pies, van detrás del cuerpo
+  if (back === "cape") {
+    const fl = Math.sin(now * 0.01) * 4;
+    ctx.fillStyle = "#ff2a5f"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-12, 2); ctx.quadraticCurveTo(-32, 16, -28 + fl, 34); ctx.lineTo(8, 30); ctx.quadraticCurveTo(2, 14, 12, 2);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else if (back === "wings") {
+    const fl = Math.sin(now * 0.012) * 0.3;
+    ctx.fillStyle = "#ffffff"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 2.5;
+    for (const sd of [-1, 1]) {
+      ctx.save();
+      ctx.translate(sd * 8, 6); ctx.rotate(sd * (-0.5 + fl));
+      ctx.beginPath(); ctx.ellipse(sd * 16, -8, 17, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(sd * 12, -1, 11, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+  } else if (back === "pack") {
+    drawRoundedRect(-26, 0, 17, 22, 5, "#22c55e", "#1b112c", 2.8);
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(-20.5, 9, 6, 2.5); ctx.fillRect(-18.7, 7, 2.5, 6.5);
+  }
+  if (feet === "skate") {
+    drawRoundedRect(-25, 28, 50, 7, 4, "#ff7b00", "#1b112c", 2.5);
+    ctx.fillStyle = "#1b112c";
+    ctx.beginPath(); ctx.arc(-15, 38, 4, 0, Math.PI * 2); ctx.arc(15, 38, 4, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Cola rayada
+  ctx.strokeStyle = "#1b112c";
+  ctx.lineWidth = 8;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-14, 14);
+  ctx.quadraticCurveTo(-34, 4 + Math.sin(now * 0.008) * 6, -28, -10);
+  ctx.stroke();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4.5;
+  ctx.stroke();
+
+  // Cuerpo con remera de farmacia
+  drawRoundedRect(-16, 2, 32, 22, 8, "#ffffff", "#1b112c", 3.2);
+  // Cruz verde en el pecho
+  ctx.fillStyle = "#22c55e";
+  ctx.fillRect(-2, 7, 4, 12);
+  ctx.fillRect(-6, 11, 12, 4);
+
+  // Patitas
+  ctx.fillStyle = color;
+  drawRoundedRect(-15, 20, 12, 8, 4, color, "#1b112c", 2.8);
+  drawRoundedRect(3, 20, 12, 8, 4, color, "#1b112c", 2.8);
+
+  // Orejas rojas/contrastadas
+  ctx.fillStyle = ear;
+  ctx.strokeStyle = "#1b112c";
+  ctx.lineWidth = 3.2;
+  ctx.beginPath();
+  ctx.moveTo(-22, -14); ctx.lineTo(-29, -34); ctx.lineTo(-10, -24); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(22, -14); ctx.lineTo(29, -34); ctx.lineTo(10, -24); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Cabeza cachetona
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(0, -10, 27, 19, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Cachetes blancos característicos de Gaturro
+  ctx.fillStyle = "#fffaf0";
+  ctx.beginPath();
+  ctx.ellipse(-11, -3, 16, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(11, -3, 16, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(0, -3, 14, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ojos pegados (parpadean cada tanto)
+  let seed = 0;
+  for (const ch of name || "") seed = (seed * 31 + ch.charCodeAt(0)) % 9973;
+  const blinking = (now + seed * 7) % 3600 < 130;
+  if (blinking) {
+    ctx.beginPath();
+    ctx.moveTo(-10, -16); ctx.quadraticCurveTo(-5.5, -12, -1, -16);
+    ctx.moveTo(1, -16); ctx.quadraticCurveTo(5.5, -12, 10, -16);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.ellipse(-5.5, -16, 5.5, 7.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(5.5, -16, 5.5, 7.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#1b112c";
+    ctx.beginPath();
+    ctx.arc(-4.5, -15.5, 2.5, 0, Math.PI * 2);
+    ctx.arc(4.5, -15.5, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Anteojos que se compran en TurroModa
+  if (eyes === "sun") {
+    ctx.fillStyle = "#1b112c";
+    ctx.beginPath(); ctx.roundRect(-13, -21, 11, 9, 3); ctx.roundRect(2, -21, 11, 9, 3); ctx.fill();
+    ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(-2, -18); ctx.lineTo(2, -18); ctx.moveTo(-13, -18); ctx.lineTo(-24, -20); ctx.moveTo(13, -18); ctx.lineTo(24, -20); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.65)"; ctx.fillRect(-11, -20, 3, 2); ctx.fillRect(4, -20, 3, 2);
+  } else if (eyes === "nerd") {
+    ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(-5.5, -16, 7, 0, Math.PI * 2); ctx.moveTo(12.5, -16); ctx.arc(5.5, -16, 7, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.lineWidth = 3;
+
+  // Rubor en los cachetes
+  ctx.fillStyle = "rgba(255,90,140,.35)";
+  ctx.beginPath();
+  ctx.ellipse(-17, -2, 4.5, 2.6, 0, 0, Math.PI * 2);
+  ctx.ellipse(17, -2, 4.5, 2.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Nariz
+  ctx.fillStyle = "#ff3b6b";
+  ctx.beginPath();
+  ctx.ellipse(0, -8.5, 5, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Sonrisa
+  ctx.beginPath();
+  ctx.arc(0, -4, 6, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+
+  // Bigotes
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(-22, -6); ctx.lineTo(-34, -9);
+  ctx.moveTo(-23, -2); ctx.lineTo(-35, -2);
+  ctx.moveTo(22, -6); ctx.lineTo(34, -9);
+  ctx.moveTo(23, -2); ctx.lineTo(35, -2);
+  ctx.stroke();
+
+  // Sombrero / Accesorio
+  if (hat === "crown") {
+    ctx.fillStyle = "#ffde00";
+    ctx.beginPath();
+    ctx.moveTo(-14, -26); ctx.lineTo(-10, -38); ctx.lineTo(-4, -30);
+    ctx.lineTo(0, -40); ctx.lineTo(4, -30); ctx.lineTo(10, -38); ctx.lineTo(14, -26);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  } else if (hat === "cap") {
+    ctx.fillStyle = "#0095ff";
+    ctx.beginPath();
+    ctx.arc(0, -25, 15, Math.PI, 0);
+    ctx.fill(); ctx.stroke();
+    ctx.fillRect(6, -28, 16, 4);
+    ctx.strokeRect(6, -28, 16, 4);
+  } else if (hat === "bow") {
+    ctx.fillStyle = "#ff2a85";
+    ctx.beginPath();
+    ctx.moveTo(0, -28); ctx.lineTo(-12, -34); ctx.lineTo(-12, -22); ctx.closePath();
+    ctx.moveTo(0, -28); ctx.lineTo(12, -34); ctx.lineTo(12, -22); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  } else if (hat === "top") {
+    drawRoundedRect(-17, -30, 34, 6, 3, "#1b112c", "#1b112c", 2);
+    drawRoundedRect(-11, -54, 22, 26, 3, "#2a1d40", "#1b112c", 3);
+    ctx.fillStyle = "#ff2a5f"; ctx.fillRect(-10, -37, 20, 5);
+  } else if (hat === "party") {
+    ctx.fillStyle = "#00e1ff";
+    ctx.beginPath(); ctx.moveTo(-11, -26); ctx.lineTo(0, -54); ctx.lineTo(11, -26); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ff5ec4";
+    ctx.beginPath(); ctx.moveTo(-7.5, -36); ctx.lineTo(7.5, -36); ctx.lineTo(5.5, -41); ctx.lineTo(-5.5, -41); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#ffde00";
+    ctx.beginPath(); ctx.arc(0, -55, 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  } else if (hat === "wizard") {
+    ctx.fillStyle = "#6d28d9";
+    ctx.beginPath(); ctx.moveTo(-19, -25); ctx.lineTo(5, -64); ctx.lineTo(19, -25); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ffde00"; ctx.font = "11px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("★", -1, -35); ctx.fillText("✦", 6, -48);
+  } else if (hat === "cowboy") {
+    ctx.fillStyle = "#a16207";
+    ctx.beginPath(); ctx.moveTo(-12, -27); ctx.quadraticCurveTo(-14, -47, 0, -42); ctx.quadraticCurveTo(14, -47, 12, -27); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, -27, 25, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#7c2d12"; ctx.fillRect(-11, -33, 22, 4);
+  } else if (hat === "doctor") {
+    drawRoundedRect(-12, -36, 24, 11, 3, "#fff", "#1b112c", 2.5);
+    ctx.fillStyle = "#ff2a5f";
+    ctx.beginPath(); ctx.arc(0, -30.5, 4, 0, Math.PI * 2); ctx.fill();
+  }
+
+  ctx.restore();
+
+  // Etiqueta con el nombre abajo
+  ctx.save();
+  ctx.font = "900 12px Nunito, sans-serif";
+  const nw = ctx.measureText(name).width + 14;
+  drawRoundedRect(x - nw / 2, y + 8, nw, 20, 8, isPlayer ? "#ffde00" : "rgba(27,17,44,0.82)", "#1b112c", 2.2);
+  ctx.fillStyle = isPlayer ? "#1b112c" : "#ffffff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(name, x, y + 18);
+
+  // Globito de Emote
+  if (emote && now < emoteUntil) {
+    drawRoundedRect(x - 22, y - 98, 44, 38, 14, "#ffffff", "#1b112c", 3);
+    ctx.font = "24px sans-serif";
+    ctx.fillText(emote, x, y - 78);
+  }
+  // Globito de Chat
+  else if (bubble && now < bubbleUntil) {
+    ctx.font = "800 12.5px Nunito, sans-serif";
+    const maxW = 240;
+    const txt = bubble.length > 68 ? bubble.slice(0, 65) + "..." : bubble;
+    const bw = Math.min(maxW, Math.max(80, ctx.measureText(txt).width + 22));
+    const bx = x - bw / 2, by = y - 96;
+    drawRoundedRect(bx, by, bw, 32, 12, "#ffffff", "#1b112c", 3);
+    ctx.beginPath();
+    ctx.moveTo(x - 8, by + 30); ctx.lineTo(x, by + 42); ctx.lineTo(x + 8, by + 30);
+    ctx.fillStyle = "#ffffff"; ctx.fill();
+    ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x - 8, by + 31); ctx.lineTo(x, by + 42); ctx.lineTo(x + 8, by + 31); ctx.stroke();
+    ctx.fillStyle = "#1b112c";
+    ctx.fillText(txt, x, by + 16, bw - 14);
+  }
+  ctx.restore();
+}
+
+function drawBuilding(b, now) {
+  const { x, y, w, h, roof, wall, sign, queries } = b;
+  const left = x - w / 2, top = y - h;
+  const hovered = hoverB === b;
+  ctx.save();
+  if (hovered) {
+    const s = 1.04 + Math.sin(now * 0.012) * 0.015;
+    ctx.translate(x, y); ctx.scale(s, s); ctx.translate(-x, -y);
+    ctx.shadowColor = "rgba(255,240,120,.95)"; ctx.shadowBlur = 26;
+  }
+
+  // Sombra edificio
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 6, w * 0.54, 18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pared principal (estilo inflado de Mundo Gaturro)
+  drawRoundedRect(left, top + 28, w, h - 28, 18, wall, "#1b112c", 4);
+
+  // Techo colorido con toldito
+  drawRoundedRect(left - 10, top, w + 20, 42, 18, roof, "#1b112c", 4);
+
+  // Rayas del toldo
+  ctx.fillStyle = "rgba(255,255,255,0.28)";
+  for (let i = left + 8; i < left + w - 12; i += 28) {
+    ctx.fillRect(i, top + 6, 12, 30);
+  }
+
+  ctx.shadowBlur = 0;
+
+  // Cartel superior que se balancea
+  ctx.save();
+  ctx.translate(x, top - 2);
+  ctx.rotate(Math.sin(now * 0.002 + x) * 0.03);
+  drawRoundedRect(-74, -14, 148, 28, 10, "#ffde00", "#1b112c", 3.5);
+  ctx.font = '400 16px "Luckiest Guy", cursive';
+  ctx.fillStyle = "#1b112c";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(sign, 0, 1);
+  ctx.restore();
+
+  // Puerta + Ventanas con luz que titila
+  drawRoundedRect(x - 24, y - 54, 48, 54, 12, hovered ? "#7dd3fc" : "#38bdf8", "#1b112c", 3.5);
+  ctx.fillStyle = "#ffde00";
+  ctx.beginPath(); ctx.arc(x + 14, y - 26, 3.5, 0, Math.PI * 2); ctx.fill();
+  const glow = 0.55 + Math.sin(now * 0.003 + x * 0.1) * 0.25;
+  for (const wx of [left + 16, left + w - 52]) {
+    drawRoundedRect(wx, top + 52, 36, 32, 8, `rgba(255,236,150,${glow})`, "#1b112c", 3);
+    ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(wx + 18, top + 52); ctx.lineTo(wx + 18, top + 84); ctx.moveTo(wx, top + 68); ctx.lineTo(wx + 36, top + 68); ctx.stroke();
+  }
+
+  // Cruz verde de farmacia que late en la esquina del techo
+  const pulse = 1 + Math.sin(now * 0.006 + x) * 0.12;
+  ctx.save();
+  ctx.translate(left + w - 6, top + 6);
+  ctx.scale(pulse, pulse);
+  ctx.fillStyle = "#22c55e"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.roundRect(-4, -11, 8, 22, 2); ctx.roundRect(-11, -4, 22, 8, 2);
+  ctx.fill(); ctx.stroke();
+  ctx.fillRect(-2.5, -9.5, 5, 19); ctx.fillRect(-9.5, -2.5, 19, 5);
+  ctx.restore();
+
+  // Cruz de farmacia giratoria o badge de consultas
+  const qTxt = queries.join(" · ");
+  ctx.font = "900 11px Nunito, sans-serif";
+  const pw = ctx.measureText(qTxt).width + 18;
+  drawRoundedRect(x - pw / 2, top + 46, pw, 20, 9, "#ffffff", "#1b112c", 2.5);
+  ctx.fillStyle = "#1b112c";
+  ctx.fillText(qTxt, x, top + 56);
+  ctx.restore();
+
+  // Cartel que rebota sobre la puerta cuando pasás el mouse
+  if (hovered) {
+    const ay = y - 30 + Math.sin(now * 0.012) * 5;
+    ctx.font = '400 15px "Luckiest Guy", cursive';
+    const lw = ctx.measureText("¡ENTRAR!").width + 18;
+    drawRoundedRect(x - lw / 2, ay - 22, lw, 24, 10, "#52df00", "#1b112c", 3);
+    ctx.fillStyle = "#ffffff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("¡ENTRAR!", x, ay - 9);
+    ctx.fillStyle = "#52df00"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x - 9, ay + 2); ctx.lineTo(x, ay + 12); ctx.lineTo(x + 9, ay + 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+}
+
+/* ==================== DECORADO: SOL, NUBES, ÁRBOLES, FLORES Y FAROLES ==================== */
+const CLOUDS = Array.from({ length: 7 }, (_, i) => ({ x: Math.random(), y: 0.08 + Math.random() * 0.5, s: 0.6 + Math.random() * 0.8, v: 0.00004 + Math.random() * 0.00005 + i * 0.000004 }));
+const TREES = [
+  { x: 70, y: 330, s: 1.1 }, { x: 1235, y: 340, s: 1.15 }, { x: 55, y: 600, s: 1.2 },
+  { x: 1250, y: 640, s: 1.1 }, { x: 430, y: 690, s: .95 }, { x: 870, y: 700, s: 1 },
+  { x: 650, y: 205, s: .9 }, { x: 345, y: 215, s: .8 }, { x: 965, y: 215, s: .85 },
+];
+const LAMPS = [{ x: 365, y: 355 }, { x: 935, y: 355 }, { x: 430, y: 615 }, { x: 870, y: 615 }];
+const FLOWERS = [];
+{
+  const cols = ["#ff5ec4", "#ffde00", "#ffffff", "#ff7b00", "#9b4dff"];
+  let tries = 0;
+  while (FLOWERS.length < 46 && tries++ < 2000) {
+    const fx0 = 320 + Math.random() * 660, fy0 = 300 + Math.random() * 250;
+    const inGarden = ((fx0 - 650) / 330) ** 2 + ((fy0 - 425) / 125) ** 2 < 1;
+    const onRoad = (fx0 > 598 && fx0 < 702) || (fy0 > 388 && fy0 < 464);
+    const nearStatue = Math.hypot(fx0 - 650, fy0 - 385) < 90;
+    if (inGarden && !onRoad && !nearStatue) FLOWERS.push({ x: fx0, y: fy0, c: cols[FLOWERS.length % cols.length], p: Math.random() * 6 });
+  }
+}
+const BUTTERFLIES = Array.from({ length: 4 }, (_, i) => ({ cx: 380 + i * 170, cy: 330 + (i % 2) * 180, r: 40 + i * 12, sp: 0.0006 + i * 0.0002, c: ["#ff5ec4", "#ffde00", "#00e1ff", "#9b4dff"][i] }));
+
+function drawCloud(x, y, s) {
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(s, s);
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 60, 22, 0, 0, Math.PI * 2);
+  ctx.ellipse(-22, -14, 26, 22, 0, 0, Math.PI * 2);
+  ctx.ellipse(16, -20, 30, 26, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(120,190,255,.25)";
+  ctx.beginPath(); ctx.ellipse(0, 12, 54, 8, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+function drawSun(x, y, now) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(now * 0.0003);
+  ctx.fillStyle = "rgba(255,222,0,.55)";
+  for (let i = 0; i < 12; i++) {
+    ctx.rotate(Math.PI / 6);
+    ctx.beginPath(); ctx.moveTo(-9, 44); ctx.lineTo(0, 74 + Math.sin(now * 0.004 + i) * 6); ctx.lineTo(9, 44); ctx.fill();
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = "#ffde00"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#1b112c";
+  ctx.beginPath(); ctx.arc(-13, -6, 4.5, 0, Math.PI * 2); ctx.arc(13, -6, 4.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(255,90,140,.5)";
+  ctx.beginPath(); ctx.ellipse(-22, 6, 6, 3.5, 0, 0, Math.PI * 2); ctx.ellipse(22, 6, 6, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 3.5; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.arc(0, 4, 12, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+  ctx.restore();
+}
+
+function drawTree(t, now) {
+  const sway = Math.sin(now * 0.0016 + t.x) * 0.04;
+  ctx.save();
+  ctx.translate(t.x, t.y); ctx.scale(t.s, t.s);
+  ctx.fillStyle = "rgba(0,0,0,.2)";
+  ctx.beginPath(); ctx.ellipse(0, 4, 34, 10, 0, 0, Math.PI * 2); ctx.fill();
+  drawRoundedRect(-8, -40, 16, 44, 6, "#a0522d", "#1b112c", 3.5);
+  ctx.rotate(sway);
+  ctx.fillStyle = "#3fbf00"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(-18, -52, 22, 0, Math.PI * 2);
+  ctx.arc(18, -52, 22, 0, Math.PI * 2);
+  ctx.arc(0, -74, 26, 0, Math.PI * 2);
+  ctx.stroke(); ctx.fill();
+  ctx.fillStyle = "#6be81a";
+  ctx.beginPath(); ctx.arc(-6, -80, 11, 0, Math.PI * 2); ctx.arc(-24, -58, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#ff2a5f";
+  for (const [ax, ay] of [[-14, -46], [16, -60], [4, -86], [24, -42]]) {
+    ctx.beginPath(); ctx.arc(ax, ay, 4.5, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawLamp(l, now) {
+  ctx.save();
+  ctx.translate(l.x, l.y);
+  ctx.fillStyle = "rgba(0,0,0,.2)";
+  ctx.beginPath(); ctx.ellipse(0, 3, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+  drawRoundedRect(-4, -78, 8, 80, 3, "#4b3a75", "#1b112c", 3);
+  const g = 0.55 + Math.sin(now * 0.005 + l.x) * 0.2;
+  const grad = ctx.createRadialGradient(0, -86, 2, 0, -86, 38);
+  grad.addColorStop(0, `rgba(255,240,140,${g})`);
+  grad.addColorStop(1, "rgba(255,240,140,0)");
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(0, -86, 38, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#fff7ae"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, -86, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  drawRoundedRect(-9, -100, 18, 6, 3, "#4b3a75", "#1b112c", 2.5);
+  ctx.restore();
+}
+
+function drawFlowers(now) {
+  for (const f of FLOWERS) {
+    const sw = Math.sin(now * 0.003 + f.p) * 1.5;
+    ctx.strokeStyle = "#2e8c00"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.x + sw, f.y - 8); ctx.stroke();
+    ctx.fillStyle = f.c; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 1.5;
+    for (let k = 0; k < 5; k++) {
+      const a = k * Math.PI * 2 / 5 + now * 0.0005;
+      ctx.beginPath(); ctx.arc(f.x + sw + Math.cos(a) * 3.6, f.y - 9 + Math.sin(a) * 3.6, 2.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = "#ffde00";
+    ctx.beginPath(); ctx.arc(f.x + sw, f.y - 9, 2, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawButterflies(now) {
+  for (const b of BUTTERFLIES) {
+    const a = now * b.sp;
+    const x = b.cx + Math.cos(a) * b.r * 1.6, y = b.cy + Math.sin(a * 1.7) * b.r * .6 - 40;
+    const flap = Math.abs(Math.sin(now * 0.025 + b.cx));
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = b.c; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 1.8;
+    for (const side of [-1, 1]) {
+      ctx.beginPath(); ctx.ellipse(side * 5 * flap, -2, 6 * flap + 1, 7, side * .4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = "#1b112c"; ctx.fillRect(-1, -6, 2, 10);
+    ctx.restore();
+  }
+}
+
+function drawStatue(now) {
+  const sx = 650, sy = 385;
+  // Base de piedra en el centro de la plaza
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.beginPath();
+  ctx.ellipse(sx, sy + 14, 72, 24, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  drawRoundedRect(sx - 56, sy - 26, 112, 36, 12, "#cbd5e1", "#1b112c", 3.8);
+  drawRoundedRect(sx - 42, sy - 44, 84, 22, 8, "#94a3b8", "#1b112c", 3.5);
+
+  // Estatua dorada (o grafiteada si fue vandalizada)
+  const col = statueVandalized ? "#ec4899" : "#fbbf24";
+  const ear = statueVandalized ? "#22c55e" : "#d97706";
+  drawGaturroAvatar(sx, sy - 44, {
+    name: statueVandalized ? "🗿 ESTATUA VANDALIZADA" : "🗿 MONUMENTO AL CALCO",
+    color: col,
+    ear,
+    hat: "crown",
+    facing: 1,
+  }, now);
+
+  // Valla antivandálica alrededor (meme histórico de la estatua de Gaturro)
+  ctx.strokeStyle = "#1b112c";
+  ctx.lineWidth = 3;
+  for (let gx = sx - 64; gx <= sx + 64; gx += 16) {
+    ctx.beginPath();
+    ctx.moveTo(gx, sy + 16);
+    ctx.lineTo(gx, sy - 8);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.moveTo(sx - 66, sy + 2); ctx.lineTo(sx + 66, sy + 2);
+  ctx.moveTo(sx - 66, sy + 12); ctx.lineTo(sx + 66, sy + 12);
+  ctx.stroke();
+}
+
+let lastDust = 0;
+let hoverB = null, hoverThing = null;
+let room = "plaza";
+let pendingExit = null;
+let fade = null;
+
+/* ==================== SALAS DEL MUNDO ==================== */
+const ROOM_INFO = {
+  plaza: {
+    name: "Plaza Central", icon: "⛲",
+    walk: { x: [90, 1210], y: [220, 665] }, roam: { x: [360, 940], y: [340, 580] },
+    exits: [
+      { x: 52, y: 430, to: "deposito", label: "Depósito", dir: -1, spawn: { x: 1150, y: 470 } },
+      { x: 1248, y: 430, to: "parque", label: "Parque", dir: 1, spawn: { x: 150, y: 470 } },
+    ],
+  },
+  deposito: {
+    name: "Depósito FEFO", icon: "📦",
+    walk: { x: [80, 1220], y: [290, 670] }, roam: { x: [220, 1080], y: [330, 650] },
+    exits: [{ x: 1248, y: 470, to: "plaza", label: "Plaza", dir: 1, spawn: { x: 140, y: 430 } }],
+  },
+  parque: {
+    name: "Parque del Lago", icon: "🌳",
+    walk: { x: [80, 1220], y: [235, 670] }, roam: { x: [160, 600], y: [330, 660] },
+    exits: [{ x: 52, y: 470, to: "plaza", label: "Plaza", dir: -1, spawn: { x: 1160, y: 430 } }],
+  },
+};
+const ROOM_SPAWN = { plaza: { x: 650, y: 480 }, deposito: { x: 650, y: 540 }, parque: { x: 420, y: 520 } };
+
+for (const b of BUILDINGS) { b.npc.queries = b.queries; b.npc.building = b; }
+const ROOM_NPCS = {
+  plaza: BUILDINGS.map(b => b.npc),
+  deposito: [
+    { name: "Lotera Redis", x: 520, y: 430, color: "#f472b6", ear: "#9d174d", hat: "cap", eyes: "nerd", queries: ["Q08", "Q14", "Q15"], line: "¡Hola! Acá los lotes salen por FEFO, primero en vencer, primero en salir. ¿Qué querés revisar?" },
+    { name: "Capataz Mongo", x: 900, y: 480, color: "#4ade80", ear: "#166534", hat: "cowboy", queries: ["Q01", "Q02", "Q09"], line: "Yo cuento cajas y ventas pendientes todo el día. ¿Te muestro algo?" },
+  ],
+  parque: [
+    { name: "Modista Michi", x: 330, y: 405, color: "#c084fc", ear: "#6b21a8", hat: "top", eyes: "sun", shop: true, line: "¡Bienvenido a TurroModa! Galeras, capas, alas, skates... todo se paga con TurroPesos." },
+    { name: "Pescador Bug", x: 600, y: 525, color: "#38bdf8", ear: "#075985", hat: "cowboy", queries: ["Q05", "Q11"], line: "En este lago no hay peces, hay bugs. Mientras espero miro los rankings y los ingresos." },
+  ],
+};
+const CHATTER = ["¡Aguante MongoDB!", "¡El stock sale por FEFO!", "¡Quiero más TurroPesos!", "¿Fuiste al Parque del Lago?", "¡Me compré una capa en TurroModa!"];
+const ROAMERS = {
+  plaza: roamers,
+  deposito: [
+    { name: "Gatu_Pallet", x: 400, y: 520, tx: 640, ty: 560, color: "#fb923c", ear: "#9a3412", hat: "cap", back: "pack", lines: ["¡Paso con el pallet!", "Este lote vence en 3 días", "¿Quién dejó el MULTI sin EXEC?"] },
+    { name: "Michi_Stock", x: 760, y: 380, tx: 560, ty: 600, color: "#a3e635", ear: "#3f6212", hat: "none", eyes: "nerd", lines: ["Contando cajas... 41, 42...", "Stock bajo en el estante 3", "¡Cadena de frío OK!"] },
+  ],
+  parque: [
+    { name: "Gatu_Skater", x: 300, y: 600, tx: 500, ty: 640, color: "#facc15", ear: "#a16207", hat: "cap", eyes: "sun", feet: "skate", lines: ["¡Mirá este truco!", "El skate lo compré en TurroModa", "¡Wiii!"] },
+    { name: "Luna_Picnic", x: 480, y: 360, tx: 200, ty: 560, color: "#f9a8d4", ear: "#be185d", hat: "party", back: "wings", lines: ["¡Hoy es mi cumple!", "Qué lindo está el lago", "¿Viste el pato?"] },
+  ],
+};
+const ROOM_COINS = {
+  plaza: floatingCoins,
+  deposito: [{ x: 300, y: 600, takenUntil: 0 }, { x: 740, y: 370, takenUntil: 0 }, { x: 1060, y: 420, takenUntil: 0 }],
+  parque: [{ x: 200, y: 620, takenUntil: 0 }, { x: 560, y: 390, takenUntil: 0 }, { x: 1150, y: 330, takenUntil: 0 }],
+};
+
+const PARK_TREES = [
+  { x: 90, y: 330, s: 1.1 }, { x: 110, y: 640, s: 1.15 }, { x: 540, y: 245, s: .85 }, { x: 1010, y: 250, s: .9 },
+  { x: 1235, y: 330, s: 1.1 }, { x: 1240, y: 650, s: 1.1 }, { x: 430, y: 700, s: .95 }, { x: 800, y: 705, s: 1 },
+];
+const BENCHES = [{ x: 750, y: 315 }, { x: 1110, y: 650 }];
+const PARK_FLOWERS = [];
+{
+  const cols = ["#ff5ec4", "#ffde00", "#ffffff", "#ff7b00", "#9b4dff"];
+  let tries = 0;
+  while (PARK_FLOWERS.length < 40 && tries++ < 3000) {
+    const fx0 = 150 + Math.random() * 1080, fy0 = 260 + Math.random() * 420;
+    const nearPond = ((fx0 - 880) / 270) ** 2 + ((fy0 - 470) / 135) ** 2 < 1;
+    const nearKiosk = fx0 > 210 && fx0 < 450 && fy0 < 430;
+    if (!nearPond && !nearKiosk && fx0 > 120) PARK_FLOWERS.push({ x: fx0, y: fy0, c: cols[PARK_FLOWERS.length % cols.length], p: Math.random() * 6 });
+  }
+}
+const CRATES = [{ x: 280, y: 400 }, { x: 1080, y: 600 }, { x: 430, y: 650 }];
+const BOX_COLS = ["#60a5fa", "#f472b6", "#facc15", "#4ade80", "#fb923c", "#c084fc"];
+
+/* ==================== FONDOS DE CADA SALA ==================== */
+function drawSkyScreen(scale, oy) {
+  const horizon = oy + 190 * scale;
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, horizon);
+  skyGrad.addColorStop(0, "#1fa2ff");
+  skyGrad.addColorStop(1, "#c7f0ff");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, CW, horizon + 2);
+  const grassGrad = ctx.createLinearGradient(0, horizon, 0, CH);
+  grassGrad.addColorStop(0, "#65d400");
+  grassGrad.addColorStop(1, "#2f9400");
+  ctx.fillStyle = grassGrad;
+  ctx.fillRect(0, horizon, CW, CH - horizon);
+  for (const c of CLOUDS) {
+    c.x += c.v * 16;
+    if (c.x > 1.15) c.x = -0.15;
+    drawCloud(c.x * CW, c.y * horizon, c.s * Math.max(.6, scale));
+  }
+}
+
+function drawHills(now) {
+  drawSun(70, 55, now);
+  ctx.fillStyle = "#4fc400";
+  ctx.beginPath();
+  ctx.ellipse(120, 192, 300, 120, 0, Math.PI, 0);
+  ctx.ellipse(650, 192, 360, 80, 0, Math.PI, 0);
+  ctx.ellipse(1180, 192, 300, 130, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = "#7ae800";
+  ctx.strokeStyle = "#1b112c";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(320, 192, 420, 95, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(980, 192, 440, 105, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#7ae800";
+  ctx.fillRect(-200, 188, 1700, 8);
+}
+
+function drawPlazaBG(now) {
+  drawHills(now);
+
+  // Plaza circular central con caminos de baldosas amarillas
+  ctx.fillStyle = "#fde68a";
+  ctx.strokeStyle = "#1b112c";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.ellipse(650, 425, 490, 215, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Caminos hacia las salidas de los costados
+  drawRoundedRect(-60, 405, 240, 50, 18, "#fde68a", "#1b112c", 3);
+  drawRoundedRect(1120, 405, 240, 50, 18, "#fde68a", "#1b112c", 3);
+  ctx.fillStyle = "#fde68a";
+  ctx.beginPath();
+  ctx.ellipse(650, 425, 486, 211, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#5ce000";
+  ctx.strokeStyle = "#1b112c";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.ellipse(650, 425, 340, 135, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  drawRoundedRect(605, 285, 90, 280, 20, "#fde68a", "#1b112c", 3);
+  drawRoundedRect(305, 395, 690, 62, 20, "#fde68a", "#1b112c", 3);
+  ctx.strokeStyle = "rgba(180,120,20,.35)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let tx = 335; tx < 990; tx += 30) { ctx.moveTo(tx, 400); ctx.lineTo(tx, 452); }
+  for (let ty = 300; ty < 560; ty += 30) { ctx.moveTo(610, ty); ctx.lineTo(690, ty); }
+  ctx.stroke();
+
+  drawFlowers(now);
+}
+
+function drawPond(now) {
+  ctx.fillStyle = "#fde68a"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.ellipse(880, 470, 250, 120, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  const g = ctx.createRadialGradient(840, 440, 20, 880, 470, 240);
+  g.addColorStop(0, "#9be7ff"); g.addColorStop(1, "#0284c7");
+  ctx.fillStyle = g; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(880, 470, 228, 104, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+  // Ondas en el agua
+  for (let k = 0; k < 4; k++) {
+    const t = (now / 2400 + k / 4) % 1;
+    ctx.strokeStyle = `rgba(255,255,255,${(1 - t) * .7})`; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(780 + k * 70, 440 + (k % 2) * 60, 8 + t * 40, 3 + t * 13, 0, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 4; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.arc(880, 470, 180, 1.15 * Math.PI, 1.35 * Math.PI); ctx.stroke();
+
+  // Hojas de nenúfar
+  for (const [lx, ly, fl] of [[760, 500, true], [990, 420, false], [1030, 525, true], [880, 395, false]]) {
+    const bob = Math.sin(now * 0.002 + lx) * 2;
+    ctx.fillStyle = "#3fbf00"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(lx, ly + bob); ctx.ellipse(lx, ly + bob, 22, 9, 0, 0.25, Math.PI * 2 - 0.25); ctx.closePath(); ctx.fill(); ctx.stroke();
+    if (fl) {
+      ctx.fillStyle = "#ff8fd1";
+      ctx.beginPath(); ctx.arc(lx - 4, ly - 4 + bob, 5, 0, Math.PI * 2); ctx.arc(lx + 3, ly - 6 + bob, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffde00"; ctx.beginPath(); ctx.arc(lx, ly - 5 + bob, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // Pato que da vueltas por el lago
+  const a = now * 0.00025;
+  const px = 880 + Math.cos(a) * 150, py = 470 + Math.sin(a) * 58 + Math.sin(now * 0.004) * 1.5;
+  const dir = -Math.sin(a) >= 0 ? 1 : -1;
+  ctx.save();
+  ctx.translate(px, py); ctx.scale(dir, 1);
+  ctx.strokeStyle = "rgba(255,255,255,.6)"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(-4, 8, 22, 5, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = "#ffe14d"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(-4, 2, 17, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(10, -10, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#ff7b00";
+  ctx.beginPath(); ctx.moveTo(16, -11); ctx.lineTo(25, -8); ctx.lineTo(16, -6); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#1b112c"; ctx.beginPath(); ctx.arc(12, -12, 1.8, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  // Caña del pescador con su boya
+  const by = 532 + Math.sin(now * 0.005) * 2.5;
+  ctx.strokeStyle = "#7c4a1e"; ctx.lineWidth = 3.5;
+  ctx.beginPath(); ctx.moveTo(622, 500); ctx.lineTo(668, 440); ctx.stroke();
+  ctx.strokeStyle = "rgba(27,17,44,.6)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(668, 440); ctx.quadraticCurveTo(700, 470, 722, by); ctx.stroke();
+  ctx.fillStyle = "#ff2a5f"; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(722, by, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+}
+
+function drawParqueBG(now) {
+  drawHills(now);
+  ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.lineWidth = 3;
+  for (let k = 0; k < 18; k++) {
+    const gx = (k * 173) % 1250 + 30, gy = 250 + (k * 97) % 430;
+    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx - 3, gy - 8); ctx.moveTo(gx + 5, gy); ctx.lineTo(gx + 6, gy - 9); ctx.stroke();
+  }
+  drawRoundedRect(-60, 445, 360, 50, 22, "#fde68a", "#1b112c", 3);
+  drawPond(now);
+  for (const f of PARK_FLOWERS) drawFlowerAt(f, now);
+}
+
+function drawFlowerAt(f, now) {
+  const sw = Math.sin(now * 0.003 + f.p) * 1.5;
+  ctx.strokeStyle = "#2e8c00"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.x + sw, f.y - 8); ctx.stroke();
+  ctx.fillStyle = f.c; ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 1.5;
+  for (let k = 0; k < 5; k++) {
+    const an = k * Math.PI * 2 / 5 + now * 0.0005;
+    ctx.beginPath(); ctx.arc(f.x + sw + Math.cos(an) * 3.6, f.y - 9 + Math.sin(an) * 3.6, 2.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  ctx.fillStyle = "#ffde00";
+  ctx.beginPath(); ctx.arc(f.x + sw, f.y - 9, 2, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawIndoorScreen(scale, oy) {
+  const h = oy + 260 * scale;
+  ctx.fillStyle = "#ffe7b8"; ctx.fillRect(0, 0, CW, h);
+  ctx.fillStyle = "#c9d2de"; ctx.fillRect(0, h, CW, CH - h);
+}
+
+function drawShelf(sx) {
+  const w = 210, top = 60, bottom = 250;
+  ctx.fillStyle = "rgba(0,0,0,.12)"; ctx.fillRect(sx - w / 2 + 8, top + 8, w, bottom - top);
+  drawRoundedRect(sx - w / 2, top, w, bottom - top, 8, "#8b5a2b", "#1b112c", 4);
+  drawRoundedRect(sx - w / 2 + 10, top + 10, w - 20, bottom - top - 20, 4, "#5c3a1a", null);
+  for (let lvl = 0; lvl < 3; lvl++) {
+    const py = top + 66 + lvl * 60;
+    for (let k = 0; k < 5; k++) {
+      const sv = (sx + lvl * 7 + k * 13) % 6;
+      const bw = 28, bh = 30 + (sv % 3) * 6;
+      const bx = sx - w / 2 + 18 + k * 36;
+      drawRoundedRect(bx, py - bh, bw, bh, 4, BOX_COLS[sv], "#1b112c", 2.5);
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(bx + 5, py - bh + 8, bw - 10, 7);
+      ctx.fillStyle = "#22c55e"; ctx.fillRect(bx + 12, py - 14, 4, 9); ctx.fillRect(bx + 9.5, py - 11.5, 9, 4);
+    }
+    drawRoundedRect(sx - w / 2 + 6, py, w - 12, 8, 3, "#c08040", "#1b112c", 2.5);
+  }
+}
+
+function drawDepositoBG(now) {
+  ctx.fillStyle = "#ffe7b8"; ctx.fillRect(-500, -400, 2300, 660);
+  ctx.strokeStyle = "rgba(190,120,60,.28)"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let r = 0, y = 0; y < 260; y += 26, r++) {
+    ctx.moveTo(-500, y); ctx.lineTo(1800, y);
+    for (let x = (r % 2) * 26 - 500; x < 1800; x += 52) { ctx.moveTo(x, y); ctx.lineTo(x, y + 26); }
+  }
+  ctx.stroke();
+
+  // Piso de baldosas
+  for (let row = 0, y = 260; y < 1000; y += 46, row++) {
+    for (let col = -8, x = -500; x < 1800; x += 64, col++) {
+      ctx.fillStyle = (row + col) % 2 ? "#c9d2de" : "#dde4ec";
+      ctx.fillRect(x, y, 64, 46);
+    }
+  }
+  drawRoundedRect(-500, 250, 2300, 16, 0, "#c2410c", "#1b112c", 3);
+
+  for (const sx of [150, 410, 890, 1150]) drawShelf(sx);
+
+  // Cartel colgante y neón de Redis
+  ctx.font = '400 19px "Luckiest Guy", cursive';
+  const banner = "PRIMERO EN VENCER, PRIMERO EN SALIR";
+  const bw = ctx.measureText(banner).width + 34;
+  ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(650 - bw / 2 + 20, 0); ctx.lineTo(650 - bw / 2 + 20, 20); ctx.moveTo(650 + bw / 2 - 20, 0); ctx.lineTo(650 + bw / 2 - 20, 20); ctx.stroke();
+  drawRoundedRect(650 - bw / 2, 16, bw, 32, 12, "#ffde00", "#1b112c", 3.5);
+  ctx.fillStyle = "#1b112c"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(banner, 650, 33);
+
+  const flick = (now % 3000) < 90 ? .25 : 1;
+  drawRoundedRect(560, 72, 180, 46, 14, "#2a1d40", "#1b112c", 4);
+  ctx.save();
+  ctx.shadowColor = "#ff4d6d"; ctx.shadowBlur = 18 * flick;
+  ctx.fillStyle = `rgba(255,90,120,${flick})`;
+  ctx.font = '400 24px "Luckiest Guy", cursive';
+  ctx.fillText("⚡ REDIS 7 ⚡", 650, 97);
+  ctx.restore();
+}
+
+function drawFridge(now) {
+  const x = 650, y = 290, w = 120, h = 150;
+  ctx.fillStyle = "rgba(0,0,0,.18)";
+  ctx.beginPath(); ctx.ellipse(x, y + 4, 70, 12, 0, 0, Math.PI * 2); ctx.fill();
+  drawRoundedRect(x - w / 2, y - h, w, h, 14, "#e0f2fe", "#1b112c", 4);
+  drawRoundedRect(x - w / 2 + 12, y - h + 28, w - 24, h - 42, 8, "rgba(125,211,252,.7)", "#1b112c", 3);
+  for (let r = 0; r < 3; r++) {
+    for (let k = 0; k < 4; k++) {
+      ctx.fillStyle = BOX_COLS[(r + k) % 6];
+      drawRoundedRect(x - 44 + k * 22, y - h + 40 + r * 32, 12, 22, 4, BOX_COLS[(r + k) % 6], "#1b112c", 2);
+    }
+  }
+  ctx.font = "900 10px Nunito, sans-serif"; ctx.fillStyle = "#1b112c"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("FRÍO 2-8°C ❄", x, y - h + 14);
+  const glow = .4 + Math.sin(now * 0.004) * .2;
+  ctx.fillStyle = `rgba(255,255,255,${glow})`;
+  ctx.fillRect(x - w / 2 + 18, y - h + 34, 8, h - 56);
+}
+
+function drawCrates(c) {
+  ctx.save(); ctx.translate(c.x, c.y);
+  ctx.fillStyle = "rgba(0,0,0,.2)";
+  ctx.beginPath(); ctx.ellipse(0, 4, 56, 12, 0, 0, Math.PI * 2); ctx.fill();
+  drawRoundedRect(-52, -8, 104, 12, 3, "#a16207", "#1b112c", 3);
+  for (const [bx, by, bw, bh] of [[-48, -50, 46, 42], [2, -50, 46, 42], [-24, -88, 48, 38]]) {
+    drawRoundedRect(bx, by, bw, bh, 4, "#d9a066", "#1b112c", 3);
+    ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillRect(bx + bw / 2 - 4, by + 2, 8, bh - 4);
+    ctx.fillStyle = "#1b112c"; ctx.font = "900 9px Nunito, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("LOTE", bx + bw / 2, by + bh / 2 + 6);
+  }
+  ctx.restore();
+}
+
+function drawKiosk(now) {
+  const x = 330, y = 330, w = 190;
+  ctx.fillStyle = "rgba(0,0,0,.2)";
+  ctx.beginPath(); ctx.ellipse(x, y + 6, 115, 18, 0, 0, Math.PI * 2); ctx.fill();
+  drawRoundedRect(x - w / 2 + 8, y - 160, 10, 100, 3, "#8b5a2b", "#1b112c", 3);
+  drawRoundedRect(x + w / 2 - 18, y - 160, 10, 100, 3, "#8b5a2b", "#1b112c", 3);
+  drawRoundedRect(x - w / 2, y - 72, w, 72, 12, "#fff0f8", "#1b112c", 4);
+  ctx.font = "26px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ["🎩", "🕶️", "🦸", "🛹"].forEach((ic, i) => ctx.fillText(ic, x - 66 + i * 44, y - 40 + Math.sin(now * 0.004 + i) * 3));
+
+  // Toldo a rayas con festón
+  const aw = w + 26, ax = x - aw / 2, ay = y - 178;
+  const n = 8, sw = aw / n;
+  for (let i = 0; i < n; i++) {
+    ctx.fillStyle = i % 2 ? "#ffffff" : "#ff42b0";
+    ctx.fillRect(ax + i * sw, ay, sw, 34);
+    ctx.beginPath(); ctx.arc(ax + i * sw + sw / 2, ay + 34, sw / 2, 0, Math.PI); ctx.fill();
+  }
+  ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(ax, ay + 34); ctx.lineTo(ax, ay); ctx.lineTo(ax + aw, ay); ctx.lineTo(ax + aw, ay + 34);
+  for (let i = n - 1; i >= 0; i--) ctx.arc(ax + i * sw + sw / 2, ay + 34, sw / 2, 0, Math.PI);
+  ctx.stroke();
+
+  ctx.save();
+  ctx.translate(x, ay - 6); ctx.rotate(Math.sin(now * 0.002) * 0.03);
+  drawRoundedRect(-80, -16, 160, 30, 12, "#ffde00", "#1b112c", 3.5);
+  ctx.font = '400 19px "Luckiest Guy", cursive'; ctx.fillStyle = "#1b112c";
+  ctx.fillText("TURROMODA", 0, 1);
+  ctx.restore();
+
+  if (hoverThing === "kiosk") {
+    const by = y - 96 + Math.sin(now * 0.012) * 5;
+    ctx.font = '400 15px "Luckiest Guy", cursive';
+    const lw = ctx.measureText("¡COMPRAR!").width + 18;
+    drawRoundedRect(x - lw / 2, by - 12, lw, 24, 10, "#52df00", "#1b112c", 3);
+    ctx.fillStyle = "#ffffff"; ctx.fillText("¡COMPRAR!", x, by + 1);
+  }
+}
+
+function drawBench(b) {
+  ctx.save(); ctx.translate(b.x, b.y);
+  ctx.fillStyle = "rgba(0,0,0,.18)";
+  ctx.beginPath(); ctx.ellipse(0, 4, 48, 9, 0, 0, Math.PI * 2); ctx.fill();
+  drawRoundedRect(-36, -14, 6, 18, 2, "#4b3a75", "#1b112c", 2.5);
+  drawRoundedRect(30, -14, 6, 18, 2, "#4b3a75", "#1b112c", 2.5);
+  drawRoundedRect(-44, -22, 88, 10, 4, "#c2410c", "#1b112c", 3);
+  drawRoundedRect(-44, -46, 88, 9, 4, "#c2410c", "#1b112c", 3);
+  drawRoundedRect(-44, -34, 88, 9, 4, "#c2410c", "#1b112c", 3);
+  ctx.restore();
+}
+
+function drawExitSign(e, now) {
+  const hov = hoverThing === e;
+  const bob = Math.sin(now * 0.006) * 4;
+  ctx.save();
+  ctx.translate(e.x, e.y);
+  ctx.strokeStyle = `rgba(255,255,255,${.4 + Math.sin(now * 0.006) * .3})`; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(0, 6, 34, 11, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = "rgba(0,0,0,.2)";
+  ctx.beginPath(); ctx.ellipse(0, 3, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+  drawRoundedRect(-5, -82, 10, 84, 3, "#8b5a2b", "#1b112c", 3);
+
+  const label = e.dir < 0 ? `◀ ${e.label}` : `${e.label} ▶`;
+  ctx.font = '400 17px "Luckiest Guy", cursive';
+  const w = ctx.measureText(label).width + 26, h = 32;
+  const cx = -e.dir * 22 + e.dir * bob;
+  const x0 = cx - w / 2, y0 = -104;
+  ctx.beginPath();
+  if (e.dir > 0) {
+    ctx.moveTo(x0, y0); ctx.lineTo(x0 + w - 8, y0); ctx.lineTo(x0 + w + 8, y0 + h / 2); ctx.lineTo(x0 + w - 8, y0 + h); ctx.lineTo(x0, y0 + h);
+  } else {
+    ctx.moveTo(x0 + w, y0); ctx.lineTo(x0 + 8, y0); ctx.lineTo(x0 - 8, y0 + h / 2); ctx.lineTo(x0 + 8, y0 + h); ctx.lineTo(x0 + w, y0 + h);
+  }
+  ctx.closePath();
+  ctx.fillStyle = hov ? "#ffde00" : "#fff2b3"; ctx.fill();
+  ctx.strokeStyle = "#1b112c"; ctx.lineWidth = 3.5; ctx.stroke();
+  ctx.fillStyle = "#1b112c"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(label, cx, y0 + h / 2 + 1);
+  ctx.restore();
+}
+
+function drawCoins(list, now) {
+  for (const c of list) {
+    if (now < c.takenUntil) continue;
+    const bob = Math.sin(now * 0.006 + c.x) * 4;
+    const spin = Math.cos(now * 0.005 + c.x);
+    ctx.fillStyle = "rgba(0,0,0,.18)";
+    ctx.beginPath(); ctx.ellipse(c.x, c.y + 6, 10 - bob * .5, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.translate(c.x, c.y - 10 + bob);
+    ctx.scale(Math.max(.15, Math.abs(spin)), 1);
+    ctx.fillStyle = "#ffde00";
+    ctx.strokeStyle = "#1b112c";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#1b112c";
+    ctx.font = '400 13px "Luckiest Guy"';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    if (Math.abs(spin) > .4) ctx.fillText("$", 0, 1);
+    ctx.restore();
+    if ((now + c.x * 10) % 1400 < 200) {
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "13px sans-serif";
+      ctx.fillText("✦", c.x + 10, c.y - 22 + bob);
+    }
+  }
+}
+
+function roomItems(now) {
+  const list = [];
+  if (room === "plaza") {
+    for (const b of BUILDINGS) list.push({ y: b.y, draw: () => drawBuilding(b, now) });
+    list.push({ y: 385, draw: () => drawStatue(now) });
+    for (const t of TREES) list.push({ y: t.y, draw: () => drawTree(t, now) });
+    for (const l of LAMPS) list.push({ y: l.y, draw: () => drawLamp(l, now) });
+  } else if (room === "parque") {
+    list.push({ y: 330, draw: () => drawKiosk(now) });
+    for (const t of PARK_TREES) list.push({ y: t.y, draw: () => drawTree(t, now) });
+    for (const b of BENCHES) list.push({ y: b.y, draw: () => drawBench(b) });
+  } else {
+    list.push({ y: 290, draw: () => drawFridge(now) });
+    for (const c of CRATES) list.push({ y: c.y, draw: () => drawCrates(c) });
+  }
+  for (const e of ROOM_INFO[room].exits) list.push({ y: e.y, draw: () => drawExitSign(e, now) });
+  for (const n of ROOM_NPCS[room]) list.push({ y: n.y, draw: () => drawGaturroAvatar(n.x, n.y, n, now) });
+  for (const r of ROAMERS[room]) list.push({ y: r.y, draw: () => drawGaturroAvatar(r.x, r.y, r, now) });
+  list.push({ y: player.y, draw: () => drawGaturroAvatar(player.x, player.y, { ...player, isPlayer: true }, now) });
+  return list;
+}
+
+/* ==================== CAMBIO DE SALA CON PANTALLA DE CARGA ==================== */
+function changeRoom(to, spawn = ROOM_SPAWN[to]) {
+  if (fade || to === room) return;
+  fade = { start: performance.now(), to, spawn, swapped: false };
+  pendingExit = null;
+  closeDialog();
+  F.Sound.tone(500, 0, .08, "triangle", .05);
+  F.Sound.tone(750, .08, .12, "triangle", .05);
+}
+
+function drawFade(now) {
+  if (!fade) return;
+  const t = (now - fade.start) / 1100;
+  if (t >= .5 && !fade.swapped) {
+    fade.swapped = true;
+    room = fade.to;
+    player.x = player.tx = fade.spawn.x;
+    player.y = player.ty = fade.spawn.y;
+    particles.length = 0;
+    hoverB = null; hoverThing = null;
+  }
+  if (t >= 1) {
+    const info = ROOM_INFO[room];
+    fade = null;
+    showToast(`${info.icon} ${info.name.toUpperCase()}`);
+    return;
+  }
+  const a = Math.min(1, (t < .5 ? t * 2 : (1 - t) * 2) * 1.3);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = `rgba(27,17,44,${a})`;
+  ctx.fillRect(0, 0, CW, CH);
+  ctx.globalAlpha = a;
+  const info = ROOM_INFO[fade.to];
+  ctx.font = '400 40px "Luckiest Guy", cursive';
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.lineWidth = 7; ctx.strokeStyle = "#1b112c"; ctx.lineJoin = "round";
+  ctx.strokeText(`${info.icon} ${info.name}`, CW / 2, CH / 2 - 20);
+  ctx.fillStyle = "#ffde00"; ctx.fillText(`${info.icon} ${info.name}`, CW / 2, CH / 2 - 20);
+  for (let k = 0; k < 3; k++) {
+    ctx.fillStyle = ["#ff5ec4", "#00e1ff", "#52df00"][k];
+    ctx.beginPath(); ctx.arc(CW / 2 - 30 + k * 30, CH / 2 + 30 - Math.abs(Math.sin(now * 0.012 + k)) * 12, 8, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ==================== LOOP PRINCIPAL ==================== */
+function tickWorld(now) {
+  const R = ROOM_INFO[room];
+
+  // Mover jugador hacia el destino clicado
+  const dx = player.tx - player.x, dy = player.ty - player.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist > 3) {
+    const step = Math.min(dist, player.feet === "skate" ? 6.2 : 4.4);
+    player.x += (dx / dist) * step;
+    player.y += (dy / dist) * step;
+    if (Math.abs(dx) > 1) player.facing = dx >= 0 ? 1 : -1;
+    if (now - lastDust > 85) { dust(player.x, player.y); lastDust = now; }
+  } else if (pendingExit) {
+    const e = pendingExit;
+    pendingExit = null;
+    changeRoom(e.to, e.spawn);
+  }
+
+  // Mover NPCs paseanderos de la sala
+  for (const r of ROAMERS[room]) {
+    const rdx = r.tx - r.x, rdy = r.ty - r.y, rdist = Math.hypot(rdx, rdy);
+    if (rdist < 6) {
+      r.tx = R.roam.x[0] + Math.random() * (R.roam.x[1] - R.roam.x[0]);
+      r.ty = R.roam.y[0] + Math.random() * (R.roam.y[1] - R.roam.y[0]);
+      if (Math.random() < 0.35) {
+        const lines = r.lines || CHATTER;
+        r.bubble = lines[Math.floor(Math.random() * lines.length)];
+        r.bubbleUntil = now + 3500;
+      }
+    } else {
+      const sp = r.feet === "skate" ? 2.2 : 1.2;
+      r.x += (rdx / rdist) * sp;
+      r.y += (rdy / rdist) * sp;
+      r.facing = rdx >= 0 ? 1 : -1;
+    }
+  }
+
+  // Recoger monedas flotantes
+  for (const c of ROOM_COINS[room]) {
+    if (now < c.takenUntil) continue;
+    if (Math.hypot(player.x - c.x, player.y - c.y) < 34) {
+      c.takenUntil = now + 9000;
+      addCoins(15, "🪙 ¡+15 TURROPESOS!");
+      burst(c.x, c.y - 10, 16, ["#ffde00", "#fff7ae", "#ffbb00"]);
+      floatText(c.x, c.y - 30, "+15");
+      F.Sound.tone(987, 0, .07, "sine", .05);
+      F.Sound.tone(1318, .06, .12, "sine", .05);
+    }
+  }
+
+  // Renderizado
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, CW, CH);
+  rollCoins();
+
+  const { scale, ox, oy } = view();
+  if (room === "deposito") drawIndoorScreen(scale, oy);
+  else drawSkyScreen(scale, oy);
+
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(scale, scale);
+
+  if (room === "plaza") drawPlazaBG(now);
+  else if (room === "parque") drawParqueBG(now);
+  else drawDepositoBG(now);
+
+  // Marcador de destino clicado
+  if (dist > 5) {
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(player.tx, player.ty, 16, 7, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  drawCoins(ROOM_COINS[room], now);
+
+  // Ordenar por coordenada Y para profundidad 2.5D
+  const renderList = roomItems(now);
+  renderList.sort((a, b) => a.y - b.y);
+  for (const item of renderList) item.draw();
+
+  if (room !== "deposito") drawButterflies(now);
+  drawParticles();
+
+  ctx.restore();
+  drawFade(now);
+  drawConfetti();
+  requestAnimationFrame(tickWorld);
+}
+requestAnimationFrame(tickWorld);
+
+/* ==================== CLIC EN EL MUNDO (CAMINAR, HABLAR, SALIR) ==================== */
+function hitBuilding(pt) {
+  if (room !== "plaza") return null;
+  return BUILDINGS.find(b => pt.x >= b.x - b.w / 2 - 12 && pt.x <= b.x + b.w / 2 + 12 && pt.y >= b.y - b.h - 15 && pt.y <= b.y + 42) || null;
+}
+function hitExit(pt) {
+  return ROOM_INFO[room].exits.find(e => Math.abs(pt.x - e.x) < 70 && pt.y > e.y - 110 && pt.y < e.y + 25) || null;
+}
+function hitAvatar(pt) {
+  return [...ROOM_NPCS[room], ...ROAMERS[room]].find(c => Math.abs(pt.x - c.x) < 28 && pt.y > c.y - 72 && pt.y < c.y + 14) || null;
+}
+function hitKiosk(pt) {
+  return room === "parque" && Math.abs(pt.x - 330) < 108 && pt.y > 140 && pt.y < 340;
+}
+function inPond(pt) {
+  return room === "parque" && ((pt.x - 880) / 236) ** 2 + ((pt.y - 470) / 110) ** 2 < 1;
+}
+function onStatue(pt) {
+  return room === "plaza" && Math.hypot(pt.x - 650, pt.y - 365) < 62;
+}
+
+function talkTo(npc) {
+  const R = ROOM_INFO[room];
+  const side = player.x < npc.x ? -1 : 1;
+  player.tx = Math.max(R.walk.x[0], Math.min(R.walk.x[1], npc.x + side * 62));
+  player.ty = Math.max(R.walk.y[0], Math.min(R.walk.y[1], npc.y + 6));
+  npc.facing = side;
+  F.Sound.tone(587, 0, .08, "triangle", .05);
+  F.Sound.tone(880, .07, .12, "triangle", .05);
+  openDialog(npc);
+}
+
+canvas.addEventListener("click", e => {
+  $("pop-emotes").classList.remove("on");
+  $("pop-style").classList.remove("on");
+  if (fade) return;
+
+  const pt = screenToWorld(e.clientX, e.clientY);
+  const R = ROOM_INFO[room];
+
+  const ex = hitExit(pt);
+  if (ex) {
+    pendingExit = ex;
+    player.tx = ex.x; player.ty = ex.y + 8;
+    ring(player.tx, player.ty);
+    F.Sound.tone(520, 0, .05, "sine", .04);
+    return;
+  }
+  pendingExit = null;
+
+  const who = hitAvatar(pt);
+  if (who) { talkTo(who); return; }
+
+  if (onStatue(pt)) {
+    player.tx = 650; player.ty = 435;
+    toggleStatueVandal();
+    return;
+  }
+
+  const b = hitBuilding(pt);
+  if (b) { talkTo(b.npc); return; }
+
+  if (hitKiosk(pt)) { talkTo(ROOM_NPCS.parque[0]); return; }
+
+  if (inPond(pt)) {
+    player.bubble = "¡Ni loco me meto al lago, soy un gato! 🙀";
+    player.bubbleUntil = performance.now() + 3000;
+    F.Sound.tone(260, 0, .12, "sawtooth", .04);
+    return;
+  }
+
+  closeDialog();
+  player.tx = Math.max(R.walk.x[0], Math.min(R.walk.x[1], pt.x));
+  player.ty = Math.max(R.walk.y[0], Math.min(R.walk.y[1], pt.y));
+  ring(player.tx, player.ty);
+  F.Sound.tone(420, 0, .04, "sine", .03);
+});
+
+canvas.addEventListener("mousemove", e => {
+  if (fade) return;
+  const pt = screenToWorld(e.clientX, e.clientY);
+  const next = hitBuilding(pt);
+  if (next && next !== hoverB) F.Sound.tone(760, 0, .04, "sine", .025);
+  hoverB = next;
+  hoverThing = hitExit(pt) || hitAvatar(pt) || (hitKiosk(pt) ? "kiosk" : null);
+  canvas.style.cursor = hoverB || hoverThing || onStatue(pt) ? "pointer" : "default";
+});
+canvas.addEventListener("mouseleave", () => { hoverB = null; hoverThing = null; });
+
+/* ==================== DIÁLOGO CON NPCS ==================== */
+let typeTimer = null;
+function typeText(txt) {
+  clearInterval(typeTimer);
+  const p = $("dlg-txt");
+  p.textContent = "";
+  let i = 0;
+  p.onclick = () => { clearInterval(typeTimer); p.textContent = txt; };
+  typeTimer = setInterval(() => {
+    i++;
+    p.textContent = txt.slice(0, i);
+    if (i % 3 === 0) F.Sound.tone(520 + Math.random() * 260, 0, .03, "square", .012);
+    if (i >= txt.length) clearInterval(typeTimer);
+  }, 22);
+}
+
+function openDialog(npc) {
+  $("pop-emotes").classList.remove("on");
+  $("pop-style").classList.remove("on");
+  $("dlg-face").innerHTML = gaturroSVG(npc.color, npc.ear || "#d93800", npc.hat || "none");
+  $("dlg-name").textContent = npc.name;
+  const opts = [];
+  if (npc.shop) opts.push(["🛍️ Ver la tienda", () => openShop("shop")]);
+  for (const code of npc.queries || []) {
+    opts.push([`📠 ${code} · ${F.byCode(code).short}`, () => { closeDialog(); openQuery(code); }]);
+  }
+  if (npc.building) opts.push(["🏠 Entrar al edificio", () => { closeDialog(); openBuildingModal(npc.building); }]);
+  opts.push(["😹 Contame algo", () => typeText(NIK_FACTS[Math.floor(Math.random() * NIK_FACTS.length)])]);
+  opts.push(["👋 Chau", closeDialog]);
+  $("dlg-opts").replaceChildren(...opts.map(([label, run]) => el("button", { type: "button", text: label, onclick: run })));
+  $("dlg").classList.add("on");
+  const lines = npc.lines || CHATTER;
+  typeText(npc.line || lines[Math.floor(Math.random() * lines.length)]);
+  npc.bubble = "💬 ...";
+  npc.bubbleUntil = performance.now() + 2500;
+}
+
+function closeDialog() {
+  clearInterval(typeTimer);
+  $("dlg").classList.remove("on");
+}
+$("dlg-x").onclick = closeDialog;
+
+/* ==================== TIENDA TURROMODA Y MOCHILA ==================== */
+function isWorn(it) {
+  return player[it.slot] === it.id;
+}
+
+function saveEquip() {
+  F.store.set("fturro.hat", player.hat);
+  F.store.set("fturro.eq", JSON.stringify({ eyes: player.eyes, back: player.back, feet: player.feet }));
+}
+
+function toggleWear(it) {
+  player[it.slot] = isWorn(it) ? "none" : it.id;
+  saveEquip();
+  renderStylePop();
+  burst(player.x, player.y - 50, 12);
+  F.Sound.tone(880, 0, .08, "triangle", .05);
+  F.Sound.tone(1174, .07, .1, "triangle", .05);
+}
+
+function buy(it) {
+  if (inv.includes(it.id)) return;
+  if (coins < it.price) {
+    showToast("😿 ¡TE FALTAN TURROPESOS!");
+    F.Sound.tone(220, 0, .2, "sawtooth", .05);
+    return;
+  }
+  inv.push(it.id);
+  F.store.set("fturro.inv", JSON.stringify(inv));
+  addCoins(-it.price, `🛍️ ¡COMPRASTE ${it.name.toUpperCase()}!`);
+  if (!isWorn(it)) toggleWear(it);
+  confetti(70);
+}
+
+function openShop(tab = "shop") {
+  closeDialog();
+  $("modal-title").textContent = tab === "shop" ? "🛍️ TURROMODA, LA TIENDA DEL PARQUE" : "🎒 MI MOCHILA";
+  $("modal-tabs").replaceChildren(
+    el("button", { class: tab === "shop" ? "on" : "", onclick: () => openShop("shop") }, "🛍️ Tienda"),
+    el("button", { class: tab === "bag" ? "on" : "", onclick: () => openShop("bag") }, `🎒 Mochila (${inv.length})`)
+  );
+  const list = tab === "shop" ? SHOP : SHOP.filter(it => inv.includes(it.id));
+  const bar = el("div", { class: "shop-bar" }, `💰 Tenés ${coins.toLocaleString("es-AR")} TurroPesos`);
+  let body;
+  if (!list.length) {
+    body = el("div", { class: "fp-empty" },
+      el("p", { text: "Tu mochila está vacía. Comprá ropa en TurroModa, en el Parque del Lago 🌳" }),
+      el("button", { class: "mg-btn green", onclick: () => { closeModal(); changeRoom("parque"); } }, "🌳 Ir al Parque del Lago"));
+  } else {
+    body = el("div", { class: "shop-grid" }, ...list.map(it => {
+      const owned = inv.includes(it.id), worn = isWorn(it);
+      return el("div", { class: "shop-card" + (owned ? " owned" : "") + (worn ? " worn" : "") },
+        el("div", { class: "big", text: it.ico }),
+        el("h4", { text: it.name }),
+        el("small", { text: SLOT_NAMES[it.slot] }),
+        owned
+          ? el("button", { class: "mg-btn " + (worn ? "pink" : "green"), onclick: () => { toggleWear(it); openShop(tab); } }, worn ? "Sacármelo" : "Ponérmelo")
+          : el("div", {},
+              el("div", { class: "price", text: `$ ${it.price}` }),
+              el("button", { class: "mg-btn", onclick: () => { buy(it); openShop(tab); } }, "Comprar")));
+    }));
+  }
+  $("modal-body").replaceChildren(el("div", { style: "display:flex;flex-direction:column;min-height:0;flex:1" }, bar, body));
+  $("modal-ov").classList.add("on");
+}
+
+function roomCards() {
+  return Object.entries(ROOM_INFO).map(([id, r]) =>
+    el("div", { class: "map-card", onclick: () => { closeModal(); changeRoom(id); } },
+      el("div", { class: "m-top" },
+        el("div", { class: "m-ico", style: "--mc:#b4ff57", text: r.icon }),
+        el("div", {}, el("h4", { text: r.name }), el("p", { text: id === room ? "📍 Estás acá" : "Viajar a esta sala" }))
+      )
+    ));
+}
+
+
+/* ==================== MODALES: EDIFICIO / 15 CONSULTAS / MAPA / PASAPORTE ==================== */
+function closeModal() {
+  $("modal-ov").classList.remove("on");
+}
+$("modal-close").onclick = closeModal;
+$("modal-ov").addEventListener("click", e => {
+  if (e.target.id === "modal-ov") closeModal();
+});
+window.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeModal(); closeDialog(); }
+});
+
+function openBuildingModal(b, activeCode = b.queries[0]) {
+  $("modal-title").textContent = `🏠 ${b.name} — ${b.sub}`;
+  const codes = b.queries;
+  $("modal-tabs").replaceChildren(
+    ...codes.map(code => {
+      const q = F.byCode(code);
+      return el("button", {
+        class: code === activeCode ? "on" : "",
+        onclick: () => openBuildingModal(b, code)
+      }, el("b", { text: code }), q.short);
+    }),
+    el("button", {
+      onclick: () => openAllQueriesModal(activeCode)
+    }, "📠 Ver las 15 Consultas")
+  );
+  mountQueryPanel(activeCode);
+  $("modal-ov").classList.add("on");
+}
+
+function openAllQueriesModal(activeCode = "Q01") {
+  $("modal-title").textContent = "📠 FOTOCOPIADORA DE CONSULTAS (Q01 a Q15)";
+  $("modal-tabs").replaceChildren(...F.QUERIES.map(q =>
+    el("button", {
+      class: q.code === activeCode ? "on" : "",
+      onclick: () => openAllQueriesModal(q.code)
+    }, el("b", { text: q.code }), q.short)
+  ));
+  mountQueryPanel(activeCode);
+  $("modal-ov").classList.add("on");
+}
+
+function openQuery(code) {
+  const b = BUILDINGS.find(st => st.queries.includes(code));
+  if (b) openBuildingModal(b, code);
+  else openAllQueriesModal(code);
+}
+window.openQuery = openQuery;
+
+function mountQueryPanel(code) {
+  const q = F.byCode(code);
+  const panel = F.createPanel(q, {
+    text: {
+      run: "📠 ¡Fotocopiar Consulta!",
+      runMutation: "🚀 ¡Ejecutar en el Mundo!",
+      loading: "Fotocopiando datos de la API...",
+      empty: "Sin resultados en este servidor",
+      fill: "Completá los datos del formulario y dale al botón verde"
+    },
+    onSuccess: (q, req, res, msg) => {
+      const firstTime = !stamps[q.code];
+      stamps[q.code] = true;
+      F.store.set("fturro.stamps", JSON.stringify(stamps));
+      addCoins(firstTime ? 100 : 30, msg || (firstTime ? `🪪 ¡SELLO ${q.code} DESBLOQUEADO! +100` : `📠 ¡${q.code} FOTOCOPIADA! +30`));
+      F.Sound.tone(659, 0, .08, "triangle", .05);
+      F.Sound.tone(880, .08, .14, "triangle", .05);
+      if (firstTime) confetti(120);
+      if (q.mutation) refreshSnapshot();
+    },
+    onError: () => {
+      F.Sound.tone(220, 0, .22, "sawtooth", .05);
+    }
+  });
+  $("modal-body").replaceChildren(panel.root);
+}
+
+/* ==================== MAPA DEL MUNDO FARMATURRO ==================== */
+$("btn-map").onclick = openMapModal;
+function openMapModal() {
+  $("modal-title").textContent = "🗺️ MAPA OFICIAL DE MUNDO FARMATURRO";
+  $("modal-tabs").replaceChildren(
+    el("button", { class: "on" }, "🏖️ Isla & Plaza Central"),
+    el("button", { onclick: () => openAllQueriesModal("Q01") }, "📠 Ir a las 15 Consultas"),
+    el("button", { onclick: openPassportModal }, "🪪 Mi Pasaporte")
+  );
+  const grid = el("div", { class: "map-grid" },
+    ...roomCards(),
+    ...BUILDINGS.map(b =>
+      el("div", {
+        class: "map-card",
+        onclick: () => {
+          const spot = { x: b.npc.x, y: b.npc.y + 42 };
+          if (room !== "plaza") changeRoom("plaza", spot);
+          else { player.x = player.tx = spot.x; player.y = player.ty = spot.y; }
+          openBuildingModal(b);
+        }
+      },
+        el("div", { class: "m-top" },
+          el("div", { class: "m-ico", style: `--mc:${b.roof}`, text: "🏠" }),
+          el("div", {}, el("h4", { text: b.name }), el("p", { text: b.sub }))
+        ),
+        el("p", { text: `Atiende: ${b.npc.name} — "${b.npc.line}"` }),
+        el("div", { class: "m-qs" }, ...b.queries.map(c => el("span", { text: `${c} · ${F.byCode(c).short}` })))
+      )
+    )
+  );
+  $("modal-body").replaceChildren(grid);
+  $("modal-ov").classList.add("on");
+}
+
+/* ==================== PASAPORTE GATURRO (SELLOS Q01-Q15) ==================== */
+$("btn-pass").onclick = openPassportModal;
+function openPassportModal() {
+  const count = Object.keys(stamps).length;
+  $("modal-title").textContent = `🪪 PASAPORTE FARMATURRO (${count}/15 SELLOS)`;
+  $("modal-tabs").replaceChildren(
+    el("button", { class: "on" }, "🪪 Mis Sellos y Logros"),
+    el("button", { onclick: openMapModal }, "🗺️ Mapa del Mundo"),
+    el("button", { onclick: () => openAllQueriesModal("Q01") }, "📠 Fotocopiadora Q01–Q15")
+  );
+
+  const idCard = el("div", { class: "pass-id" });
+  idCard.innerHTML = gaturroSVG(player.color, player.ear, player.hat);
+  idCard.append(
+    el("h3", { class: "lg", style: "margin:6px 0 2px;font-size:24px", text: player.name }),
+    el("div", { style: "font-size:12.5px;color:#4b5563", text: `Servidor: ${currentServer.name}` }),
+    el("div", { style: "margin-top:8px;font-weight:900;color:#b45309", text: `💰 ${coins.toLocaleString("es-AR")} TurroPesos` }),
+    el("div", { style: "margin-top:4px;font-size:12px", text: `Sellos coleccionados: ${count} de 15` })
+  );
+
+  const stampsGrid = el("div", { class: "pass-stamps" },
+    ...F.QUERIES.map(q =>
+      el("div", {
+        class: "stamp" + (stamps[q.code] ? " done" : ""),
+        onclick: () => openQuery(q.code)
+      },
+        el("b", { text: `${stamps[q.code] ? "🐾 " : ""}${q.code}` }),
+        el("small", { text: q.short }),
+        el("small", { style: "margin-top:4px;font-weight:900", text: stamps[q.code] ? "¡SELLADO!" : "Clic para sellar" })
+      )
+    )
+  );
+
+  $("modal-body").replaceChildren(el("div", { class: "pass-wrap" }, idCard, stampsGrid));
+  $("modal-ov").classList.add("on");
+}
+
+$("btn-queries").onclick = () => openAllQueriesModal("Q01");
+$("btn-bag").onclick = () => openShop("bag");
+
+/* ==================== CARGA DE DATOS EN VIVO DE LA API ==================== */
+async function refreshSnapshot() {
+  const s = await F.snapshot();
+  $("kpi-prod").textContent = `${s.productos.length} prods (Q01)`;
+  $("kpi-lotes").textContent = `${s.lotes.length} lotes <50u (Q08)`;
+  $("kpi-ing").textContent = `${FMT.pesos(s.totalIngresos || 0)} (Q11)`;
+  $("kpi-pend").textContent = `${s.pendientes.length} pend. (Q02)`;
+  document.querySelectorAll(".kpi-chip").forEach((c, i) => {
+    c.classList.remove("pop");
+    setTimeout(() => c.classList.add("pop"), i * 90);
+  });
+}
+refreshSnapshot();
+
+// Rotador de chistes / confesiones de Nik en el banner superior
+let factIdx = 0;
+function rotateFact() {
+  const f = $("nik-fact");
+  f.textContent = NIK_FACTS[factIdx % NIK_FACTS.length];
+  f.classList.remove("in");
+  void f.offsetWidth;
+  f.classList.add("in");
+  factIdx++;
+}
+rotateFact();
+setInterval(rotateFact, 6500);
+
+})();
+</script>
+</body>
+</html>

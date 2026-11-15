@@ -197,6 +197,7 @@ const THEMES = [
   { id: "farmatown", name: "FarmaTown", href: "farmatown.html" },
   { id: "farmahitrun", name: "Farma Hit & Run", href: "farmahitrun.html" },
   { id: "farmacampus", name: "FarmaCampus", href: "farmacampus.html" },
+  { id: "farmaturro", name: "Mundo FarmaTurro", href: "farmaturro.html" },
 ];
 
 const API = {
