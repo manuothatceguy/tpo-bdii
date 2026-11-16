@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from pymongo import MongoClient
+from pymongo.database import Database
 from redis import Redis
 
 from .dependencies.mongo import MONGO_DB, MONGO_URI
@@ -77,6 +78,16 @@ def build_ventas(sucursal_por_farmaceutico: dict[str, str]) -> list[dict]:
     return ventas
 
 
+def ensure_indexes(db: Database) -> None:
+    db["clientes"].create_index("dni", unique=True)
+    db["ventas"].create_index("id_cliente")
+    db["ventas"].create_index("id_farmaceutico")
+    db["ventas"].create_index("fecha")
+    db["recetas"].create_index("id_cliente")
+    db["sagas"].create_index("id_venta")
+    db["sagas"].create_index("estado")
+
+
 def load_mongo(client: MongoClient) -> None:
     documentos = {
         coleccion: [with_mongo_id(row, id_field) for row in read_csv(coleccion)]
@@ -92,6 +103,7 @@ def load_mongo(client: MongoClient) -> None:
         db.drop_collection(coleccion)
         db[coleccion].insert_many(filas)
         print(f"mongo {coleccion}: {len(filas)}")
+    ensure_indexes(db)
 
 
 def load_redis(client: Redis) -> None:

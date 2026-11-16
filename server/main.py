@@ -23,6 +23,10 @@ async def lifespan(app: FastAPI):
     app.state.mongo = create_mongo_client()
     app.state.redis = create_redis_client()
     try:
+        await app.state.mongo[MONGO_DB]["clientes"].create_index("dni", unique=True)
+    except PyMongoError as error:
+        logger.warning("No se pudo crear el índice único de clientes.dni: %s", error)
+    try:
         compensadas = await recuperar_sagas(app.state.mongo[MONGO_DB], app.state.redis)
         if compensadas:
             logger.info("Sagas trabadas compensadas: %s", ", ".join(map(str, compensadas)))
