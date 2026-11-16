@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -24,8 +24,8 @@ async def ventas_recientes_por_farmaceutico(
 
     **Motor utilizado:** MongoDB.
     """
-    hoy = date.today()
-    desde = datetime.combine(hoy - timedelta(days=60), datetime.min.time())
+    hoy = datetime.now(timezone.utc).date()
+    desde = datetime.combine(hoy - timedelta(days=59), datetime.min.time())
     hasta = datetime.combine(hoy + timedelta(days=1), datetime.min.time())
 
     pipeline = [
@@ -79,7 +79,7 @@ async def ingresos_mes_por_farmaceutico(
 
     **Motor utilizado:** MongoDB.
     """
-    hoy = date.today()
+    hoy = datetime.now(timezone.utc).date()
     desde = datetime.combine(hoy.replace(day=1), datetime.min.time())
     hasta = datetime.combine(hoy + timedelta(days=1), datetime.min.time())
 
@@ -105,15 +105,15 @@ async def ingresos_mes_por_farmaceutico(
                 "as": "farmaceutico",
             }
         },
-        {"$unwind": "$farmaceutico"},
+        {"$unwind": {"path": "$farmaceutico", "preserveNullAndEmptyArrays": True}},
         {
             "$project": {
                 "_id": 0,
                 "id_farmaceutico": "$_id",
-                "nombre": "$farmaceutico.nombre",
-                "apellido": "$farmaceutico.apellido",
-                "matricula": "$farmaceutico.matricula",
-                "id_sucursal": "$farmaceutico.id_sucursal",
+                "nombre": {"$ifNull": ["$farmaceutico.nombre", None]},
+                "apellido": {"$ifNull": ["$farmaceutico.apellido", None]},
+                "matricula": {"$ifNull": ["$farmaceutico.matricula", None]},
+                "id_sucursal": {"$ifNull": ["$farmaceutico.id_sucursal", None]},
                 "cantidad_ventas": 1,
                 "ingresos_totales": 1,
             }
