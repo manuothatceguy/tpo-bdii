@@ -28,7 +28,7 @@ async def clientes_de_sucursal(
         raise HTTPException(status_code=404, detail="Sucursal no encontrada")
 
     pipeline = [
-        {"$match": {"id_sucursal": id_sucursal}},
+        {"$match": {"id_sucursal": id_sucursal, "estado": {"$ne": "Anulada"}}},
         {"$group": {"_id": "$id_cliente", "cantidad_ventas": {"$sum": 1}}},
         {
             "$lookup": {
@@ -38,7 +38,7 @@ async def clientes_de_sucursal(
                 "as": "cliente",
             }
         },
-        {"$unwind": "$cliente"},
+        {"$unwind": {"path": "$cliente", "preserveNullAndEmptyArrays": True}},
         {
             "$project": {
                 "_id": 0,
