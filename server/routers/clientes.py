@@ -1,11 +1,12 @@
 from calendar import monthrange
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field, model_validator
 from pymongo import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
+from pymongo.errors import DuplicateKeyError
 
 from ..dependencies.mongo import get_mongo_database
 
@@ -21,29 +22,45 @@ ObraSocial = Literal[
 ]
 
 
+def _limpiar_texto(valor: object) -> object:
+    return valor.strip() if isinstance(valor, str) else valor
+
+
+TextoLimpio = Annotated[str, BeforeValidator(_limpiar_texto)]
+
+
 class AltaClienteRequest(BaseModel):
-    id_cliente: str | None = Field(
+    id_cliente: TextoLimpio | None = Field(
         default=None,
+        min_length=1,
+        pattern=r"^[^\s/?#]+\z",
         description="Identificador único opcional (ej. C009). Si se omite, se autogenera.",
     )
-    nombre: str = Field(..., min_length=1)
-    apellido: str = Field(..., min_length=1)
-    dni: str = Field(..., pattern=r"^\s*\d{7,8}\s*$", description="DNI numérico de 7 u 8 dígitos")
-    email: str = Field(..., min_length=1)
-    telefono: str = Field(..., min_length=1)
-    ciudad: str = Field(..., min_length=1)
-    provincia: str = Field(..., min_length=1)
+    nombre: TextoLimpio = Field(..., min_length=1)
+    apellido: TextoLimpio = Field(..., min_length=1)
+    dni: TextoLimpio = Field(..., pattern=r"^[0-9]{7,8}\z", description="DNI numérico de 7 u 8 dígitos")
+    email: TextoLimpio = Field(..., min_length=1)
+    telefono: TextoLimpio = Field(..., min_length=1)
+    ciudad: TextoLimpio = Field(..., min_length=1)
+    provincia: TextoLimpio = Field(..., min_length=1)
     obra_social: ObraSocial
-    nro_afiliado: str | None = None
+    nro_afiliado: TextoLimpio | None = None
 
 
 class ModificarClienteRequest(BaseModel):
-    email: str | None = Field(default=None, min_length=1)
-    telefono: str | None = Field(default=None, min_length=1)
-    ciudad: str | None = Field(default=None, min_length=1)
-    provincia: str | None = Field(default=None, min_length=1)
+    email: TextoLimpio | None = Field(default=None, min_length=1)
+    telefono: TextoLimpio | None = Field(default=None, min_length=1)
+    ciudad: TextoLimpio | None = Field(default=None, min_length=1)
+    provincia: TextoLimpio | None = Field(default=None, min_length=1)
     obra_social: ObraSocial | None = None
-    nro_afiliado: str | None = None
+    nro_afiliado: TextoLimpio | None = None
+
+    @model_validator(mode="after")
+    def validar_campos_no_nulos(self) -> "ModificarClienteRequest":
+        for campo in ("email", "telefono", "ciudad", "provincia", "obra_social"):
+            if campo in self.model_fields_set and getattr(self, campo) is None:
+                raise ValueError(f"El campo '{campo}' no puede ser nulo")
+        return self
 
 
 def formatear_cliente(doc: dict) -> dict:
@@ -66,7 +83,12 @@ async def generar_id_cliente(db: AsyncDatabase) -> str:
     ids = [doc["_id"] async for doc in db["clientes"].find({}, {"_id": 1})]
     max_num = 0
     for cid in ids:
-        if isinstance(cid, str) and cid.startswith("C") and cid[1:].isdigit():
+        if (
+            isinstance(cid, str)
+            and cid.startswith("C")
+            and cid[1:].isascii()
+            and cid[1:].isdigit()
+        ):
             max_num = max(max_num, int(cid[1:]))
     return f"C{max_num + 1:03d}"
 
@@ -100,16 +122,17 @@ async def clientes_con_varias_recetas(
                 "as": "cliente",
             }
         },
-        {"$unwind": "$cliente"},
+        {"$unwind": {"path": "$cliente", "preserveNullAndEmptyArrays": True}},
         {
             "$project": {
                 "_id": 0,
                 "id_cliente": "$_id",
-                "nombre": "$cliente.nombre",
-                "apellido": "$cliente.apellido",
+                "nombre": {"$ifNull": ["$cliente.nombre", None]},
+                "apellido": {"$ifNull": ["$cliente.apellido", None]},
                 "cantidad_recetas": 1,
             }
         },
+        {"$sort": {"cantidad_recetas": -1, "id_cliente": 1}},
     ]
 
     cursor = await db["recetas"].aggregate(pipeline)
@@ -129,10 +152,10 @@ async def clientes_sin_ventas_recientes(
 
     **Motor utilizado:** MongoDB.
     """
-    hoy = date.today()
+    hoy = datetime.now(timezone.utc).date()
     dia = min(hoy.day, monthrange(hoy.year - 1, hoy.month)[1])
-    desde = datetime(hoy.year - 1, hoy.month, dia)
-    hasta = datetime.combine(hoy + timedelta(days=1), datetime.min.time())
+    desde = datetime(hoy.year - 1, hoy.month, dia, tzinfo=timezone.utc)
+    hasta = datetime.combine(hoy + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
 
     pipeline = [
         {
@@ -229,7 +252,7 @@ async def alta_cliente(
 
     **Motor utilizado:** MongoDB.
     """
-    dni = datos.dni.strip()
+    dni = datos.dni
     if await db["clientes"].find_one({"dni": dni}, {"_id": 1}) is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -237,41 +260,82 @@ async def alta_cliente(
         )
 
     if datos.id_cliente is not None:
-        id_cliente = datos.id_cliente.strip()
+        id_cliente = datos.id_cliente
         if await db["clientes"].find_one({"_id": id_cliente}, {"_id": 1}) is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Ya existe un cliente con el ID {id_cliente}",
             )
-    else:
-        id_cliente = await generar_id_cliente(db)
 
     if datos.obra_social == "Sin cobertura":
         nro_afiliado = None
     else:
-        if not datos.nro_afiliado or not datos.nro_afiliado.strip():
+        if not datos.nro_afiliado:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Debe indicar un número de afiliado cuando el cliente posee obra social",
             )
-        nro_afiliado = datos.nro_afiliado.strip()
+        nro_afiliado = datos.nro_afiliado
 
-    documento = {
-        "_id": id_cliente,
-        "nombre": datos.nombre.strip(),
-        "apellido": datos.apellido.strip(),
-        "dni": datos.dni.strip(),
-        "email": datos.email.strip(),
-        "telefono": datos.telefono.strip(),
-        "ciudad": datos.ciudad.strip(),
-        "provincia": datos.provincia.strip(),
-        "obra_social": datos.obra_social,
-        "nro_afiliado": nro_afiliado,
-        "activo": True,
-    }
+    if datos.id_cliente is not None:
+        documento = {
+            "_id": datos.id_cliente,
+            "nombre": datos.nombre,
+            "apellido": datos.apellido,
+            "dni": dni,
+            "email": datos.email,
+            "telefono": datos.telefono,
+            "ciudad": datos.ciudad,
+            "provincia": datos.provincia,
+            "obra_social": datos.obra_social,
+            "nro_afiliado": nro_afiliado,
+            "activo": True,
+        }
+        try:
+            await db["clientes"].insert_one(documento)
+        except DuplicateKeyError as exc:
+            key_pattern = (exc.details or {}).get("keyPattern", {})
+            if "dni" in key_pattern:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Ya existe un cliente registrado con el DNI {dni}",
+                ) from exc
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Ya existe un cliente con el ID {datos.id_cliente}",
+            ) from exc
+        return formatear_cliente(documento)
 
-    await db["clientes"].insert_one(documento)
-    return formatear_cliente(documento)
+    for _ in range(30):
+        id_cliente = await generar_id_cliente(db)
+        documento = {
+            "_id": id_cliente,
+            "nombre": datos.nombre,
+            "apellido": datos.apellido,
+            "dni": dni,
+            "email": datos.email,
+            "telefono": datos.telefono,
+            "ciudad": datos.ciudad,
+            "provincia": datos.provincia,
+            "obra_social": datos.obra_social,
+            "nro_afiliado": nro_afiliado,
+            "activo": True,
+        }
+        try:
+            await db["clientes"].insert_one(documento)
+            return formatear_cliente(documento)
+        except DuplicateKeyError as exc:
+            key_pattern = (exc.details or {}).get("keyPattern", {})
+            if "dni" in key_pattern:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Ya existe un cliente registrado con el DNI {dni}",
+                ) from exc
+
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="No se pudo generar un identificador único para el cliente, intente nuevamente",
+    )
 
 
 @router.patch("/{id_cliente}", summary="Q13 - Modificación de cliente")
@@ -291,47 +355,61 @@ async def modificar_cliente(
 
     **Motor utilizado:** MongoDB.
     """
-    actual = await db["clientes"].find_one({"_id": id_cliente})
-    if actual is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cliente no encontrado",
-        )
+    for _ in range(5):
+        actual = await db["clientes"].find_one({"_id": id_cliente})
+        if actual is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cliente no encontrado",
+            )
 
-    cambios = datos.model_dump(exclude_unset=True)
-    if not cambios:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Debe enviar al menos un campo para modificar",
-        )
+        if not actual.get("activo", True):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"El cliente {id_cliente} está dado de baja",
+            )
 
-    nueva_obra_social = cambios.get("obra_social", actual["obra_social"])
-    nuevo_nro_afiliado = (
-        cambios["nro_afiliado"]
-        if "nro_afiliado" in cambios
-        else actual["nro_afiliado"]
-    )
-
-    if nueva_obra_social == "Sin cobertura":
-        cambios["nro_afiliado"] = None
-    else:
-        if not nuevo_nro_afiliado or not nuevo_nro_afiliado.strip():
+        cambios = datos.model_dump(exclude_unset=True)
+        if not cambios:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Debe indicar un número de afiliado cuando el cliente posee obra social",
+                detail="Debe enviar al menos un campo para modificar",
             )
-        cambios["nro_afiliado"] = nuevo_nro_afiliado.strip()
 
-    for campo in ("email", "telefono", "ciudad", "provincia"):
-        if campo in cambios and cambios[campo] is not None:
-            cambios[campo] = cambios[campo].strip()
+        nueva_obra_social = cambios.get("obra_social", actual["obra_social"])
+        nuevo_nro_afiliado = (
+            cambios["nro_afiliado"]
+            if "nro_afiliado" in cambios
+            else actual["nro_afiliado"]
+        )
 
-    actualizado = await db["clientes"].find_one_and_update(
-        {"_id": id_cliente},
-        {"$set": cambios},
-        return_document=ReturnDocument.AFTER,
+        if nueva_obra_social == "Sin cobertura":
+            cambios["nro_afiliado"] = None
+        else:
+            if not nuevo_nro_afiliado:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Debe indicar un número de afiliado cuando el cliente posee obra social",
+                )
+            cambios["nro_afiliado"] = nuevo_nro_afiliado
+
+        actualizado = await db["clientes"].find_one_and_update(
+            {
+                "_id": id_cliente,
+                "activo": True,
+                "obra_social": actual["obra_social"],
+                "nro_afiliado": actual["nro_afiliado"],
+            },
+            {"$set": cambios},
+            return_document=ReturnDocument.AFTER,
+        )
+        if actualizado is not None:
+            return formatear_cliente(actualizado)
+
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Conflicto de concurrencia al modificar el cliente, intente nuevamente",
     )
-    return formatear_cliente(actualizado)
 
 
 @router.delete("/{id_cliente}", summary="Q13 - Baja lógica de cliente")
@@ -349,22 +427,21 @@ async def baja_cliente(
 
     **Motor utilizado:** MongoDB.
     """
-    actual = await db["clientes"].find_one({"_id": id_cliente})
-    if actual is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cliente no encontrado",
-        )
-
-    if not actual["activo"]:
+    actualizado = await db["clientes"].find_one_and_update(
+        {"_id": id_cliente, "activo": True},
+        {"$set": {"activo": False}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if actualizado is None:
+        actual = await db["clientes"].find_one({"_id": id_cliente}, {"_id": 1, "activo": 1})
+        if actual is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cliente no encontrado",
+            )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El cliente ya se encuentra dado de baja",
         )
 
-    actualizado = await db["clientes"].find_one_and_update(
-        {"_id": id_cliente},
-        {"$set": {"activo": False}},
-        return_document=ReturnDocument.AFTER,
-    )
     return formatear_cliente(actualizado)
