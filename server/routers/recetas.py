@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -24,7 +24,7 @@ async def recetas_con_dispensa_vencida(
 
     **Motor utilizado:** MongoDB.
     """
-    hoy = datetime.combine(date.today(), datetime.min.time())
+    hoy = datetime.combine(datetime.now(timezone.utc).date(), datetime.min.time())
 
     pipeline = [
         {
@@ -42,7 +42,7 @@ async def recetas_con_dispensa_vencida(
                 "as": "cliente",
             }
         },
-        {"$unwind": "$cliente"},
+        {"$unwind": {"path": "$cliente", "preserveNullAndEmptyArrays": True}},
         {
             "$project": {
                 "_id": 0,
@@ -54,15 +54,21 @@ async def recetas_con_dispensa_vencida(
                 "dispensas_realizadas": 1,
                 "proxima_dispensa": 1,
                 "cliente": {
-                    "id_cliente": "$cliente._id",
-                    "nombre": "$cliente.nombre",
-                    "apellido": "$cliente.apellido",
-                    "dni": "$cliente.dni",
-                    "email": "$cliente.email",
-                    "telefono": "$cliente.telefono",
-                    "obra_social": "$cliente.obra_social",
-                    "nro_afiliado": "$cliente.nro_afiliado",
-                    "activo": "$cliente.activo",
+                    "$cond": [
+                        {"$ifNull": ["$cliente", False]},
+                        {
+                            "id_cliente": "$cliente._id",
+                            "nombre": "$cliente.nombre",
+                            "apellido": "$cliente.apellido",
+                            "dni": "$cliente.dni",
+                            "email": "$cliente.email",
+                            "telefono": "$cliente.telefono",
+                            "obra_social": "$cliente.obra_social",
+                            "nro_afiliado": "$cliente.nro_afiliado",
+                            "activo": "$cliente.activo",
+                        },
+                        None,
+                    ]
                 },
             }
         },
