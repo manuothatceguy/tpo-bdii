@@ -154,6 +154,9 @@ el resultado de ese descuento.
 uv run --project server python -m consultas.q15 ID_VENTA
 ```
 
+## Interfaz web
+Una vez levantado el servidor, se dispone de una interfaz gráfica en `http://localhost:8000` para hacer más ameno el proceso de consultas.
+
 ## Variables de entorno
 
 Se leen del entorno o de un archivo `.env` en la raíz. El devcontainer ya define `MONGO_URI` y `REDIS_URL` para apuntar a los servicios de Docker Compose.
