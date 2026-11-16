@@ -1,9 +1,11 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
 from pymongo.asynchronous.database import AsyncDatabase
+from pymongo.errors import PyMongoError
 from redis.asyncio import Redis
+from redis.exceptions import RedisError
 
 from ..dependencies.mongo import get_mongo_database
 from ..dependencies.redis import get_redis
@@ -15,15 +17,22 @@ router = APIRouter(prefix="/ventas", tags=["Ventas"])
 MedioPago = Literal["Efectivo", "Débito", "Crédito", "Transferencia", "Obra social"]
 
 
+def _limpiar_texto(valor: object) -> object:
+    return valor.strip() if isinstance(valor, str) else valor
+
+
+TextoLimpio = Annotated[str, BeforeValidator(_limpiar_texto)]
+
+
 class ItemVentaRequest(BaseModel):
-    id_producto: str = Field(..., min_length=1)
+    id_producto: TextoLimpio = Field(..., min_length=1)
     cantidad: int = Field(..., gt=0)
 
 
 class RegistrarVentaRequest(BaseModel):
-    id_cliente: str = Field(..., min_length=1)
-    id_farmaceutico: str = Field(..., min_length=1)
-    id_receta: str | None = Field(default=None, min_length=1)
+    id_cliente: TextoLimpio = Field(..., min_length=1)
+    id_farmaceutico: TextoLimpio = Field(..., min_length=1)
+    id_receta: TextoLimpio | None = Field(default=None, min_length=1)
     medio_pago: MedioPago
     items: list[ItemVentaRequest] = Field(..., min_length=1)
 
@@ -52,7 +61,7 @@ async def ventas_pendientes(
                 "as": "farmaceutico",
             }
         },
-        {"$unwind": "$farmaceutico"},
+        {"$unwind": {"path": "$farmaceutico", "preserveNullAndEmptyArrays": True}},
         {
             "$lookup": {
                 "from": "sucursales",
@@ -61,17 +70,23 @@ async def ventas_pendientes(
                 "as": "sucursal",
             }
         },
-        {"$unwind": "$sucursal"},
+        {"$unwind": {"path": "$sucursal", "preserveNullAndEmptyArrays": True}},
         {
             "$project": {
                 "_id": 0,
                 "id_venta": "$_id",
                 "total": 1,
                 "farmaceutico": {
-                    "nombre": "$farmaceutico.nombre",
-                    "apellido": "$farmaceutico.apellido",
-                    "matricula": "$farmaceutico.matricula",
-                    "sucursal": "$sucursal.nombre",
+                    "$cond": [
+                        {"$ifNull": ["$farmaceutico", False]},
+                        {
+                            "nombre": "$farmaceutico.nombre",
+                            "apellido": "$farmaceutico.apellido",
+                            "matricula": "$farmaceutico.matricula",
+                            "sucursal": "$sucursal.nombre",
+                        },
+                        None,
+                    ]
                 },
             }
         },
@@ -162,6 +177,11 @@ async def registrar_nueva_venta(
         )
     except ErrorServicio as error:
         raise HTTPException(status_code=error.status_code, detail=error.detail)
+    except (PyMongoError, RedisError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Servicio de base de datos no disponible temporalmente",
+        ) from error
 
     venta = dict(resultado["venta"])
     return {
