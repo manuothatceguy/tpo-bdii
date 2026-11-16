@@ -19,7 +19,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
 };
 const pick = (o, p) => p.split(".").reduce((a, k) => (a == null ? undefined : a[k]), o);
-const nombre = r => `${r.nombre} ${r.apellido}`;
+const nombre = r => r ? `${r.nombre ?? ""} ${r.apellido ?? ""}`.trim() || "-" : "-";
 const enc = encodeURIComponent;
 (() => {
   const css = document.createElement("style");
