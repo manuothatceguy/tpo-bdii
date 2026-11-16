@@ -31,7 +31,8 @@ async def productos_activos(
                 "as": "proveedor",
             }
         },
-        {"$unwind": "$proveedor"},
+        {"$unwind": {"path": "$proveedor", "preserveNullAndEmptyArrays": True}},
+        {"$sort": {"_id": 1}},
     ]
 
     cursor = await db["productos"].aggregate(pipeline)
