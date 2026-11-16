@@ -13,7 +13,7 @@ def main() -> None:
             Columna("Médico", "medico"),
             Columna("Emisión", "fecha_emision", fecha),
             Columna("Cliente", "cliente.id_cliente"),
-            Columna("Nombre", lambda receta: nombre_completo(receta["cliente"])),
+            Columna("Nombre", lambda receta: nombre_completo(receta.get("cliente"))),
             Columna("DNI", "cliente.dni"),
             Columna("Teléfono", "cliente.telefono"),
             Columna("Obra social", "cliente.obra_social"),

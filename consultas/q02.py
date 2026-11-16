@@ -9,7 +9,7 @@ def main() -> None:
         [
             Columna("Venta", "id_venta"),
             Columna("Total", "total", pesos, "right"),
-            Columna("Farmacéutico", lambda venta: nombre_completo(venta["farmaceutico"])),
+            Columna("Farmacéutico", lambda venta: nombre_completo(venta.get("farmaceutico"))),
             Columna("Matrícula", "farmaceutico.matricula"),
             Columna("Sucursal", "farmaceutico.sucursal"),
         ],

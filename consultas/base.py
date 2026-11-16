@@ -86,5 +86,12 @@ def si_no(valor: bool) -> str:
     return "Sí" if valor else "No"
 
 
-def nombre_completo(persona: dict) -> str:
-    return f"{persona['nombre']} {persona['apellido']}"
+def nombre_completo(persona: dict | None) -> str:
+    if not isinstance(persona, dict):
+        return "-"
+    partes = [
+        str(valor).strip()
+        for valor in (persona.get("nombre"), persona.get("apellido"))
+        if valor is not None and str(valor).strip()
+    ]
+    return " ".join(partes) or "-"
