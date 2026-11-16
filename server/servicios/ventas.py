@@ -1,13 +1,14 @@
-from datetime import date, datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 
 from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 from redis.asyncio import Redis
+from redis.exceptions import RedisError
 
 from . import saga
 from .errores import FalloRegistro, NoEncontrado, ReglaDeNegocio
-from .stock import descontar_stock, planificar_descuento
+from .stock import clave_saga_pendiente, descontar_stock, devolver_stock, planificar_descuento
 
 CONDICIONES_CON_RECETA = ("Bajo receta", "Bajo receta archivada")
 DIAS_ENTRE_DISPENSAS = 30
@@ -17,7 +18,12 @@ MAX_INTENTOS_ID = 3
 def _siguiente_id(ids: list[str], prefijo: str, cantidad: int = 1) -> list[str]:
     max_num = 0
     for valor in ids:
-        if isinstance(valor, str) and valor.startswith(prefijo) and valor[len(prefijo):].isdigit():
+        if (
+            isinstance(valor, str)
+            and valor.startswith(prefijo)
+            and valor[len(prefijo):].isascii()
+            and valor[len(prefijo):].isdigit()
+        ):
             max_num = max(max_num, int(valor[len(prefijo):]))
     return [f"{prefijo}{max_num + i:03d}" for i in range(1, cantidad + 1)]
 
@@ -187,17 +193,41 @@ async def registrar_venta(db: AsyncDatabase, redis: Redis, id_cliente: str, id_f
     id_saga = await saga.crear_saga(db, id_sucursal, plan)
 
     try:
-        lotes = await descontar_stock(redis, id_sucursal, cantidades)
+        lotes = await descontar_stock(redis, id_sucursal, cantidades, id_saga=str(id_saga))
     except ReglaDeNegocio as error:
         await saga.marcar_rechazado(db, id_saga, error.detail)
         raise
-    await saga.marcar_redis_descontado(db, id_saga, lotes)
+    try:
+        await saga.marcar_redis_descontado(db, id_saga, lotes)
+    except Exception as error:
+        devuelto = False
+        try:
+            await devolver_stock(redis, lotes)
+            devuelto = True
+        except Exception:
+            pass
+        if devuelto:
+            try:
+                await redis.delete(clave_saga_pendiente(str(id_saga)))
+            except Exception:
+                pass
+            try:
+                await db["sagas"].update_one(
+                    {"_id": id_saga, "estado": {"$in": [saga.CREADO, saga.REDIS_DESCONTADO]}},
+                    {
+                        "$set": {"estado": saga.COMPENSADO, "lotes_descontados": lotes},
+                        "$push": {"pasos": saga._paso(saga.COMPENSADO, f"Falló actualización de saga: {error}")},
+                    },
+                )
+            except Exception:
+                pass
+        raise FalloRegistro("No se pudo registrar la venta, el stock descontado fue devuelto") from error
 
     cabecera = {
         "id_cliente": id_cliente,
         "id_farmaceutico": id_farmaceutico,
         "id_receta": id_receta,
-        "fecha": datetime.combine(date.today(), time()),
+        "fecha": datetime.combine(datetime.now(timezone.utc).date(), time()),
         "tipo": "Venta libre" if receta is None else "Con receta",
         "medio_pago": medio_pago,
         "estado": "Completada",
@@ -211,6 +241,11 @@ async def registrar_venta(db: AsyncDatabase, redis: Redis, id_cliente: str, id_f
         if isinstance(error, ReglaDeNegocio):
             raise
         raise FalloRegistro("No se pudo registrar la venta, el stock descontado fue devuelto") from error
+
+    try:
+        await redis.delete(clave_saga_pendiente(str(id_saga)))
+    except RedisError:
+        pass
 
     return {"venta": venta, "lotes_descontados": lotes, "id_saga": str(id_saga)}
 

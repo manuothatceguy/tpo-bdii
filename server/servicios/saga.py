@@ -1,3 +1,5 @@
+import json
+import logging
 from datetime import datetime, timedelta, timezone
 
 from bson import ObjectId
@@ -5,7 +7,9 @@ from pymongo import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from redis.asyncio import Redis
 
-from .stock import devolver_stock
+from .stock import clave_saga_pendiente, devolver_stock
+
+logger = logging.getLogger("uvicorn.error")
 
 CREADO = "Creado"
 REDIS_DESCONTADO = "Redis descontado"
@@ -150,14 +154,18 @@ async def compensar_saga(db: AsyncDatabase, redis: Redis, id_saga: ObjectId, mot
             },
         )
         raise
+    try:
+        await redis.delete(clave_saga_pendiente(str(id_saga)))
+    except Exception:
+        pass
     return True
 
 
 async def recuperar_sagas(db: AsyncDatabase, redis: Redis) -> list[ObjectId]:
     """
     **Propósito:** Compensar las sagas que quedaron trabadas en 'Redis
-    descontado' por más de `TIEMPO_LIMITE` desde su creación, por ejemplo
-    porque la aplicación se cayó antes de registrar la venta en MongoDB.
+    descontado' o en 'Creado' por más de `TIEMPO_LIMITE` desde su creación,
+    por ejemplo porque la aplicación se cayó durante la ejecución de la saga.
 
     **Parámetros:** `db`, base de MongoDB; `redis`, cliente de Redis.
 
@@ -166,9 +174,67 @@ async def recuperar_sagas(db: AsyncDatabase, redis: Redis) -> list[ObjectId]:
     **Motor utilizado:** MongoDB y Redis.
     """
     limite = _ahora() - TIEMPO_LIMITE
-    cursor = db["sagas"].find({"estado": REDIS_DESCONTADO, "creado": {"$lt": limite}}, {"_id": 1})
     compensadas = []
+
+    cursor = db["sagas"].find({"estado": REDIS_DESCONTADO, "creado": {"$lt": limite}}, {"_id": 1})
     async for saga in cursor:
-        if await compensar_saga(db, redis, saga["_id"], "Recuperación al iniciar: saga trabada"):
-            compensadas.append(saga["_id"])
+        try:
+            if await compensar_saga(db, redis, saga["_id"], "Recuperación al iniciar: saga trabada"):
+                compensadas.append(saga["_id"])
+        except Exception as error:
+            logger.warning("No se pudo compensar la saga %s: %s", saga["_id"], error)
+
+    cursor_creadas = db["sagas"].find({"estado": CREADO, "creado": {"$lt": limite}}, {"_id": 1})
+    async for saga in cursor_creadas:
+        try:
+            clave_pendiente = clave_saga_pendiente(str(saga["_id"]))
+            raw = await redis.get(clave_pendiente)
+            if raw is not None:
+                lotes = json.loads(raw)
+                actualizada = await db["sagas"].find_one_and_update(
+                    {"_id": saga["_id"], "estado": CREADO},
+                    {
+                        "$set": {"estado": COMPENSADO, "lotes_descontados": lotes},
+                        "$push": {
+                            "pasos": _paso(
+                                COMPENSADO,
+                                "Recuperación al iniciar: saga Creado con descuento en Redis",
+                            )
+                        },
+                    },
+                    return_document=ReturnDocument.AFTER,
+                )
+                if actualizada is not None:
+                    try:
+                        await devolver_stock(redis, lotes)
+                    except Exception:
+                        await db["sagas"].update_one(
+                            {"_id": saga["_id"], "estado": COMPENSADO},
+                            {
+                                "$set": {"estado": REDIS_DESCONTADO},
+                                "$push": {"pasos": _paso(REDIS_DESCONTADO, "Falló la devolución de stock")},
+                            },
+                        )
+                        raise
+                    try:
+                        await redis.delete(clave_pendiente)
+                    except Exception:
+                        pass
+                    compensadas.append(saga["_id"])
+            else:
+                await db["sagas"].find_one_and_update(
+                    {"_id": saga["_id"], "estado": CREADO},
+                    {
+                        "$set": {"estado": RECHAZADO},
+                        "$push": {
+                            "pasos": _paso(
+                                RECHAZADO,
+                                "Recuperación al iniciar: saga expirada sin descuento en Redis",
+                            )
+                        },
+                    },
+                )
+        except Exception as error:
+            logger.warning("No se pudo recuperar la saga %s: %s", saga["_id"], error)
+
     return compensadas

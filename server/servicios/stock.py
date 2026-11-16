@@ -1,5 +1,5 @@
 import json
-from datetime import date, datetime, time, timezone
+from datetime import datetime, time, timezone
 
 from redis.asyncio import Redis
 from redis.exceptions import WatchError
@@ -25,8 +25,12 @@ def clave_stock(id_sucursal: str, id_producto: str) -> str:
     return f"stock:{id_sucursal}:{id_producto}"
 
 
+def clave_saga_pendiente(id_saga: str) -> str:
+    return f"saga:descuento:pending:{id_saga}"
+
+
 async def _ids_lotes_vigentes(lector, id_sucursal: str, id_producto: str) -> list[str]:
-    hoy = datetime.combine(date.today(), time.min, tzinfo=timezone.utc).timestamp()
+    hoy = datetime.combine(datetime.now(timezone.utc).date(), time.min, tzinfo=timezone.utc).timestamp()
     return await lector.zrange(clave_stock(id_sucursal, id_producto), hoy, "+inf", byscore=True)
 
 
@@ -106,6 +110,7 @@ async def descontar_stock(
     cantidades: dict[str, int],
     *,
     id_venta: str | None = None,
+    id_saga: str | None = None,
 ) -> list[dict]:
     """
     **Propósito:** Descontar las unidades pedidas de los lotes vigentes de la
@@ -116,7 +121,9 @@ async def descontar_stock(
     **Parámetros:** `redis`, cliente de Redis; `id_sucursal`, sucursal de los
     lotes; `cantidades`, unidades a descontar por ID de producto;
     `id_venta`, venta ya registrada en q15. Su resultado se guarda en la
-    misma transacción que el descuento para evitar repetirlo.
+    misma transacción que el descuento para evitar repetirlo;
+    `id_saga`, identificador de saga para registrar la clave pendiente en la
+    misma transacción que el descuento.
 
     **Valor de retorno:** Lista de lotes descontados con la cantidad sacada de
     cada uno. Lanza `StockInsuficiente` sin tocar ningún lote si algún producto
@@ -157,11 +164,17 @@ async def descontar_stock(
                 pipe.hincrby(clave_lote(lote["id_lote"]), "unidades", -lote["cantidad"])
             if clave_descuento is not None:
                 pipe.set(clave_descuento, json.dumps(plan))
+            if id_saga is not None:
+                pipe.set(clave_saga_pendiente(id_saga), json.dumps(plan), ex=86400)
             try:
                 await pipe.execute()
             except WatchError:
                 continue
             return plan
+    if clave_descuento is not None:
+        resultado = await redis.get(clave_descuento)
+        if resultado is not None:
+            return json.loads(resultado)
     raise ConflictoDeStock(
         f"No se pudo descontar el stock en {id_sucursal} por cambios concurrentes, reintente la venta"
     )
